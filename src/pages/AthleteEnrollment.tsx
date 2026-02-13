@@ -5,12 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, User, Users, Trophy, Calendar, MapPin, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getBestClass } from "@/lib/class-utils";
-import type { Database } from "@/integrations/supabase/types";
 
-type DanceCategory = Database["public"]["Enums"]["dance_category"];
 
 interface Athlete {
   id: string;
@@ -40,11 +38,7 @@ interface Competition {
   registration_deadline: string | null;
 }
 
-interface ClassRule {
-  competition_id: string;
-  class: string;
-  is_allowed: boolean;
-}
+
 
 interface EventType {
   id: string;
@@ -61,7 +55,7 @@ export default function AthleteEnrollment() {
   const [couples, setCouples] = useState<Couple[]>([]);
   const [selectedCouple, setSelectedCouple] = useState<Couple | null>(null);
   const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [classRules, setClassRules] = useState<ClassRule[]>([]);
+  // const [classRules, setClassRules] = useState<ClassRule[]>([]); // Removed unused
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [existingEntries, setExistingEntries] = useState<Set<string>>(new Set());
   const [selectedCompetitions, setSelectedCompetitions] = useState<Set<string>>(new Set());
@@ -161,7 +155,7 @@ export default function AthleteEnrollment() {
         toast({ title: result.error, variant: "destructive" });
       } else {
         setCompetitions(result.competitions || []);
-        setClassRules(result.classRules || []);
+        // setClassRules(result.classRules || []);
         setExistingEntries(new Set(result.existingEntries || []));
         setEventTypes(result.eventTypes || []);
       }

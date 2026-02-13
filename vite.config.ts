@@ -1,12 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "path";
 
 
 import fs from "fs";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
@@ -19,8 +20,8 @@ export default defineConfig(({ mode }) => ({
     react(),
     {
       name: 'serve-excel-files',
-      configureServer(server) {
-        server.middlewares.use("/files", (req, res, next) => {
+      configureServer(server: any) {
+        server.middlewares.use("/files", (req: any, res: any, next: any) => {
           if (!req.url) return next();
 
           // Parse URL and remove query string

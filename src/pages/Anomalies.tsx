@@ -32,10 +32,7 @@ interface Couple {
   is_active: boolean;
 }
 
-interface Profile {
-  id: string;
-  full_name: string;
-}
+
 
 interface CoupleAnomaly {
   couple: Couple;

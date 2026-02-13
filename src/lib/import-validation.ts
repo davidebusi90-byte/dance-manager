@@ -4,7 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 type DanceCategory = Database["public"]["Enums"]["dance_category"];
 
 const VALID_DANCE_CATEGORIES: DanceCategory[] = ["standard", "latino", "combinata", "show_dance"];
-const VALID_CLASSES = ["MASTER", "AS", "A", "A1", "A2", "B", "B1", "B2", "B3", "C", "D"];
+
 
 // Allow letters (including accented), spaces, hyphens, apostrophes
 const nameRegex = /^[A-Za-zÀ-ÿ\s''-]+$/;

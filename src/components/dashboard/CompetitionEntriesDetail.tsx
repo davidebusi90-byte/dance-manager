@@ -183,14 +183,7 @@ export default function CompetitionEntriesDetail({
       setEventTypes(eventTypesRes.data);
     }
 
-    // Debug logging
-    console.log("[CompetitionEntriesDetail] Athletes received:", athletes.length);
-    console.log("[CompetitionEntriesDetail] Sample athlete IDs:", athletes.slice(0, 3).map(a => a.id));
-    console.log("[CompetitionEntriesDetail] Entries count:", entriesRes.data?.length);
-    if (entriesRes.data && entriesRes.data.length > 0) {
-      const firstEntry = entriesRes.data[0] as any;
-      console.log("[CompetitionEntriesDetail] First entry couple:", firstEntry.couples);
-    }
+
 
     setLoading(false);
   };

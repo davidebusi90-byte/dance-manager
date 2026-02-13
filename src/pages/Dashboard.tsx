@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, AlertTriangle, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, RefreshCw, Link, Copy, ExternalLink, Menu } from "lucide-react";
+import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, RefreshCw, ExternalLink, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { importCompetitors, importCompetitions } from "@/lib/import-utils";
@@ -12,7 +12,6 @@ import { filterAthletesByInstructor } from "@/lib/instructor-utils";
 import StatCard from "@/components/dashboard/StatCard";
 import AthletesList from "@/components/dashboard/AthletesList";
 import CouplesList from "@/components/dashboard/CouplesList";
-import ExpiredCertificatesList from "@/components/dashboard/ExpiredCertificatesList";
 import CompetitionsList from "@/components/dashboard/CompetitionsList";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -71,7 +70,7 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin } = useIsAdmin();
+  useIsAdmin();
   const { role, userId } = useUserRole();
 
   const fetchData = useCallback(async () => {
@@ -229,13 +228,7 @@ export default function Dashboard() {
     );
   }
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Link copiato",
-      description: `Link per ${label} copiato negli appunti`,
-    });
-  };
+
 
   return (
     <div className="min-h-screen bg-background">

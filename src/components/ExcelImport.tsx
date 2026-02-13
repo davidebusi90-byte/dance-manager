@@ -221,7 +221,7 @@ export default function ExcelImport({ onImportComplete }: ExcelImportProps) {
 
             if (!code || !firstName || !lastName) return null;
 
-            let partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
+            const partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
 
             const disciplines: { discipline: DanceCategory; class: string; raw: string }[] = [];
             for (const { disc, cls } of discIndices) {

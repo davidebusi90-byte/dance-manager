@@ -1,7 +1,7 @@
 
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
-import { validateAthleteRow, MAX_IMPORT_ROWS } from "@/lib/import-validation";
+import { validateAthleteRow } from "@/lib/import-validation";
 import { validateCoupleCategory } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
 import type { Database } from "@/integrations/supabase/types";
@@ -131,9 +131,9 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
             const extractAthlete = () => {
 
 
-                let code = String(row[colIdx.CID] || "").trim();
-                let firstName = String(row[colIdx.NOME] || "").trim();
-                let lastName = String(row[colIdx.COGNOME] || "").trim();
+                const code = String(row[colIdx.CID] || "").trim();
+                const firstName = String(row[colIdx.NOME] || "").trim();
+                const lastName = String(row[colIdx.COGNOME] || "").trim();
                 // Read Sex always from Col E (Index 4)
                 let sex = String(row[colIdx.SESSO] || "").trim().toUpperCase();
 
@@ -143,7 +143,7 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
                 if (!code || !firstName || !lastName) return null;
 
                 // Partner CID (from Col S / Index 18)
-                let partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
+                const partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
 
                 const disciplines: { discipline: DanceCategory; class: string; raw: string }[] = [];
                 for (const { disc, cls } of discIndices) {
@@ -243,20 +243,14 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
             const athlete1 = athlete;
             const athlete2 = athletes.find((a: any) => a.code === athlete.partnerCode);
 
-            let hasAnomaly = false;
-            let anomalyReason = null;
-
             if (athlete1 && athlete2) {
-                const validation = validateCoupleCategory({
+                // Validation logic removed as hasAnomaly/anomalyReason were unused
+                validateCoupleCategory({
                     storedCategory: athlete.category || "Senza categoria",
                     athlete1BirthDateISO: athlete1.birthDate,
                     athlete2BirthDateISO: athlete2.birthDate,
                     onDate: new Date(),
                 });
-                if (!validation.ok) {
-                    hasAnomaly = true;
-                    anomalyReason = (validation as any).reason;
-                }
             }
 
             const disciplineInfo: Record<string, string> = {};

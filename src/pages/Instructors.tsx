@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, KeyRound, Search, ShieldAlert, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, RefreshCw } from "lucide-react";
+import { ArrowLeft, CheckCircle, Search, ShieldAlert, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, KeyRound } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Badge } from "@/components/ui/badge";
 
