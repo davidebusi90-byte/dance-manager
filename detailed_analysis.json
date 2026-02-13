@@ -1,0 +1,436 @@
+{
+  "summary": {
+    "totalPDFs": 18,
+    "successfulAnalyses": 18,
+    "failedAnalyses": 0
+  },
+  "categories": {
+    "count": 10,
+    "list": [
+      "Adult",
+      "Junior",
+      "Juvenile",
+      "Over 35",
+      "Over 45",
+      "Over 55",
+      "Over 65",
+      "Over 70",
+      "Senior",
+      "Youth"
+    ]
+  },
+  "disciplines": {
+    "count": 2,
+    "list": [
+      "Latin",
+      "Standard"
+    ]
+  },
+  "classes": {
+    "count": 1,
+    "list": [
+      "A Class"
+    ]
+  },
+  "ageGroupPatterns": {
+    "count": 43,
+    "list": [
+      "1/3\nC",
+      "1/4\nA",
+      "10/11 A",
+      "10/11 B",
+      "10/11 D",
+      "12/13 A",
+      "12/13 B",
+      "12/13 D",
+      "14/15 A",
+      "14/15 B",
+      "16/18 A",
+      "16/18 B",
+      "19/34 A",
+      "19/34 B",
+      "2/3\nA",
+      "2/4\nA",
+      "35/44 B",
+      "35/44 D",
+      "45/54 A",
+      "45/54 B",
+      "6/9 A",
+      "6/9 B",
+      "6/9 D",
+      "Adult",
+      "Junior",
+      "Junior 1",
+      "Junior 2",
+      "Juvenile",
+      "Juvenile 1",
+      "Juvenile 2",
+      "Over 35",
+      "Over 45",
+      "Over 55",
+      "Over 65",
+      "Over 70",
+      "Senior",
+      "Senior 1",
+      "Senior 2",
+      "Senior 3",
+      "Senior 4",
+      "Under 16",
+      "Under 21",
+      "Youth"
+    ]
+  },
+  "competitionTypes": {
+    "count": 5,
+    "list": [
+      "Championship",
+      "Cup",
+      "International",
+      "Interregionale",
+      "World Event"
+    ]
+  },
+  "eventPatterns": {
+    "count": 92,
+    "sample": [
+      "10/11 A Latin",
+      "10/11 A Standard",
+      "10/11 Assoluto Latin",
+      "10/11 Assoluto Standard",
+      "10/11 B Open Latin",
+      "10/11 B Open Standard",
+      "12/13 Assoluto Latin",
+      "12/13 Assoluto Standard",
+      "12/13 B Open Latin",
+      "12/13 B Open Standard",
+      "12/13 B2 Latin",
+      "12/13 B2 Standard",
+      "12/13 B3 Latin",
+      "12/13 B3 Standard",
+      "14/15 Assoluto Latin",
+      "14/15 Assoluto Standard",
+      "14/15 B Open Latin",
+      "14/15 B Open Standard",
+      "14/15 B2 Latin",
+      "14/15 B3 Standard",
+      "16/18 A Latin",
+      "16/18 A Standard",
+      "16/18 Assoluto Latin",
+      "16/18 Assoluto Standard",
+      "16/18 B Open Latin",
+      "16/18 B Open Standard",
+      "16/18 B Open Ten Dance",
+      "16/18 B1 Latin",
+      "16/18 B1 Standard",
+      "19/34 Assoluto Latin",
+      "19/34 Assoluto Standard",
+      "19/34 B1 Latin",
+      "19/34 B2 Standard",
+      "19/34 B3 Latin",
+      "19/34 B3 Standard",
+      "35/44 B Open Latin",
+      "35/44 B Open Standard",
+      "35/44 B2 Latin",
+      "35/44 B2 Standard",
+      "45/54 A Standard",
+      "45/54 Assoluto Standard",
+      "45/54 B Open Latin",
+      "45/54 B Open Standard",
+      "45/54 B Open Ten Dance",
+      "6/9 Assoluto Latin",
+      "6/9 Assoluto Standard",
+      "6/9 B Open Latin",
+      "6/9 B Open Standard",
+      "Adult B Open Latin",
+      "Adult B Open Standard"
+    ]
+  },
+  "competitionList": [
+    {
+      "name": "27th Italian Open 2025 - FEINDA - International Championship",
+      "pages": 3,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Over 45",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "27th Italian Open 2025 - FEINDA - National Championship",
+      "pages": 3,
+      "categories": [
+        "Adult"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "CSIT World Championships 2024 (Section 2)",
+      "pages": 2,
+      "categories": [
+        "Adult",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "CSIT World Championships 2024 (Section 3)",
+      "pages": 3,
+      "categories": [
+        "Adult",
+        "Over 35",
+        "Over 45",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "CSIT World Championships and World Cup (Section 1)",
+      "pages": 1,
+      "categories": [
+        "Adult",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "CSIT World Sport Games Dancesport",
+      "pages": 2,
+      "categories": [
+        "Adult",
+        "Over 35",
+        "Over 45",
+        "Over 65",
+        "Over 70",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Campionato Interregionale Settore Centro-Sud 2025",
+      "pages": 4,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Over 45",
+        "Over 55",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "International Championships 2024",
+      "pages": 4,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Over 45",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "International Senior Cup 2025",
+      "pages": 2,
+      "categories": [
+        "Over 35",
+        "Over 45",
+        "Over 55",
+        "Over 65",
+        "Senior"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Star Championships and World Syllabus Championships 2025",
+      "pages": 5,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Over 45",
+        "Over 55",
+        "Over 65",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Star Cup Ferrara 2024",
+      "pages": 3,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Over 45",
+        "Over 55",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Star Cup Lago di Garda 2025",
+      "pages": 3,
+      "categories": [
+        "Adult",
+        "Over 35",
+        "Over 45",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Star Cup Prato 2024",
+      "pages": 3,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Syllabus Cup Alatri 2025",
+      "pages": 2,
+      "categories": [
+        "Junior",
+        "Juvenile"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Syllabus Cup Copparo 2025",
+      "pages": 4,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Syllabus Cup Este 2025",
+      "pages": 3,
+      "categories": [
+        "Adult"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Syllabus Cup Merano 2024",
+      "pages": 3,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    },
+    {
+      "name": "Universal Championships 2025",
+      "pages": 9,
+      "categories": [
+        "Adult",
+        "Junior",
+        "Juvenile",
+        "Over 35",
+        "Over 45",
+        "Senior",
+        "Youth"
+      ],
+      "disciplines": [
+        "Latin",
+        "Standard"
+      ],
+      "hasError": false
+    }
+  ]
+}
