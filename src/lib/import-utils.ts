@@ -115,14 +115,22 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
         }
 
         const athletes: any[] = [];
+        let missingCidCount = 0;
 
         for (let i = 3; i < rawData.length; i++) {
             const row = rawData[i];
             if (!row || row.length === 0) continue;
 
-            const code = String(row[colIdx.CID] || "").trim();
+            let code = String(row[colIdx.CID] || "").trim();
             const firstName = String(row[colIdx.NOME] || "").trim();
             const lastName = String(row[colIdx.COGNOME] || "").trim();
+
+            // Assign fallback CID if missing
+            if ((!code || code.toLowerCase() === "undefined") && firstName && lastName) {
+                missingCidCount++;
+                code = `XX${String(missingCidCount).padStart(4, "0")}`;
+            }
+
             let sex = String(row[colIdx.SESSO] || "").trim().toUpperCase();
             if (!["M", "F"].includes(sex)) sex = "M";
 

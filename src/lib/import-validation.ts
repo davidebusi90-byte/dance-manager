@@ -56,7 +56,7 @@ export const athleteImportSchema = z.object({
         .toUpperCase()
         .max(10, "Classe troppo lunga"),
     })
-  ).max(4, "Massimo 4 discipline"),
+  ).max(10, "Massimo 10 discipline"),
   partnerCode: z
     .string()
     .trim()
