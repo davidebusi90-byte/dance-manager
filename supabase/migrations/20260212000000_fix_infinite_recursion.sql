@@ -2,6 +2,7 @@
 -- and using a simpler approach that doesn't create circular dependencies
 
 DROP POLICY IF EXISTS "Instructors can view linked athlete profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Instructors can view linked profiles" ON public.profiles;
 
 -- Simplified policy: Instructors can view their own profile and profiles they're directly linked to
 -- This completely avoids any reference to the athletes table

@@ -9,17 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CompetitionsImport from "@/components/CompetitionsImport";
+import AddCompetitionDialog from "@/components/AddCompetitionDialog";
+import * as XLSX from "xlsx";
 
 interface Competition {
   id: string;
   name: string;
   date: string;
-}
-
-interface ClassRule {
-  competition_id: string;
-  class: string;
-  is_allowed: boolean;
+  end_date?: string | null;
 }
 
 interface EventType {
@@ -31,35 +28,44 @@ interface EventType {
   max_age: number | null;
 }
 
-// Available dance classes
-// Available dance classes
-const DANCE_CLASSES = ["MASTER", "AS", "A1", "A2", "A", "B1", "B2", "B3", "B", "C", "D"];
-
 const DISCIPLINES = ["Danze Standard", "Danze Latino Americane", "Combinata"];
 
 // Predefined event types for Standard and Latin
 const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number; maxAge?: number }[] = [
-  { name: "Adult Master", classes: ["MASTER"] },
-  { name: "Adult Open", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 19 },
-  { name: "Rising Star", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 19 },
-  { name: "Open A", classes: ["A", "A1", "A2", "D"] },
-  { name: "A1", classes: ["A1"] },
-  { name: "A2", classes: ["A2"] },
-  { name: "Under 21", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 18, maxAge: 20 },
-  { name: "Open B", classes: ["B1", "B2", "B3", "C", "D"] },
-  { name: "B1", classes: ["B1"] },
-  { name: "B2", classes: ["B2"] },
-  { name: "B3", classes: ["B3"] },
-  { name: "Open C", classes: ["C", "D"] },
-  { name: "C", classes: ["C"] },
-  { name: "D", classes: ["D"] },
-  { name: "Under 16", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], maxAge: 15 },
-  { name: "Open Over 35", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 35 },
-  { name: "Open Over 45", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 45 },
-  { name: "Open Over 55", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 55 },
-  { name: "Open Over 65", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 65 },
-  { name: "Open Over 70", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 70 },
-  { name: "Open Over 75", classes: ["A", "A1", "A2", "B1", "B2", "B3", "B", "D"], minAge: 75 },
+  // Juvenile & Junior
+  { name: "Juvenile 1 (6/9)", classes: ["D", "C", "B1", "B2", "B3"], minAge: 6, maxAge: 9 },
+  { name: "Juvenile 2 (10/11)", classes: ["D", "C", "B1", "B2", "B3", "A"], minAge: 10, maxAge: 11 },
+  { name: "Junior 1 (12/13)", classes: ["D", "C", "B1", "B2", "B3", "A"], minAge: 12, maxAge: 13 },
+  { name: "Junior 2 (14/15)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 14, maxAge: 15 },
+
+  // Youth
+  { name: "Youth (16/18)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 16, maxAge: 18 },
+
+  // Under 16 & Under 21 (Special)
+  { name: "Under 16", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS"], maxAge: 15 },
+  { name: "Under 21", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
+
+  // Adult
+  { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
+
+  // Senior 1 & 2
+  { name: "Senior 1 (35/44)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35, maxAge: 44 },
+  { name: "Senior 2 (45/54)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 45, maxAge: 54 },
+
+  // Senior 3, 4, 5
+  { name: "Senior 3 (55/64)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55, maxAge: 64 },
+  { name: "Senior 4 (65/74)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65, maxAge: 74 },
+  { name: "Senior 5 (75+)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 75 },
+
+  // Over Specifics
+  { name: "Over 35", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35 },
+  { name: "Over 45", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 45 },
+  { name: "Over 55", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55 },
+  { name: "Over 65", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65 },
+
+  // Open / General
+  { name: "Open Classe A", classes: ["A", "A1", "A2"], minAge: 16 },
+  { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
 ];
 
 // Specific event types for Combinata
@@ -79,11 +85,9 @@ const getEventsForDiscipline = (discipline: string) => {
 
 export default function CompetitionEnrollments() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [classRules, setClassRules] = useState<ClassRule[]>([]);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [pendingClassChanges, setPendingClassChanges] = useState<Map<string, boolean>>(new Map());
   const [pendingEventChanges, setPendingEventChanges] = useState<Map<string, boolean>>(new Map());
   const [selectedCompetitionForEvents, setSelectedCompetitionForEvents] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -105,14 +109,20 @@ export default function CompetitionEnrollments() {
   const fetchData = async (isRefetch = false) => {
     if (!isRefetch) setLoading(true);
     try {
-      const [competitionsRes, rulesRes, eventTypesRes] = await Promise.all([
-        supabase.from("competitions").select("id, name, date").order("date", { ascending: true }),
-        supabase.from("competition_class_rules").select("competition_id, class, is_allowed"),
+      const [competitionsRes, eventTypesRes] = await Promise.all([
+        supabase.from("competitions").select("id, name, date, end_date, is_deleted").eq("is_deleted", false).order("date", { ascending: true }) as any,
         supabase.from("competition_event_types").select("*"),
       ]);
 
-      if (competitionsRes.data) setCompetitions(competitionsRes.data);
-      if (rulesRes.data) setClassRules(rulesRes.data);
+      if (competitionsRes.data) {
+        // Extra safety: deduplicate by name and date in case duplicates already exist in DB
+        const unique = new Map();
+        (competitionsRes.data as any[]).forEach(c => {
+          const key = `${c.name.toLowerCase()}-${c.date}`;
+          if (!unique.has(key)) unique.set(key, c);
+        });
+        setCompetitions(Array.from(unique.values()));
+      }
       if (eventTypesRes.data) setEventTypes(eventTypesRes.data as EventType[]);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -121,24 +131,7 @@ export default function CompetitionEnrollments() {
     }
   };
 
-  const makeKey = (competitionId: string, className: string) => `${competitionId}::${className}`;
   const makeEventKey = (competitionId: string, eventName: string) => `${competitionId}::${eventName}`;
-
-  const parseKey = (key: string) => {
-    const [competitionId, className] = key.split("::");
-    return { competitionId, className };
-  };
-
-  const getClassAllowed = (competitionId: string, className: string): boolean => {
-    const pendingKey = makeKey(competitionId, className);
-    if (pendingClassChanges.has(pendingKey)) {
-      return pendingClassChanges.get(pendingKey)!;
-    }
-    const rule = classRules.find(
-      r => r.competition_id === competitionId && r.class === className
-    );
-    return rule?.is_allowed ?? false;
-  };
 
   const getEventActive = (competitionId: string, eventName: string): boolean => {
     const pendingKey = makeEventKey(competitionId, eventName);
@@ -148,20 +141,6 @@ export default function CompetitionEnrollments() {
     return eventTypes.some(
       e => e.competition_id === competitionId && e.event_name === eventName
     );
-  };
-
-  const toggleClass = (competitionId: string, className: string) => {
-    if (!isAdmin) {
-      toast({ title: "Accesso negato", description: "Solo gli amministratori possono modificare le regole", variant: "destructive" });
-      return;
-    }
-    const key = makeKey(competitionId, className);
-    const currentValue = getClassAllowed(competitionId, className);
-    setPendingClassChanges(prev => {
-      const next = new Map(prev);
-      next.set(key, !currentValue);
-      return next;
-    });
   };
 
   const toggleEventType = (competitionId: string, eventName: string) => {
@@ -177,28 +156,6 @@ export default function CompetitionEnrollments() {
       return next;
     });
   };
-
-  const toggleClassesRange = (competitionId: string, targetClasses: string[]) => {
-    if (!isAdmin) return;
-
-    // Check if all target classes are currently allowed
-    const allAllowed = targetClasses.every(cls => getClassAllowed(competitionId, cls));
-    const newValue = !allAllowed;
-
-    setPendingClassChanges(prev => {
-      const next = new Map(prev);
-      targetClasses.forEach(cls => {
-        const key = makeKey(competitionId, cls);
-        if (getClassAllowed(competitionId, cls) !== newValue) {
-          next.set(key, newValue);
-        }
-      });
-      return next;
-    });
-  };
-
-  const toggleAllClasses = (competitionId: string) => toggleClassesRange(competitionId, DANCE_CLASSES);
-  const toggleSyllabusClasses = (competitionId: string) => toggleClassesRange(competitionId, ["B1", "B2", "B3", "B", "C", "D"]);
 
   const toggleEventTypesRange = (competitionId: string, discipline: string, targetNames: string[]) => {
     if (!isAdmin) return;
@@ -234,28 +191,10 @@ export default function CompetitionEnrollments() {
   };
 
   const saveAllChanges = async () => {
-    if (pendingClassChanges.size === 0 && pendingEventChanges.size === 0) return;
+    if (pendingEventChanges.size === 0) return;
     setSaving(true);
     try {
-      // 1. Save Class Changes
-      const classUpsertPromises = [];
-      for (const [key, isAllowed] of pendingClassChanges) {
-        const { competitionId, className } = parseKey(key);
-        const existingRule = classRules.find(
-          r => r.competition_id === competitionId && r.class === className
-        );
-        if (existingRule) {
-          classUpsertPromises.push(
-            supabase.from("competition_class_rules").update({ is_allowed: isAllowed }).eq("competition_id", competitionId).eq("class", className)
-          );
-        } else {
-          classUpsertPromises.push(
-            supabase.from("competition_class_rules").insert({ competition_id: competitionId, class: className, is_allowed: isAllowed })
-          );
-        }
-      }
-
-      // 2. Save Event Changes
+      // Save Event Changes
       const eventPromises = [];
       for (const [key, isActive] of pendingEventChanges) {
         const [competitionId, fullEventName] = key.split("::");
@@ -292,12 +231,11 @@ export default function CompetitionEnrollments() {
         }
       }
 
-      const results = await Promise.all([...classUpsertPromises, ...eventPromises]);
+      const results = await Promise.all(eventPromises);
       const hasError = results.some(r => r.error);
       if (hasError) throw results.find(r => r.error)?.error;
 
       toast({ title: "Salvato", description: "Modifiche salvate con successo" });
-      setPendingClassChanges(new Map());
       setPendingEventChanges(new Map());
       fetchData(true); // Background refresh
     } catch (error) {
@@ -308,11 +246,59 @@ export default function CompetitionEnrollments() {
     }
   };
 
+  const exportCompetitionsToExcel = async () => {
+    try {
+      const { data: allCompetitions, error } = await supabase
+        .from("competitions")
+        .select("*")
+        .order("date", { ascending: true });
+
+      if (error) throw error;
+
+      const exportData = allCompetitions.map(comp => ({
+        "Nome": comp.name,
+        "Data": comp.date,
+        "Data Fine": comp.end_date || "",
+        "Luogo": comp.location || "",
+        "Scadenza": comp.registration_deadline || "",
+        "Data Aumento Quota": comp.late_fee_deadline || "",
+        "Descrizione": comp.description || "",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Competizioni");
+      XLSX.writeFile(wb, "Competizioni_Aggiornate.xlsx");
+
+      toast({
+        title: "Excel generato",
+        description: "Il file delle competizioni è stato aggiornato e scaricato."
+      });
+    } catch (error) {
+      console.error("Error exporting competitions:", error);
+      toast({
+        title: "Errore export",
+        description: "Impossibile generare il file Excel",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCompetitionAdded = async () => {
+    await fetchData(true);
+    await exportCompetitionsToExcel();
+  };
+
   const getCompetitionEventTypes = (competitionId: string) => {
     return eventTypes.filter(e => e.competition_id === competitionId);
   };
 
-  const formatDate = (date: string) => {
+  const formatDate = (date: string, endDate?: string | null) => {
+    const start = new Date(date).toLocaleDateString("it-IT", { day: "2-digit", month: "short" });
+    if (endDate && endDate !== date) {
+      const end = new Date(endDate).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
+      return `${start} - ${end}`;
+    }
     return new Date(date).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
   };
 
@@ -338,11 +324,12 @@ export default function CompetitionEnrollments() {
             <h1 className="text-xl font-display font-bold">Iscrizioni Gara</h1>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && <AddCompetitionDialog onSuccess={handleCompetitionAdded} />}
             {isAdmin && <CompetitionsImport onImportComplete={() => fetchData(true)} />}
-            {isAdmin && (pendingClassChanges.size > 0 || pendingEventChanges.size > 0) && (
+            {isAdmin && pendingEventChanges.size > 0 && (
               <Button onClick={saveAllChanges} disabled={saving} className="gap-2">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Salva ({pendingClassChanges.size + pendingEventChanges.size})
+                Salva ({pendingEventChanges.size})
               </Button>
             )}
           </div>
@@ -361,246 +348,144 @@ export default function CompetitionEnrollments() {
             <CardContent className="py-12 text-center">
               <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Nessuna competizione</h3>
-              <p className="text-muted-foreground">Importa le competizioni dalla dashboard per configurare le classi ammesse.</p>
+              <p className="text-muted-foreground">Importa le competizioni dalla dashboard per configurare i tipi di gara.</p>
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="classes" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="classes">Classi Ammesse</TabsTrigger>
-              <TabsTrigger value="events">Tipi di Gara</TabsTrigger>
-            </TabsList>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-accent" />
+                  Tipi di Gara per Competizione
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configura quali tipi di gara sono disponibili per ogni competizione (es. Adult Open, Rising Star, ecc.).
+                  Ogni tipo ha restrizioni di classe e di età predefinite.
+                </p>
+              </CardContent>
+            </Card>
 
-            <TabsContent value="classes" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-accent" />
-                    Configura Classi per Competizione
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Seleziona le classi ammesse per ogni competizione. Le coppie potranno iscriversi solo se la loro classe è abilitata.
-                  </p>
-                </CardContent>
-              </Card>
+            {competitions.map(competition => {
+              const compEvents = getCompetitionEventTypes(competition.id);
+              const isExpanded = selectedCompetitionForEvents === competition.id;
 
-              <div className="overflow-x-auto">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th className="min-w-[200px]">Competizione</th>
-                      <th className="text-center">Data</th>
-                      <th className="text-center px-2">
-                        <span className="sr-only">Azioni</span>
-                      </th>
-                      {DANCE_CLASSES.map(cls => (
-                        <th key={cls} className="text-center w-14 text-xs">{cls}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {competitions.map(competition => (
-                      <tr key={competition.id}>
-                        <td className="font-medium">{competition.name}</td>
-                        <td className="text-center text-muted-foreground">{formatDate(competition.date)}</td>
-                        <td className="text-center">
-                          {isAdmin && (
-                            <div className="flex flex-wrap gap-1 justify-center min-w-[280px]">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600"
-                                onClick={() => toggleAllClasses(competition.id)}
-                              >
-                                Championship
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-600"
-                                onClick={() => toggleSyllabusClasses(competition.id)}
-                              >
-                                Syllabus
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-[10px] bg-purple-50 hover:bg-purple-100 text-purple-600"
-                                onClick={() => toggleAllClasses(competition.id)}
-                              >
-                                Star Cup
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-[10px] bg-green-50 hover:bg-green-100 text-green-600"
-                                onClick={() => toggleSyllabusClasses(competition.id)}
-                              >
-                                Gara di Ballo
-                              </Button>
-                            </div>
-                          )}
-                        </td>
-                        {DANCE_CLASSES.map(cls => {
-                          const isAllowed = getClassAllowed(competition.id, cls);
-                          const isPending = pendingClassChanges.has(makeKey(competition.id, cls));
-                          return (
-                            <td key={cls} className="text-center">
-                              <div className="flex justify-center">
-                                <Checkbox
-                                  checked={isAllowed}
-                                  onCheckedChange={() => toggleClass(competition.id, cls)}
-                                  disabled={!isAdmin}
-                                  className={isPending ? "ring-2 ring-primary" : ""}
-                                />
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="events" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-accent" />
-                    Tipi di Gara per Competizione
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Configura quali tipi di gara sono disponibili per ogni competizione (es. Adult Open, Rising Star, ecc.).
-                    Ogni tipo ha restrizioni di classe e di età predefinite.
-                  </p>
-                </CardContent>
-              </Card>
-
-              {competitions.map(competition => {
-                const compEvents = getCompetitionEventTypes(competition.id);
-                const isExpanded = selectedCompetitionForEvents === competition.id;
-
-                return (
-                  <Card key={competition.id}>
-                    <CardHeader
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
-                    >
-                      <CardTitle className="text-base flex items-center justify-between">
-                        <span>{competition.name} - {formatDate(competition.date)}</span>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <Badge count={compEvents.length} />
-                          </div>
+              return (
+                <Card key={competition.id}>
+                  <CardHeader
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
+                  >
+                    <CardTitle className="text-base flex items-center justify-between">
+                      <span>{competition.name} - {formatDate(competition.date, competition.end_date)}</span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Badge count={compEvents.length} />
                         </div>
-                      </CardTitle>
-                    </CardHeader>
-                    {isExpanded && (
-                      <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {DISCIPLINES.map(discipline => (
-                            <div key={discipline} className="space-y-4">
-                              <div className="flex items-center justify-between border-b pb-2">
-                                <h3 className="font-semibold">{discipline}</h3>
-                                {isAdmin && (
-                                  <div className="flex flex-col gap-1">
-                                    <div className="flex gap-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 w-full"
-                                        onClick={(e) => { e.stopPropagation(); toggleAllEvents(competition.id, discipline); }}
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  {isExpanded && (
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {DISCIPLINES.map(discipline => (
+                          <div key={discipline} className="space-y-4">
+                            <div className="flex items-center justify-between border-b pb-2">
+                              <h3 className="font-semibold">{discipline}</h3>
+                              {isAdmin && (
+                                <div className="flex flex-col gap-1">
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 w-full"
+                                      onClick={(e) => { e.stopPropagation(); toggleAllEvents(competition.id, discipline); }}
+                                    >
+                                      Championship
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-[10px] bg-purple-50 hover:bg-purple-100 text-purple-600 w-full"
+                                      onClick={(e) => { e.stopPropagation(); toggleAllEvents(competition.id, discipline); }}
+                                    >
+                                      Star Cup
+                                    </Button>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-600 w-full"
+                                      onClick={(e) => { e.stopPropagation(); toggleSyllabusEvents(competition.id, discipline); }}
+                                    >
+                                      Syllabus
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-[10px] bg-green-50 hover:bg-green-100 text-green-600 w-full"
+                                      onClick={(e) => { e.stopPropagation(); toggleSyllabusEvents(competition.id, discipline); }}
+                                    >
+                                      Gara di Ballo
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              {getEventsForDiscipline(discipline).map(preset => {
+                                const fullEventName = `${discipline} - ${preset.name}`;
+                                const isActive = getEventActive(competition.id, fullEventName);
+                                const pendingKey = makeEventKey(competition.id, fullEventName);
+                                const isPending = pendingEventChanges.has(pendingKey);
+
+                                return (
+                                  <div
+                                    key={fullEventName}
+                                    className={`
+                                      flex items-start gap-3 p-3 rounded-lg border transition-colors
+                                      ${isActive ? "bg-primary/5 border-primary/20" : "bg-card border-border hover:border-primary/20"}
+                                    `}
+                                  >
+                                    <Checkbox
+                                      id={`${competition.id}-${fullEventName}`}
+                                      checked={isActive}
+                                      onCheckedChange={() => toggleEventType(competition.id, fullEventName)}
+                                      disabled={!isAdmin}
+                                      className={isPending ? "ring-2 ring-primary mt-1" : "mt-1"}
+                                    />
+                                    <div className="space-y-1">
+                                      <label
+                                        htmlFor={`${competition.id}-${fullEventName}`}
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                                       >
-                                        Championship
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-[10px] bg-purple-50 hover:bg-purple-100 text-purple-600 w-full"
-                                        onClick={(e) => { e.stopPropagation(); toggleAllEvents(competition.id, discipline); }}
-                                      >
-                                        Star Cup
-                                      </Button>
-                                    </div>
-                                    <div className="flex gap-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-600 w-full"
-                                        onClick={(e) => { e.stopPropagation(); toggleSyllabusEvents(competition.id, discipline); }}
-                                      >
-                                        Syllabus
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-[10px] bg-green-50 hover:bg-green-100 text-green-600 w-full"
-                                        onClick={(e) => { e.stopPropagation(); toggleSyllabusEvents(competition.id, discipline); }}
-                                      >
-                                        Gara di Ballo
-                                      </Button>
+                                        {preset.name}
+                                      </label>
+                                      <p className="text-xs text-muted-foreground">
+                                        Classi: {preset.classes.join(", ")}
+                                      </p>
+                                      {(preset.minAge || preset.maxAge) && (
+                                        <p className="text-xs text-muted-foreground">
+                                          Età: {preset.minAge ? `${preset.minAge}+` : ""}{preset.minAge && preset.maxAge ? " - " : ""}{preset.maxAge ? `max ${preset.maxAge}` : ""}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
-                                )}
-                              </div>
-                              <div className="space-y-2">
-                                {getEventsForDiscipline(discipline).map(preset => {
-                                  const fullEventName = `${discipline} - ${preset.name}`;
-                                  const isActive = getEventActive(competition.id, fullEventName);
-                                  const pendingKey = makeEventKey(competition.id, fullEventName);
-                                  const isPending = pendingEventChanges.has(pendingKey);
-
-                                  return (
-                                    <div
-                                      key={fullEventName}
-                                      className={`
-                                        flex items-start gap-3 p-3 rounded-lg border transition-colors
-                                        ${isActive ? "bg-primary/5 border-primary/20" : "bg-card border-border hover:border-primary/20"}
-                                      `}
-                                    >
-                                      <Checkbox
-                                        id={`${competition.id}-${fullEventName}`}
-                                        checked={isActive}
-                                        onCheckedChange={() => toggleEventType(competition.id, fullEventName)}
-                                        disabled={!isAdmin}
-                                        className={isPending ? "ring-2 ring-primary mt-1" : "mt-1"}
-                                      />
-                                      <div className="space-y-1">
-                                        <label
-                                          htmlFor={`${competition.id}-${fullEventName}`}
-                                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                        >
-                                          {preset.name}
-                                        </label>
-                                        <p className="text-xs text-muted-foreground">
-                                          Classi: {preset.classes.join(", ")}
-                                        </p>
-                                        {(preset.minAge || preset.maxAge) && (
-                                          <p className="text-xs text-muted-foreground">
-                                            Età: {preset.minAge ? `${preset.minAge}+` : ""}{preset.minAge && preset.maxAge ? " - " : ""}{preset.maxAge ? `max ${preset.maxAge}` : ""}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
+                                );
+                              })}
                             </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    )}
-                  </Card>
-                );
-              })}
-            </TabsContent>
-          </Tabs>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
         )}
       </main>
     </div>

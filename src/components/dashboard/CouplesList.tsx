@@ -45,106 +45,74 @@ interface CouplesListProps {
 
 export default function CouplesList({ couples, athletes, profiles, onClose }: CouplesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const getAthlete = (id: string) => athletes.find(a => a.id === id);
+  const athleteMap = useMemo(() => new Map(athletes.map(a => [a.id, a])), [athletes]);
 
-  // Get class for discipline - uses discipline_info if available, otherwise falls back to main class
   const getClassForDiscipline = (couple: Couple, key: string) => {
-    // Check for specific class in discipline_info
-    if (couple.discipline_info && couple.discipline_info[key]) {
-      return couple.discipline_info[key];
-    }
-
-    // Fall back to main class if the discipline is in the disciplines array
+    if (couple.discipline_info && couple.discipline_info[key]) return couple.discipline_info[key];
     const mappedKey = key === "show_dance_sa" || key === "show_dance_classic" ? "show_dance" : key;
 
-    // SPECIAL RULE: For "Combinata", the class must be the highest among Standard, Latino, and Combinata itself
     if (key === "combinata" && couple.disciplines?.includes("combinata")) {
       const combClass = (couple.discipline_info && couple.discipline_info[key]) || couple.class || "D";
       const latClass = couple.discipline_info?.["latino"];
       const stdClass = couple.discipline_info?.["standard"];
-
       let resolvedClass = combClass;
       if (latClass) resolvedClass = getBestClass(resolvedClass, latClass);
       if (stdClass) resolvedClass = getBestClass(resolvedClass, stdClass);
       return resolvedClass;
     }
 
-    if (couple.disciplines?.includes(mappedKey)) {
-      return couple.class || "-";
-    }
-
-    return "-";
+    return couple.disciplines?.includes(mappedKey) ? (couple.class || "-") : "-";
   };
 
-  const getCombinedResponsabili = (athlete1?: Athlete, athlete2?: Athlete) => {
-    const resps = new Set<string>();
-    athlete1?.responsabili?.forEach(r => resps.add(r.trim()));
-    athlete2?.responsabili?.forEach(r => resps.add(r.trim()));
-    return Array.from(resps);
-  };
+  const registeredProfileNames = useMemo(() =>
+    new Set(profiles.map(p => p.full_name.toLowerCase().trim())),
+    [profiles]
+  );
 
-  const registeredProfileNames = new Set(profiles.map(p => p.full_name.toLowerCase().trim()));
-
-  const sortedCouples = useMemo(() => {
+  const sortedFilteredCouples = useMemo(() => {
     const referenceDate = new Date();
+    const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
 
-    return [...couples]
-      .filter(couple => {
-        if (!searchQuery) return true;
-        const a1 = getAthlete(couple.athlete1_id);
-        const a2 = getAthlete(couple.athlete2_id);
-        const query = searchQuery.toLowerCase();
-        return (
-          (a1 && (a1.first_name.toLowerCase().includes(query) || a1.last_name.toLowerCase().includes(query))) ||
-          (a2 && (a2.first_name.toLowerCase().includes(query) || a2.last_name.toLowerCase().includes(query)))
-        );
-      })
-      .sort((a, b) => {
-        const athlete1A = getAthlete(a.athlete1_id);
-        const athlete2A = getAthlete(a.athlete2_id);
-        const athlete1B = getAthlete(b.athlete1_id);
-        const athlete2B = getAthlete(b.athlete2_id);
+    const filtered = couples.filter(couple => {
+      if (queryWords.length === 0) return true;
+      const a1 = athleteMap.get(couple.athlete1_id);
+      const a2 = athleteMap.get(couple.athlete2_id);
+      const searchable = [
+        a1?.first_name, a1?.last_name, a1?.code,
+        a2?.first_name, a2?.last_name, a2?.code
+      ].map(s => (s || "").toLowerCase());
+      return queryWords.every(word => searchable.some(s => s.includes(word)));
+    });
 
-        const getCoupleAgeInfo = (ath1?: Athlete, ath2?: Athlete) => {
-          const age1 = ath1?.birth_date ? getSportsAge(ath1.birth_date, referenceDate) : null;
-          const age2 = ath2?.birth_date ? getSportsAge(ath2.birth_date, referenceDate) : null;
+    return filtered.sort((a, b) => {
+      const getAgeInfo = (ath1Id: string, ath2Id: string) => {
+        const ath1 = athleteMap.get(ath1Id);
+        const ath2 = athleteMap.get(ath2Id);
+        const age1 = ath1?.birth_date ? getSportsAge(ath1.birth_date, referenceDate) : null;
+        const age2 = ath2?.birth_date ? getSportsAge(ath2.birth_date, referenceDate) : null;
+        if (age1 === null && age2 === null) return null;
+        const validAges = [age1, age2].filter((age): age is number => age !== null);
+        return { primary: Math.max(...validAges), secondary: Math.min(...validAges) };
+      };
 
-          if (age1 === null && age2 === null) return null;
-
-          const validAges = [age1, age2].filter((age): age is number => age !== null);
-          return {
-            primary: Math.max(...validAges),
-            secondary: Math.min(...validAges)
-          };
-        };
-
-        const ageInfoA = getCoupleAgeInfo(athlete1A, athlete2A);
-        const ageInfoB = getCoupleAgeInfo(athlete1B, athlete2B);
-
-        // Handle missing ages (put at the end)
-        if (!ageInfoA && !ageInfoB) return 0;
-        if (!ageInfoA) return 1;
-        if (!ageInfoB) return -1;
-
-        // Sort by primary age (older partner)
-        if (ageInfoA.primary !== ageInfoB.primary) {
-          return ageInfoA.primary - ageInfoB.primary;
-        }
-
-        // Secondary sort by younger partner
-        return ageInfoA.secondary - ageInfoB.secondary;
-      });
-  }, [couples, athletes, searchQuery]);
+      const ageA = getAgeInfo(a.athlete1_id, a.athlete2_id);
+      const ageB = getAgeInfo(b.athlete1_id, b.athlete2_id);
+      if (!ageA && !ageB) return 0;
+      if (!ageA) return 1;
+      if (!ageB) return -1;
+      return ageA.primary !== ageB.primary ? ageA.primary - ageB.primary : ageA.secondary - ageB.secondary;
+    });
+  }, [couples, athleteMap, searchQuery]);
 
   return (
-    <Card className="animate-fade-in">
+    <Card className="animate-fade-in shadow-xl border-success/10">
       <CardHeader>
         <div className="flex flex-row items-center justify-between mb-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-success" />
             Coppie Attive ({couples.length})
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-destructive/10 hover:text-destructive">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -154,164 +122,141 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
             placeholder="Cerca per nome ballerino/a..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-muted/30 focus-visible:ring-success/30"
           />
         </div>
       </CardHeader>
       <CardContent>
-        {couples.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">Nessuna coppia attiva</p>
+        {sortedFilteredCouples.length === 0 ? (
+          <p className="text-muted-foreground text-center py-12 bg-muted/20 rounded-lg">Nessuna coppia trovata</p>
         ) : (
           <div className="space-y-4">
-            {/* Mobile View: Cards */}
+            {/* Mobile View */}
             <div className="md:hidden space-y-4">
-              {sortedCouples.map((couple) => {
-                let athlete1 = getAthlete(couple.athlete1_id);
-                let athlete2 = getAthlete(couple.athlete2_id);
-
-                // Swap logic (copied from desktop view)
-                if (athlete2?.gender === 'M' && athlete1?.gender !== 'M') {
-                  [athlete1, athlete2] = [athlete2, athlete1];
-                } else if (athlete1?.gender === 'F' && athlete2?.gender === 'M') {
-                  [athlete1, athlete2] = [athlete2, athlete1];
+              {sortedFilteredCouples.map((couple) => {
+                let a1 = athleteMap.get(couple.athlete1_id);
+                let a2 = athleteMap.get(couple.athlete2_id);
+                if ((a2?.gender === 'M' && a1?.gender !== 'M') || (a1?.gender === 'F' && a2?.gender === 'M')) {
+                  [a1, a2] = [a2, a1];
                 }
-
-                const responsabili = getCombinedResponsabili(athlete1, athlete2);
-                const categoryCheck = validateCoupleCategory({
-                  storedCategory: couple.category,
-                  athlete1BirthDateISO: athlete1?.birth_date ?? null,
-                  athlete2BirthDateISO: athlete2?.birth_date ?? null,
-                });
+                const resps = Array.from(new Set([...(a1?.responsabili || []), ...(a2?.responsabili || [])].map(r => r.trim())));
 
                 return (
-                  <div key={couple.id} className="p-4 rounded-lg border bg-card shadow-sm">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-muted-foreground w-12">{athlete1?.code}</span>
-                          <span className="font-medium">{athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-muted-foreground w-12">{athlete2?.code}</span>
-                          <span className="font-medium">{athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}</span>
-                        </div>
+                  <div key={couple.id} className="p-4 rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 bg-muted/20 p-2 rounded-lg">
+                        <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">CAV</span>
+                        <span className="font-bold text-sm text-primary/80">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-muted/20 p-2 rounded-lg">
+                        <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">DAM</span>
+                        <span className="font-bold text-sm text-primary/80">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</span>
                       </div>
                     </div>
-
-                    <div className="mb-3 p-2 bg-muted/50 rounded flex justify-between items-center">
-                      <span className="text-sm font-semibold">{couple.category}</span>
-                      <div className="flex gap-2">
-                        <div className="text-xs text-center">
-                          <span className="block text-muted-foreground">LAT</span>
-                          <span className="font-mono">{getClassForDiscipline(couple, "latino")}</span>
-                        </div>
-                        <div className="text-xs text-center">
-                          <span className="block text-muted-foreground">STD</span>
-                          <span className="font-mono">{getClassForDiscipline(couple, "standard")}</span>
-                        </div>
-                        <div className="text-xs text-center">
-                          <span className="block text-muted-foreground">CMB</span>
-                          <span className="font-mono">{getClassForDiscipline(couple, "combinata")}</span>
-                        </div>
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <div className="col-span-3 bg-success/5 p-2 rounded-lg border border-success/10 mb-1">
+                        <p className="text-[10px] uppercase font-bold text-success/70 tracking-tight">Categoria Selezionata</p>
+                        <p className="font-bold text-success/90">{couple.category}</p>
+                      </div>
+                      <div className="text-center p-1.5 bg-muted/30 rounded-lg border border-border/50">
+                        <span className="block text-[8px] font-black text-muted-foreground uppercase mb-0.5">Latino</span>
+                        <span className="font-mono text-xs font-bold">{getClassForDiscipline(couple, "latino")}</span>
+                      </div>
+                      <div className="text-center p-1.5 bg-muted/30 rounded-lg border border-border/50">
+                        <span className="block text-[8px] font-black text-muted-foreground uppercase mb-0.5">Standard</span>
+                        <span className="font-mono text-xs font-bold">{getClassForDiscipline(couple, "standard")}</span>
+                      </div>
+                      <div className="text-center p-1.5 bg-muted/30 rounded-lg border border-border/50">
+                        <span className="block text-[8px] font-black text-muted-foreground uppercase mb-0.5">Combinata</span>
+                        <span className="font-mono text-xs font-bold">{getClassForDiscipline(couple, "combinata")}</span>
                       </div>
                     </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      Resp: {responsabili.join(", ") || "-"}
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight mb-1">Responsabili Uniti</p>
+                      <div className="flex flex-wrap gap-1 text-[11px]">
+                        {resps.length ? resps.map((name, idx) => (
+                          <span key={idx} className={registeredProfileNames.has(name.toLowerCase().trim()) ? "font-bold text-primary" : "text-muted-foreground/70"}>
+                            {name}{idx < resps.length - 1 ? "," : ""}
+                          </span>
+                        )) : <span className="italic text-muted-foreground/30">Nessuno</span>}
+                      </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="data-table">
-                <thead>
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-border/50">
+              <table className="w-full border-collapse text-[11px]">
+                <thead className="bg-teal-100 border-b border-teal-200 text-left">
                   <tr>
-                    <th>Codice Cavaliere</th>
-                    <th>Cavaliere</th>
-                    <th>Codice Dama</th>
-                    <th>Dama</th>
-                    <th>Categoria</th>
-                    <th>Danze Latino Americane</th>
-                    <th>Danze Standard</th>
-                    <th>Combinata 8/10 Danze</th>
-                    <th>South America Showdance</th>
-                    <th>Classic Showdance</th>
-                    <th>Responsabili</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cav. Cod.</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cavaliere</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dam. Cod.</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dama</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700 text-center min-w-[120px]">Categoria</th>
+                    <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">LAT</th>
+                    <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">STD</th>
+                    <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">CMB</th>
+                    <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">SA</th>
+                    <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">CL</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Responsabili</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {sortedCouples.map((couple) => {
-                    let athlete1 = getAthlete(couple.athlete1_id);
-                    let athlete2 = getAthlete(couple.athlete2_id);
-
-                    // Ensure Male is in the First Position (Cavaliere)
-                    // If Athlete 2 is Male and Athlete 1 is NOT Male, Swap.
-                    if (athlete2?.gender === 'M' && athlete1?.gender !== 'M') {
-                      [athlete1, athlete2] = [athlete2, athlete1];
-                    } else if (athlete1?.gender === 'F' && athlete2?.gender === 'M') {
-                      // Double check explicit Female in pos 1
-                      [athlete1, athlete2] = [athlete2, athlete1];
+                <tbody className="divide-y divide-border/50">
+                  {sortedFilteredCouples.map((couple) => {
+                    let a1 = athleteMap.get(couple.athlete1_id);
+                    let a2 = athleteMap.get(couple.athlete2_id);
+                    if ((a2?.gender === 'M' && a1?.gender !== 'M') || (a1?.gender === 'F' && a2?.gender === 'M')) {
+                      [a1, a2] = [a2, a1];
                     }
-
-
-                    const responsabili = getCombinedResponsabili(athlete1, athlete2);
-
+                    const resps = Array.from(new Set([...(a1?.responsabili || []), ...(a2?.responsabili || [])].map(r => r.trim())));
                     const categoryCheck = validateCoupleCategory({
                       storedCategory: couple.category,
-                      athlete1BirthDateISO: athlete1?.birth_date ?? null,
-                      athlete2BirthDateISO: athlete2?.birth_date ?? null,
+                      athlete1BirthDateISO: a1?.birth_date ?? null,
+                      athlete2BirthDateISO: a2?.birth_date ?? null,
                     });
 
                     return (
-                      <tr key={couple.id}>
-                        <td className="font-mono text-sm">{athlete1?.code || "-"}</td>
-                        <td className="font-medium">
-                          {athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}
-                        </td>
-                        <td className="font-mono text-sm">{athlete2?.code || "-"}</td>
-                        <td className="font-medium">
-                          {athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}
-                        </td>
-                        <td>
-                          <div className="flex items-center gap-2">
-                            <span>{couple.category}</span>
-                            {categoryCheck.ok ? null : (
+                      <tr key={couple.id} className="hover:bg-muted/80 transition-colors">
+                        <td className="px-3 py-2.5 font-mono text-muted-foreground">{a1?.code || "-"}</td>
+                        <td className="px-3 py-2.5 font-bold text-primary/80">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
+                        <td className="px-3 py-2.5 font-mono text-muted-foreground">{a2?.code || "-"}</td>
+                        <td className="px-3 py-2.5 font-bold text-primary/80">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
+                        <td className="px-3 py-2.5 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span className="font-bold">{couple.category}</span>
+                            {!categoryCheck.ok && (
                               <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span
-                                    className="status-badge status-badge-warning cursor-help"
-                                  >
-                                    Cat.?
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{"reason" in categoryCheck ? categoryCheck.reason : "Errore non specificato"}</p>
-                                </TooltipContent>
+                                <TooltipTrigger><span className="w-3.5 h-3.5 rounded-full bg-warning/20 text-warning-foreground flex items-center justify-center text-[8px] font-black cursor-help">!</span></TooltipTrigger>
+                                <TooltipContent className="text-[10px]"><p>{("reason" in categoryCheck && categoryCheck.reason) || "Errore cat."}</p></TooltipContent>
                               </Tooltip>
                             )}
                           </div>
                         </td>
-                        <td className="text-center">{getClassForDiscipline(couple, "latino")}</td>
-                        <td className="text-center">{getClassForDiscipline(couple, "standard")}</td>
-                        <td className="text-center">{getClassForDiscipline(couple, "combinata")}</td>
-                        <td className="text-center">{getClassForDiscipline(couple, "show_dance_sa")}</td>
-                        <td className="text-center">{getClassForDiscipline(couple, "show_dance_classic")}</td>
-                        <td className="text-sm">
-                          {responsabili.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {responsabili.map((name, idx) => {
-                                const isRegistered = registeredProfileNames.has(name.toLowerCase().trim());
-                                return (
-                                  <span key={idx} className={isRegistered ? "font-bold text-primary" : ""}>
-                                    {name}{idx < responsabili.length - 1 ? ", " : ""}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          ) : "-"}
+                        <td className="px-2 py-2.5 text-center font-mono font-bold">{getClassForDiscipline(couple, "latino")}</td>
+                        <td className="px-2 py-2.5 text-center font-mono font-bold">{getClassForDiscipline(couple, "standard")}</td>
+                        <td className="px-2 py-2.5 text-center font-mono font-bold">{getClassForDiscipline(couple, "combinata")}</td>
+                        <td className="px-2 py-2.5 text-center font-mono font-bold">{getClassForDiscipline(couple, "show_dance_sa")}</td>
+                        <td className="px-2 py-2.5 text-center font-mono font-bold">{getClassForDiscipline(couple, "show_dance_classic")}</td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex flex-col gap-y-0.5">
+                            {Array.from({ length: Math.ceil(resps.length / 2) }, (_, i) =>
+                              resps.slice(i * 2, i * 2 + 2)
+                            ).map((pair, rowIdx) => (
+                              <div key={rowIdx} className="flex gap-x-1">
+                                {pair.map((name, idx) => {
+                                  const globalIdx = rowIdx * 2 + idx;
+                                  return (
+                                    <span key={idx} className={registeredProfileNames.has(name.toLowerCase().trim()) ? "font-black text-primary" : "text-muted-foreground/60"}>
+                                      {name}{globalIdx < resps.length - 1 ? "," : ""}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
                         </td>
                       </tr>
                     );

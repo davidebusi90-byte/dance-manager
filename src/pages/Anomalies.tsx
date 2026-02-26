@@ -71,7 +71,7 @@ export default function Anomalies() {
       let fetchedAthletes = [...rawAthletes];
       let fetchedCouples = [...rawCouples];
 
-      if (role !== "admin") {
+      if (role !== "admin" && role !== "supervisor") {
         const currentUserProfile = (profilesRes.data as any[]).find(p => p.user_id === userId);
         if (currentUserProfile) {
           const titles = ["maestro", "maestra", "m.", "prof.", "prof", "istruttore"];

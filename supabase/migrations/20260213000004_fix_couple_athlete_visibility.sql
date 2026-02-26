@@ -5,6 +5,7 @@
 DROP POLICY IF EXISTS "Instructors can view their linked athletes" ON public.athletes;
 
 -- Create a new policy that allows viewing both athletes in a couple
+DROP POLICY IF EXISTS "Instructors can view athletes in their couples" ON public.athletes;
 CREATE POLICY "Instructors can view athletes in their couples"
   ON public.athletes FOR SELECT
   TO authenticated

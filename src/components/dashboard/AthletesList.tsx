@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
-import { validateCategoryMatch, formatCategoryDisplay, CategoryLabel, getSportsAge } from "@/lib/category-validation";
+import { validateCategoryMatch, formatCategoryDisplay, getSportsAge } from "@/lib/category-validation";
 
 interface Athlete {
   id: string;
@@ -57,10 +57,21 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
       : { status: "valid", label: "Valido", class: "status-badge-success" };
   };
 
-  // Pre-calculate coupled athletes set for quick lookup
+  const validCouples = useMemo(() => couples.filter(c => c.athlete1_id !== c.athlete2_id), [couples]);
+
   const athleteIdsInCouples = useMemo(() => new Set(
-    couples.flatMap(c => [c.athlete1_id, c.athlete2_id])
-  ), [couples]);
+    validCouples.flatMap(c => [c.athlete1_id, c.athlete2_id])
+  ), [validCouples]);
+
+  const uniqueAthletes = useMemo(() => {
+    const map = new Map<string, Athlete>();
+    athletes.forEach(a => {
+      if (!map.has(a.code)) {
+        map.set(a.code, a);
+      }
+    });
+    return Array.from(map.values());
+  }, [athletes]);
 
   const sortedAthletes = useMemo(() => {
     const referenceDate = new Date();
@@ -70,69 +81,76 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
       return isNaN(age) ? -1 : age;
     };
 
-    // Helper to get athlete object
-    const getAthlete = (id: string) => athletes.find(a => a.id === id);
+    const athleteMap = new Map(uniqueAthletes.map(a => [a.id, a]));
 
-    // 1. Process Couples
-    const coupledPairs = couples.map(couple => {
-      const a1 = getAthlete(couple.athlete1_id);
-      const a2 = getAthlete(couple.athlete2_id);
-
+    const coupledPairs = validCouples.map(couple => {
+      const a1 = athleteMap.get(couple.athlete1_id);
+      const a2 = athleteMap.get(couple.athlete2_id);
       if (!a1 || !a2) return null;
 
       const age1 = getAge(a1.birth_date);
       const age2 = getAge(a2.birth_date);
-
-      // Determination of "Male" and "Female" for ordering within couple using explicit Gender column
       const isA1Male = (a1.gender || "").toUpperCase() === 'M';
       const isA2Male = (a2.gender || "").toUpperCase() === 'M';
 
       let orderedPair: Athlete[] = [];
       if (isA1Male && !isA2Male) orderedPair = [a1, a2];
       else if (!isA1Male && isA2Male) orderedPair = [a2, a1];
-      else orderedPair = [a1, a2]; // Keep original order if same gender or unknown
-
-      // Sort criteria for couples: "dal più piccola al più grande" (Youngest to Oldest)
-      // Use minimum age of the couple ensuring valid ages are prioritized?
-      // If age is -1 (invalid), it puts them at the top. Let's keep strict sorting.
-      const coupleMinAge = Math.min(age1, age2);
+      else orderedPair = [a1, a2];
 
       return {
         pair: orderedPair,
-        sortKey: coupleMinAge
+        sortKey: Math.min(age1, age2)
       };
     }).filter((x): x is { pair: Athlete[], sortKey: number } => x !== null);
 
-    // Sort couples by age (youngest to oldest)
     coupledPairs.sort((a, b) => a.sortKey - b.sortKey);
-
-    // Flatten couples
     const sortedCoupledAthletes = coupledPairs.flatMap(cp => cp.pair);
 
-    // 2. Process Singles
-    const singleAthletes = athletes.filter(a => !athleteIdsInCouples.has(a.id));
-
-    // Explicitly categorize by Gender column
+    const singleAthletes = uniqueAthletes.filter(a => !athleteIdsInCouples.has(a.id));
     const singleMales = singleAthletes.filter(a => (a.gender || "").toUpperCase() === 'M');
     const singleFemales = singleAthletes.filter(a => (a.gender || "").toUpperCase() !== 'M');
 
-    // Sort singles by age (ascending)
-    singleMales.sort((a, b) => getAge(a.birth_date) - getAge(b.birth_date));
-    singleFemales.sort((a, b) => getAge(a.birth_date) - getAge(b.birth_date));
+    const sortByAge = (a: Athlete, b: Athlete) => getAge(a.birth_date) - getAge(b.birth_date);
+    singleMales.sort(sortByAge);
+    singleFemales.sort(sortByAge);
 
-    // Combine all: Couples -> Single Males -> Single Females
-    return [...sortedCoupledAthletes, ...singleMales, ...singleFemales];
-  }, [athletes, couples, athleteIdsInCouples]);
+    // Final deduplication by code to handle duplicate DB records with same code but different IDs
+    const seen = new Set<string>();
+    const deduped = [...sortedCoupledAthletes, ...singleMales, ...singleFemales].filter(a => {
+      if (seen.has(a.code)) return false;
+      seen.add(a.code);
+      return true;
+    });
+
+    return deduped;
+  }, [uniqueAthletes, validCouples, athleteIdsInCouples]);
+
+  const filteredSortedAthletes = useMemo(() => {
+    if (!searchQuery) return sortedAthletes;
+    const words = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+    return sortedAthletes.filter(a => {
+      const first = (a.first_name || "").toLowerCase();
+      const last = (a.last_name || "").toLowerCase();
+      const code = (a.code || "").toLowerCase();
+      return words.every(w => first.includes(w) || last.includes(w) || code.includes(w));
+    });
+  }, [sortedAthletes, searchQuery]);
+
+  const registeredProfileNames = useMemo(() =>
+    new Set(profiles.map(p => p.full_name.toLowerCase().trim())),
+    [profiles]
+  );
 
   return (
-    <Card className="animate-fade-in">
+    <Card className="animate-fade-in shadow-xl border-primary/10">
       <CardHeader>
         <div className="flex flex-row items-center justify-between mb-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
             Lista Atleti ({athletes.length})
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-destructive/10 hover:text-destructive">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -142,200 +160,145 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
             placeholder="Cerca atleta..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-muted/30 focus-visible:ring-primary/30"
           />
         </div>
       </CardHeader>
       <CardContent>
-        {athletes.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">Nessun atleta registrato</p>
+        {filteredSortedAthletes.length === 0 ? (
+          <p className="text-muted-foreground text-center py-12 bg-muted/20 rounded-lg">Nessun atleta trovato</p>
         ) : (
           <div className="space-y-4">
-            {/* Mobile View: Cards */}
+            {/* Mobile View */}
             <div className="md:hidden space-y-4">
-              {sortedAthletes
-                .filter((athlete) =>
-                  searchQuery === "" ||
-                  athlete.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  athlete.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  athlete.code.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((athlete) => {
-                  const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
-                  const categoryCheck = validateCategoryMatch({
-                    storedCategory: athlete.category,
-                    birthDateISO: athlete.birth_date,
-                  });
-                  const categoryDisplay = categoryCheck.ok
-                    ? formatCategoryDisplay(categoryCheck.expected)
-                    : athlete.category;
+              {filteredSortedAthletes.map((athlete) => {
+                const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
+                const categoryCheck = validateCategoryMatch({
+                  storedCategory: athlete.category,
+                  birthDateISO: athlete.birth_date,
+                });
+                const categoryDisplay = categoryCheck.ok ? formatCategoryDisplay(categoryCheck.expected) : athlete.category;
+                const isOrphan = !athleteIdsInCouples.has(athlete.id);
+                const isFemale = athlete.gender === 'F';
+                const isMale = athlete.gender === 'M';
 
-                  const responsabili = athlete.responsabili || [];
-                  const registeredProfileNames = new Set(profiles.map(p => p.full_name.toLowerCase().trim()));
+                let cardBg = "bg-card";
+                if (isOrphan) {
+                  if (isFemale) cardBg = "bg-[#FFD9B3]/20";
+                  else if (isMale) cardBg = "bg-[#CCE5FF]/20";
+                  else cardBg = "bg-warning/10";
+                }
 
-                  const isOrphan = !athleteIdsInCouples.has(athlete.id);
-                  const isFemale = athlete.gender === 'F';
-                  const isMale = athlete.gender === 'M';
-
-                  let cardColorClass = "";
-                  if (isOrphan) {
-                    if (isFemale) cardColorClass = "bg-[#FFD9B3] placeholder-opacity-10"; // Using bg color for whole card if orphan
-                    else if (isMale) cardColorClass = "bg-[#CCE5FF] placeholder-opacity-10";
-                    else cardColorClass = "bg-warning/10";
-                  } else {
-                    cardColorClass = "bg-card";
-                  }
-
-                  return (
-                    <div key={athlete.id} className={`p-4 rounded-lg border shadow-sm ${cardColorClass}`}>
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-bold text-lg">{athlete.first_name} {athlete.last_name}</p>
-                          <p className="text-xs font-mono text-muted-foreground">{athlete.code}</p>
-                        </div>
-                        <div className={`status-badge ${certStatus.class} text-xs px-2 py-1`}>
-                          {certStatus.label}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                        <div>
-                          <p className="text-muted-foreground text-xs">Categoria</p>
-                          <div className="flex items-center gap-1">
-                            <span>{categoryDisplay}</span>
-                            {categoryCheck.ok ? null : (
-                              <span className="text-warning text-xs font-bold">?!</span>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs">Nascita</p>
-                          <p>{formatDate(athlete.birth_date)}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground text-xs">Scadenza Cert.</p>
-                          <p>{formatDate(athlete.medical_certificate_expiry)}</p>
-                        </div>
-                      </div>
-
+                return (
+                  <div key={athlete.id} className={`p-4 rounded-xl border border-border/50 shadow-sm transition-all hover:shadow-md ${cardBg}`}>
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="text-muted-foreground text-xs mb-1">Responsabili</p>
-                        <div className="text-sm">
-                          {responsabili.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {responsabili.map((name, idx) => {
-                                const isRegistered = registeredProfileNames.has(name.toLowerCase().trim());
-                                return (
-                                  <span key={idx} className={isRegistered ? "font-bold text-primary" : ""}>
-                                    {name}{idx < responsabili.length - 1 ? ", " : ""}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          ) : "-"}
-                        </div>
+                        <p className="font-bold text-lg text-primary/90">{athlete.first_name} {athlete.last_name}</p>
+                        <p className="text-xs font-mono text-muted-foreground">{athlete.code}</p>
+                      </div>
+                      <div className={`status-badge ${certStatus.class} text-xs px-2 py-1 rounded-full font-semibold`}>
+                        {certStatus.label}
                       </div>
                     </div>
-                  );
-                })}
+                    <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                      <div className="bg-muted/30 p-2 rounded-lg">
+                        <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-tight">Categoria</p>
+                        <div className="flex items-center gap-1 font-medium">
+                          <span className="truncate">{categoryDisplay}</span>
+                          {!categoryCheck.ok && <span className="text-destructive font-black">!</span>}
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 p-2 rounded-lg">
+                        <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-tight">Nascita</p>
+                        <p className="font-medium">{formatDate(athlete.birth_date)}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-tight mb-1">Responsabili</p>
+                      <div className="text-sm flex flex-wrap gap-1">
+                        {athlete.responsabili?.length ? athlete.responsabili.map((name, idx) => (
+                          <span key={idx} className={registeredProfileNames.has(name.toLowerCase().trim()) ? "font-bold text-primary" : "text-muted-foreground"}>
+                            {name}{idx < athlete.responsabili!.length - 1 ? "," : ""}
+                          </span>
+                        )) : <span className="text-muted-foreground/50 italic">Nessuno</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Desktop View: Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="data-table">
-                <thead>
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-border/50">
+              <table className="w-full border-collapse text-sm">
+                <thead className="bg-gray-100 border-b border-gray-200 text-left">
                   <tr>
-                    <th>Codice</th>
-                    <th>Nome e Cognome</th>
-                    <th>Categoria</th>
-                    <th>Data di Nascita</th>
-                    <th>Scadenza Certificato</th>
-                    <th>Istruttori</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Codice</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Nome e Cognome</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Categoria</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Nascita</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Certificato</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Istruttori</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {sortedAthletes
-                    .filter((athlete) =>
-                      searchQuery === "" ||
-                      athlete.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      athlete.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      athlete.code.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                    .map((athlete) => {
-                      const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
-                      const categoryCheck = validateCategoryMatch({
-                        storedCategory: athlete.category,
-                        birthDateISO: athlete.birth_date,
-                      });
-                      const categoryDisplay = categoryCheck.ok
-                        ? formatCategoryDisplay(categoryCheck.expected)
-                        : athlete.category;
+                <tbody className="divide-y divide-border/50">
+                  {filteredSortedAthletes.map((athlete) => {
+                    const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
+                    const categoryCheck = validateCategoryMatch({
+                      storedCategory: athlete.category,
+                      birthDateISO: athlete.birth_date,
+                    });
+                    const categoryDisplay = categoryCheck.ok ? formatCategoryDisplay(categoryCheck.expected) : athlete.category;
+                    const isOrphan = !athleteIdsInCouples.has(athlete.id);
+                    const isFemale = athlete.gender === 'F';
+                    const isMale = athlete.gender === 'M';
 
-                      const responsabili = athlete.responsabili || [];
-                      const registeredProfileNames = new Set(profiles.map(p => p.full_name.toLowerCase().trim()));
+                    let rowBg = "hover:bg-muted/80";
+                    if (isOrphan) {
+                      if (isFemale) rowBg = "bg-[#FFD9B3]/10 hover:bg-[#FFD9B3]";
+                      else if (isMale) rowBg = "bg-[#CCE5FF]/10 hover:bg-[#CCE5FF]";
+                      else rowBg = "bg-warning/5 hover:bg-warning/50";
+                    }
 
-                      const isOrphan = !athleteIdsInCouples.has(athlete.id);
-                      const isFemale = athlete.gender === 'F';
-                      const isMale = athlete.gender === 'M';
-
-                      let rowColor = "";
-                      if (isOrphan) {
-                        if (isFemale) rowColor = "bg-[#FFD9B3] hover:bg-[#FFE0C2]";
-                        else if (isMale) rowColor = "bg-[#CCE5FF] hover:bg-[#D6EAFF]";
-                        else rowColor = "bg-warning/10 hover:bg-warning/20";
-                      } else {
-                        rowColor = "hover:bg-gray-800";
-                      }
-
-                      return (
-                        <tr key={athlete.id} className={`${rowColor} transition-colors duration-300`}>
-                          <td className="font-mono text-sm">{athlete.code}</td>
-                          <td className="font-medium">{athlete.first_name} {athlete.last_name}</td>
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <span>{categoryDisplay}</span>
-                              {categoryCheck.ok ? null : (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span
-                                      className="status-badge status-badge-warning cursor-help"
-                                    >
-                                      Cat.?
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{"reason" in categoryCheck ? categoryCheck.reason : "Errore non specificato"}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              )}
+                    return (
+                      <tr key={athlete.id} className={`${rowBg} transition-colors duration-200`}>
+                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{athlete.code}</td>
+                        <td className="px-4 py-3 font-semibold text-primary/80">{athlete.first_name} {athlete.last_name}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{categoryDisplay}</span>
+                            {!categoryCheck.ok && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <span className="w-4 h-4 rounded-full bg-destructive/10 text-destructive flex items-center justify-center text-[10px] font-black cursor-help">!</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{("reason" in categoryCheck && categoryCheck.reason) || "Errore categoria"}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(athlete.birth_date)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`status-badge ${certStatus.class} text-[10px] px-2 py-0.5 rounded-full font-bold uppercase`}>
+                            {certStatus.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 max-w-[200px] truncate">
+                          {athlete.responsabili?.length ? (
+                            <div className="flex flex-wrap gap-1">
+                              {athlete.responsabili.map((name, idx) => (
+                                <span key={idx} className={registeredProfileNames.has(name.toLowerCase().trim()) ? "font-bold text-primary" : "text-muted-foreground text-xs"}>
+                                  {name}{idx < athlete.responsabili!.length - 1 ? "," : ""}
+                                </span>
+                              ))}
                             </div>
-                          </td>
-                          <td>{formatDate(athlete.birth_date)}</td>
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <span>{formatDate(athlete.medical_certificate_expiry)}</span>
-                              <span className={`status-badge ${certStatus.class}`}>
-                                {certStatus.label}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="text-sm">
-                            {responsabili.length > 0 ? (
-                              <div className="flex flex-wrap gap-1">
-                                {responsabili.map((name, idx) => {
-                                  const isRegistered = registeredProfileNames.has(name.toLowerCase().trim());
-                                  return (
-                                    <span key={idx} className={isRegistered ? "font-bold text-primary" : ""}>
-                                      {name}{idx < responsabili.length - 1 ? ", " : ""}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            ) : "-"}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                          ) : <span className="text-muted-foreground/30 italic">-</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

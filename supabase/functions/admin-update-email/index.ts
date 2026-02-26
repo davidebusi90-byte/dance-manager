@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 type Body = {
@@ -16,12 +17,12 @@ serve(async (req) => {
 
     try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL");
-        const anonKey = Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
         const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
         if (!supabaseUrl || !anonKey || !serviceRoleKey) {
             return new Response(JSON.stringify({ error: "Missing backend configuration" }), {
-                status: 500,
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
@@ -39,7 +40,7 @@ serve(async (req) => {
 
         if (userError || !requester) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), {
-                status: 401,
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
@@ -52,7 +53,7 @@ serve(async (req) => {
 
         if (roleError || !isAdmin) {
             return new Response(JSON.stringify({ error: "Forbidden: Admin role required" }), {
-                status: 403,
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
@@ -60,7 +61,7 @@ serve(async (req) => {
         const body = (await req.json()) as Body;
         if (!body?.user_id || !body?.new_email) {
             return new Response(JSON.stringify({ error: "Missing required fields (user_id, new_email)" }), {
-                status: 400,
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
@@ -68,7 +69,7 @@ serve(async (req) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(body.new_email)) {
             return new Response(JSON.stringify({ error: "Invalid email format" }), {
-                status: 400,
+                status: 200,
                 headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
@@ -105,7 +106,7 @@ serve(async (req) => {
     } catch (error: any) {
         console.error("admin-update-email error:", error);
         return new Response(JSON.stringify({ error: error.message || "Unknown error" }), {
-            status: 500,
+            status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
         });
     }

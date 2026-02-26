@@ -249,6 +249,7 @@ export type Database = {
           description: string | null
           end_date: string | null
           id: string
+          is_completed: boolean
           late_fee_deadline: string | null
           location: string | null
           name: string
@@ -261,6 +262,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          is_completed?: boolean
           late_fee_deadline?: string | null
           location?: string | null
           name: string
@@ -273,6 +275,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          is_completed?: boolean
           late_fee_deadline?: string | null
           location?: string | null
           name?: string
@@ -405,7 +408,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "instructor"
+      app_role: "admin" | "instructor" | "supervisor"
       dance_category: "standard" | "latino" | "combinata" | "show_dance"
     }
     CompositeTypes: {
@@ -534,7 +537,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "instructor"],
+      app_role: ["admin", "instructor", "supervisor"],
       dance_category: ["standard", "latino", "combinata", "show_dance"],
     },
   },

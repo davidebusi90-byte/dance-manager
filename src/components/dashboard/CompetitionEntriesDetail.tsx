@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail } from "lucide-react";
+import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -231,28 +231,6 @@ export default function CompetitionEntriesDetail({
   const lateUnpaidEntries = activeEntries.filter(e => !e.is_paid && isLateEntry(e.created_at));
   const regularUnpaidEntries = activeEntries.filter(e => !e.is_paid && !isLateEntry(e.created_at));
 
-  const deleteCompetition = async () => {
-    setLoading(true);
-    const { error } = await supabase
-      .from("competitions")
-      .delete()
-      .eq("id", competition.id);
-
-    if (error) {
-      toast({
-        title: "Errore",
-        description: "Impossibile eliminare la competizione",
-        variant: "destructive",
-      });
-      setLoading(false);
-    } else {
-      toast({
-        title: "Competizione eliminata",
-        description: "La competizione e tutte le iscrizioni sono state rimosse",
-      });
-      onClose();
-    }
-  };
 
   const deleteEntry = async (entryId: string) => {
     const { error } = await supabase
@@ -369,14 +347,14 @@ export default function CompetitionEntriesDetail({
     return (
       <tr
         key={entry.id}
-        className={`${isLate && showLateFlag ? "bg-warning/10" : ""} cursor-pointer hover:bg-muted/50 transition-colors`}
-        onClick={() => setSelectedEntry(entry)}
+        className={`${isLate && showLateFlag ? "bg-warning/10" : ""} ${role === "admin" ? "cursor-pointer hover:bg-muted/50" : ""} transition-colors`}
+        onClick={() => role === "admin" && setSelectedEntry(entry)}
       >
-        <td className="font-mono text-sm">{athlete1?.code || "-"}</td>
+        <td className="font-mono text-sm print:hidden">{athlete1?.code || "-"}</td>
         <td className="font-medium">
           {athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}
         </td>
-        <td className="font-mono text-sm">{athlete2?.code || "-"}</td>
+        <td className="font-mono text-sm print:hidden">{athlete2?.code || "-"}</td>
         <td className="font-medium">
           {athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}
         </td>
@@ -386,11 +364,11 @@ export default function CompetitionEntriesDetail({
             <div className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</div>
           </div>
         </td>
-        <td>
+        <td className="max-w-[200px] print:max-w-[400px]">
           <div className="flex flex-wrap gap-1">
             {entryEventNames.length > 0 ? (
               entryEventNames.map(name => (
-                <Badge key={name!} variant="outline" className="text-[10px] py-0 h-4 px-1 bg-primary/5 border-primary/20">
+                <Badge key={name!} variant="outline" className="text-[10px] py-1 h-auto min-h-[1.5rem] px-2 bg-primary/5 border-primary/20 whitespace-normal text-left print:border-none print:p-0 print:bg-transparent print:text-xs">
                   {name}
                 </Badge>
               ))
@@ -399,12 +377,12 @@ export default function CompetitionEntriesDetail({
             )}
           </div>
         </td>
-        <td>
+        <td className="print:hidden">
           <div className="text-xs">
             {getCombinedResponsabili(entry).join(", ") || "-"}
           </div>
         </td>
-        <td>
+        <td className="print:hidden">
           <div className="flex items-center gap-2">
             {entry.is_paid ? (
               <Badge className="bg-success text-success-foreground hover:bg-success/80">
@@ -421,12 +399,13 @@ export default function CompetitionEntriesDetail({
             )}
           </div>
         </td>
-        <td>
+        <td className="print:hidden">
           <div className="flex items-center gap-4">
             <Checkbox
               checked={entry.is_paid}
               onCheckedChange={() => handlePaymentToggle(entry.id, entry.is_paid)}
               title="Segna come pagato"
+              disabled={role !== "admin"}
             />
             {role === "admin" && (
               <AlertDialog>
@@ -469,7 +448,7 @@ export default function CompetitionEntriesDetail({
 
   return (
     <>
-      <Card className="animate-fade-in">
+      <Card className="animate-fade-in print:shadow-none print:border-none print:m-0">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -480,14 +459,20 @@ export default function CompetitionEntriesDetail({
               {formatDate(competition.date)} • Scadenza: {formatDate(competition.registration_deadline)}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleSendReport} disabled={isSendingReport} className="gap-2">
-              <Mail className="w-4 h-4" />
-              {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
-            </Button>
+          <div className="flex items-center gap-2 print:hidden">
+            {role === "admin" && (
+              <Button variant="outline" onClick={handleSendReport} disabled={isSendingReport} className="gap-2">
+                <Mail className="w-4 h-4" />
+                {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
+              </Button>
+            )}
             <Button variant="outline" onClick={generateReport} className="gap-2">
               <FileSpreadsheet className="w-4 h-4" />
               Genera Report Excel
+            </Button>
+            <Button variant="outline" onClick={() => window.print()} className="gap-2">
+              <Printer className="w-4 h-4" />
+              Stampa / PDF
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-4 h-4" />
@@ -498,28 +483,62 @@ export default function CompetitionEntriesDetail({
           {entries.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nessuna iscrizione per questa competizione</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Cod. Cavaliere</th>
-                    <th>Cavaliere</th>
-                    <th>Cod. Dama</th>
-                    <th>Dama</th>
-                    <th>Categoria / Classe</th>
-                    <th>Gare Selezionate</th>
-                    <th>Responsabili</th>
-                    <th>Stato</th>
-                    <th>Pagato</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paidEntries.map(entry => renderEntryRow(entry))}
-                  {lateUnpaidEntries.map(entry => renderEntryRow(entry, true))}
-                  {regularUnpaidEntries.map(entry => renderEntryRow(entry))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {/* Stat Cards */}
+              <div className="grid grid-cols-3 gap-3 print:hidden">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-green-700">{paidEntries.length}</p>
+                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Coppie Pagate</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-50 border border-orange-200">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-orange-700">{regularUnpaidEntries.length}</p>
+                    <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">Da Pagare</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-amber-700">{lateUnpaidEntries.length}</p>
+                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">In Ritardo (Mora)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto print:overflow-visible">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th className="print:hidden">Cod. Cavaliere</th>
+                      <th>Cavaliere</th>
+                      <th className="print:hidden">Cod. Dama</th>
+                      <th>Dama</th>
+                      <th>Categoria / Classe</th>
+                      <th>Gare Selezionate</th>
+                      <th className="print:hidden">Responsabili</th>
+                      <th className="print:hidden">Stato</th>
+                      <th className="print:hidden">Pagato</th>
+                      <th className="print:hidden"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paidEntries.map(entry => renderEntryRow(entry))}
+                    {lateUnpaidEntries.map(entry => renderEntryRow(entry, true))}
+                    {regularUnpaidEntries.map(entry => renderEntryRow(entry))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </CardContent>

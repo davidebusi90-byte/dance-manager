@@ -3,227 +3,106 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-interface ReportRequest {
-    competitionId: string;
-}
-
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 serve(async (req) => {
-    if (req.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
-    }
+    if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-        const { competitionId } = await req.json() as ReportRequest;
-
-        if (!competitionId) {
-            throw new Error("Missing competitionId");
+        if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+            return new Response(JSON.stringify({ error: "Missing configuration" }), {
+                status: 200,
+                headers: { "Content-Type": "application/json", ...corsHeaders }
+            });
         }
 
-        // 1. Fetch Competition Details
-        const { data: competition, error: compError } = await supabase
-            .from("competitions")
-            .select("*")
-            .eq("id", competitionId)
-            .single();
-
-        if (compError || !competition) throw new Error("Competition not found");
-
-        // 2. Fetch Entries
-        const { data: entries, error: entriesError } = await supabase
-            .from("competition_entries")
-            .select(`
-        *,
-        couples (
-          id,
-          category,
-          class,
-          athlete1:athletes!couples_athlete1_id_fkey (id, first_name, last_name, responsabili),
-          athlete2:athletes!couples_athlete2_id_fkey (id, first_name, last_name, responsabili),
-          instructor:profiles!couples_instructor_id_fkey (id, email, full_name)
-        )
-      `)
-            .eq("competition_id", competitionId);
-
-        if (entriesError) throw entriesError;
-
-        // 3. Fetch All Active Couples (to find missing)
-        const { data: allCouples, error: couplesError } = await supabase
-            .from("couples")
-            .select(`
-        id,
-        category,
-        class,
-        is_active,
-        athlete1:athletes!couples_athlete1_id_fkey (id, first_name, last_name, responsabili),
-        athlete2:athletes!couples_athlete2_id_fkey (id, first_name, last_name, responsabili),
-        instructor:profiles!couples_instructor_id_fkey (id, email, full_name)
-      `)
-            .eq("is_active", true);
-
-        if (couplesError) throw couplesError;
-
-        // 4. Fetch All Profiles (to map responsibility names to emails)
-        const { data: profiles, error: profilesError } = await supabase
-            .from("profiles")
-            .select("full_name, email");
-
-        if (profilesError) throw profilesError;
-
-        // --- Processing Data ---
-
-        const deadline = competition.late_fee_deadline ? new Date(competition.late_fee_deadline) : null;
-        const isLate = (dateStr: string) => deadline && new Date(dateStr) > deadline;
-
-        // Categories
-        const paidEntries = entries.filter(e => e.is_paid);
-        const confirmedUnpaidEntries = entries.filter(e => !e.is_paid && !isLate(e.created_at));
-        const lateUnpaidEntries = entries.filter(e => !e.is_paid && isLate(e.created_at));
-
-        // Identify Missing Couples
-        const registeredCoupleIds = new Set(entries.map(e => e.couple_id));
-        const missingCouples = allCouples.filter(c => !registeredCoupleIds.has(c.id));
-
-        // --- Collect Emails ---
-        const emailSet = new Set<string>();
-
-        // Helper to add emails from couple
-        const addEmailsForCouple = (couple: any) => {
-            // Direct instructor
-            if (couple.instructor?.email) {
-                emailSet.add(couple.instructor.email);
-            }
-
-            // Mapped responsabili
-            const addRespEmail = (responsabili: string[] | null) => {
-                if (!responsabili) return;
-                responsabili.forEach(name => {
-                    const profile = profiles.find(p => p.full_name.toLowerCase().trim() === name.toLowerCase().trim());
-                    if (profile?.email) {
-                        emailSet.add(profile.email);
-                    }
-                });
-            };
-
-            addRespEmail(couple.athlete1?.responsabili);
-            addRespEmail(couple.athlete2?.responsabili);
-        };
-
-        // Add emails for ALL involved couples (registered + missing)
-        // entries.forEach(e => addEmailsForCouple(e.couples));
-        // missingCouples.forEach(c => addEmailsForCouple(c));
-
-        // OR should we send to ALL instructors regardless? 
-        // Usually "mandare una mail ai vari responsabili delle coppie iscritte" implies only those registered?
-        // BUT "tutte le coppie che potevano partecipare ma non hanno svolto..." implies we might want to notify them too?
-        // Let's include everyone relevant to the lists.
-        [...entries.map(e => e.couples), ...missingCouples].forEach(c => {
-            if (c) addEmailsForCouple(c);
+        const authHeader = req.headers.get("Authorization") ?? "";
+        const userClient = createClient(supabaseUrl, anonKey, {
+            global: { headers: { Authorization: authHeader } },
         });
 
-        const recipients = Array.from(emailSet);
-
-        if (recipients.length === 0) {
-            return new Response(JSON.stringify({ message: "No recipients found / Report generated but no emails sent." }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
+        const { data: { user }, error: userError } = await userClient.auth.getUser();
+        if (userError || !user) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+                status: 200,
+                headers: { "Content-Type": "application/json", ...corsHeaders }
             });
         }
 
-        // --- Generate HTML Report ---
+        const { data: isAdmin } = await userClient.rpc("has_role", {
+            _user_id: user.id,
+            _role: "admin",
+        });
 
-        const tableStyle = "border-collapse: collapse; width: 100%; margin-bottom: 20px;";
-        const thStyle = "border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;";
-        const tdStyle = "border: 1px solid #ddd; padding: 8px;";
-        const h2Style = "color: #333; border-bottom: 2px solid #333; padding-bottom: 5px;";
+        if (!isAdmin) {
+            return new Response(JSON.stringify({ error: "Forbidden" }), {
+                status: 200,
+                headers: { "Content-Type": "application/json", ...corsHeaders }
+            });
+        }
 
-        const generateTable = (title: string, data: any[], isEntry: boolean) => {
-            if (data.length === 0) return `<p>Nessuna coppia in questa categoria.</p>`;
+        const supabase = createClient(supabaseUrl, serviceRoleKey);
+        const { competitionId } = await req.json();
+        if (!competitionId) throw new Error("Missing ID");
 
+        const [cRes, eRes, clRes, pRes] = await Promise.all([
+            supabase.from("competitions").select("*").eq("id", competitionId).single(),
+            supabase.from("competition_entries").select("*, couples (id, category, class, athlete1:athletes!couples_athlete1_id_fkey (id, first_name, last_name, responsabili), athlete2:athletes!couples_athlete2_id_fkey (id, first_name, last_name, responsabili), instructor:profiles!couples_instructor_id_fkey (id, email, full_name))").eq("competition_id", competitionId),
+            supabase.from("couples").select("id, category, class, is_active, athlete1:athletes!couples_athlete1_id_fkey (id, first_name, last_name, responsabili), athlete2:athletes!couples_athlete2_id_fkey (id, first_name, last_name, responsabili), instructor:profiles!couples_instructor_id_fkey (id, email, full_name)").eq("is_active", true),
+            supabase.from("profiles").select("full_name, email"),
+        ]);
+
+        if (cRes.error || !cRes.data) throw new Error("Comp not found");
+        const competition = cRes.data;
+        const entries = eRes.data || [];
+        const profiles = pRes.data || [];
+        const registeredIds = new Set(entries.map(e => e.couple_id));
+        const missing = (clRes.data || []).filter(c => !registeredIds.has(c.id));
+
+        const deadline = competition.late_fee_deadline ? new Date(competition.late_fee_deadline) : null;
+        const isLate = (d: string) => deadline && new Date(d) > deadline;
+
+        const emailSet = new Set<string>();
+        const addE = (c: any) => {
+            if (c?.instructor?.email) emailSet.add(c.instructor.email);
+            [c?.athlete1?.responsabili, c?.athlete2?.responsabili].flat().forEach(name => {
+                if (!name) return;
+                const p = profiles.find(pr => pr.full_name.toLowerCase().trim() === name.toLowerCase().trim());
+                if (p?.email) emailSet.add(p.email);
+            });
+        };
+        [...entries.map(e => e.couples), ...missing].forEach(c => addE(c));
+
+        const genT = (title: string, data: any[], isE: boolean) => {
+            if (!data.length) return `<p>Nessuna coppia in questa categoria.</p>`;
             const rows = data.map(item => {
-                const c = isEntry ? item.couples : item;
-                const a1 = c.athlete1 ? `${c.athlete1.first_name} ${c.athlete1.last_name}` : "N/A";
-                const a2 = c.athlete2 ? `${c.athlete2.first_name} ${c.athlete2.last_name}` : "N/A";
-                return `
-          <tr>
-            <td style="${tdStyle}">${a1} / ${a2}</td>
-            <td style="${tdStyle}">${c.category} - ${c.class}</td>
-          </tr>
-        `;
+                const c = isE ? item.couples : item;
+                return `<tr><td style="border: 1px solid #ddd; padding: 8px;">${c.athlete1?.first_name} ${c.athlete1?.last_name} / ${c.athlete2?.first_name} ${c.athlete2?.last_name}</td><td style="border: 1px solid #ddd; padding: 8px;">${c.category} - ${c.class}</td></tr>`;
             }).join("");
-
-            return `
-        <h2 style="${h2Style}">${title} (${data.length})</h2>
-        <table style="${tableStyle}">
-          <thead>
-            <tr>
-              <th style="${thStyle}">Coppia</th>
-              <th style="${thStyle}">Categoria</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-        </table>
-      `;
+            return `<h2 style="color: #333; border-bottom: 2px solid #333; padding-bottom: 5px;">${title} (${data.length})</h2><table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;"><thead><tr><th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;">Coppia</th><th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;">Categoria</th></tr></thead><tbody>${rows}</tbody></table>`;
         };
 
-        const htmlContent = `
-      <h1>Report Competizione: ${competition.name}</h1>
-      <p>Data: ${new Date(competition.date).toLocaleDateString("it-IT")}</p>
-      
-      ${generateTable("CONFERMATI E PAGATI", paidEntries, true)}
-      ${generateTable("CONFERMATI (DA PAGARE)", confirmedUnpaidEntries, true)}
-      ${generateTable("ISCRITTI IN RITARDO (MORA)", lateUnpaidEntries, true)}
-      ${generateTable("NON ISCRITTI (MANCANTI)", missingCouples, false)}
-    `;
+        const html = `<h1>Report: ${competition.name}</h1><p>Data: ${new Date(competition.date).toLocaleDateString("it-IT")}</p>${genT("CONFERMATI & PAGATI", entries.filter(e => e.is_paid), true)}${genT("DA PAGARE", entries.filter(e => !e.is_paid && !isLate(e.created_at)), true)}${genT("IN RITARDO (MORA)", entries.filter(e => !e.is_paid && isLate(e.created_at)), true)}${genT("MANCANTI", missing, false)}`;
 
-        // --- Send Email ---
-
-        if (!RESEND_API_KEY) {
-            console.log("RESEND_API_KEY not set. Simulate sending.");
-            console.log("Recipients:", recipients);
-            return new Response(JSON.stringify({ success: true, message: "Simulated sending (No API Key)" }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-        }
+        if (!RESEND_API_KEY) return new Response(JSON.stringify({ success: true, recipients: Array.from(emailSet) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
         const res = await fetch("https://api.resend.com/emails", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-                from: "Dance Manager <info@antigravity.it>", // Replace with valid sender
-                to: ["info@antigravity.it"], // Safety: send to admin/me, bcc others? Or just send to recipients.
-                bcc: recipients,
-                subject: `Report Iscrizioni: ${competition.name}`,
-                html: htmlContent,
-            }),
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
+            body: JSON.stringify({ from: "Dance Manager <info@antigravity.it>", to: ["info@antigravity.it"], bcc: Array.from(emailSet), subject: `Report Iscrizioni: ${competition.name}`, html }),
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(JSON.stringify(data));
-        }
-
-        return new Response(JSON.stringify(data), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-
-    } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        const resData = await res.json();
+        return new Response(JSON.stringify(resData), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (err: any) {
+        console.error("send-competition-report error:", err);
+        return new Response(JSON.stringify({ error: err.message }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 });

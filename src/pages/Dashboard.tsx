@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,154 +8,45 @@ import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, File
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { importCompetitors, importCompetitions } from "@/lib/import-utils";
-import { filterAthletesByInstructor } from "@/lib/instructor-utils";
 import StatCard from "@/components/dashboard/StatCard";
 import AthletesList from "@/components/dashboard/AthletesList";
 import CouplesList from "@/components/dashboard/CouplesList";
 import CompetitionsList from "@/components/dashboard/CompetitionsList";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUserRole } from "@/hooks/use-user-role";
-
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  category: string;
-  class: string;
-  birth_date: string | null;
-  medical_certificate_expiry: string | null;
-  instructor_id: string | null;
-  responsabili: string[] | null;
-  gender?: string | null;
-}
-
-interface Couple {
-  id: string;
-  category: string;
-  class: string;
-  disciplines: string[];
-  athlete1_id: string;
-  athlete2_id: string;
-  discipline_info: Record<string, string> | null;
-}
-
-interface Competition {
-  id: string;
-  name: string;
-  date: string;
-  end_date: string | null;
-  location: string | null;
-  registration_deadline: string | null;
-  late_fee_deadline: string | null;
-  description: string | null;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-}
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 type ActiveView = "none" | "athletes" | "couples" | "competitions";
 
 export default function Dashboard() {
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [allAthletes, setAllAthletes] = useState<Athlete[]>([]);
-  const [couples, setCouples] = useState<Couple[]>([]);
-  const [competitions, setCompetitions] = useState<Competition[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>("none");
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
   useIsAdmin();
   const { role, userId } = useUserRole();
-
-  const fetchData = useCallback(async () => {
-    if (role === "loading") return;
-
-    setLoading(true);
-    try {
-      const [athletesRes, couplesRes, competitionsRes, profilesRes] = await Promise.all([
-        supabase.from("athletes").select("*"),
-        supabase.from("couples").select("*").eq("is_active", true),
-        supabase.from("competitions").select("*").order("date", { ascending: true }),
-        supabase.from("profiles").select("id, user_id, full_name"),
-      ]);
-
-      if (athletesRes.error) throw athletesRes.error;
-      if (couplesRes.error) throw couplesRes.error;
-      if (competitionsRes.error) throw competitionsRes.error;
-      if (profilesRes.error) throw profilesRes.error;
-
-      const rawAthletes = athletesRes.data || [];
-      const rawCouples = (couplesRes.data as any) || [];
-
-      let fetchedAthletes = [...rawAthletes];
-      let fetchedCouples = [...rawCouples];
-
-      // Filtro di sicurezza restrittivo: solo l'Admin vede tutto.
-      if (role !== "admin") {
-        const currentUserProfile = profilesRes.data?.find(p => p.user_id === userId);
-
-        if (currentUserProfile) {
-          // Use shared utility function for consistent filtering
-          fetchedAthletes = filterAthletesByInstructor(rawAthletes, currentUserProfile);
-          fetchedCouples = rawCouples;
-        } else {
-          console.warn("[Dashboard] Profilo non trovato per l'utente loggato.");
-          fetchedAthletes = [];
-          // Anche se il profilo non è trovato, potremmo voler mostrare le coppie se non dipendono dal profilo per la visibilità,
-          // ma per sicurezza se non c'è profilo, manteniamo vuoto o mostriamo tutto? 
-          // La logica precedente svuotava tutto. Se l'utente è loggato ma non ha profilo, è un caso strano.
-          // Manteniamo il comportamento di sicurezza: se non c'è corrispondenza profilo, non mostrare nulla.
-          fetchedCouples = [];
-        }
-      }
-
-      setAllAthletes(rawAthletes);
-      setAthletes(fetchedAthletes);
-      setCouples(fetchedCouples);
-      setCompetitions(competitionsRes.data || []);
-      setProfiles(profilesRes.data || []);
-    } catch (error: any) {
-      console.error("fetchData error:", error);
-      toast({
-        title: "Errore nel caricamento",
-        description: error.message || "Impossibile caricare i dati della dashboard.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [role, userId, toast]);
+  const {
+    athletes,
+    allAthletes,
+    couples,
+    competitions,
+    profiles,
+    loading,
+    refresh
+  } = useDashboardData(role, userId);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      fetchData();
-    };
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) navigate("/auth");
     });
 
-    checkAuth();
     return () => subscription.unsubscribe();
-  }, [navigate, role, userId, fetchData]);
-
-
+  }, [navigate]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-
-    // Auto-import logic
     try {
       // Import Athletes
       try {
@@ -169,14 +60,13 @@ export default function Dashboard() {
             console.error("Import atleti failed:", result.message);
             toast({ title: "Errore Import Atleti", description: result.message || "Errore sconosciuto", variant: "destructive" });
           }
-        } else {
-          console.warn("File Competitori_ok.xls non trovato");
         }
-      } catch (e) { console.error("Auto-import athletes error", e); }
+      } catch (e) {
+        console.error("Auto-import athletes error", e);
+      }
 
       // Import Competitions
       try {
-        // Add timestamp to prevent caching
         const resp = await fetch(`/files/Competizioni.xlsx?t=${new Date().getTime()}`);
         if (resp.ok) {
           const blob = await resp.arrayBuffer();
@@ -184,12 +74,9 @@ export default function Dashboard() {
           if (result.success) {
             toast({ title: "Import Competizioni", description: `Nuove: ${result.created}, Aggiornate: ${result.updated}` });
           } else {
-            // If error, show specific message
             console.error("Auto-import competitions failed:", result.message);
             toast({ title: "Errore Import Competizioni", description: result.message || "Errore sconosciuto", variant: "destructive" });
           }
-        } else {
-          console.warn(`File Competizioni.xlsx non trovato (Status: ${resp.status})`);
         }
       } catch (e: any) {
         console.error("Auto-import competitions error", e);
@@ -199,7 +86,7 @@ export default function Dashboard() {
       console.error("Global auto-import error", globalError);
     }
 
-    await fetchData();
+    await refresh();
     setRefreshing(false);
     toast({
       title: "Sistema aggiornato",
@@ -212,9 +99,29 @@ export default function Dashboard() {
     navigate("/auth");
   };
 
-  const filteredAthletes = athletes.filter((a) =>
-    `${a.first_name} ${a.last_name} ${a.code}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAthletes = useMemo(() => {
+    let list = athletes;
+    if (searchQuery) {
+      const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+      list = athletes.filter((a) => {
+        const first = (a.first_name || "").toLowerCase();
+        const last = (a.last_name || "").toLowerCase();
+        const code = (a.code || "").toLowerCase();
+        return queryWords.every(word =>
+          first.includes(word) ||
+          last.includes(word) ||
+          code.includes(word)
+        );
+      });
+    }
+
+    // Deduplicate by code
+    const unique = new Map();
+    list.forEach(a => {
+      if (!unique.has(a.code)) unique.set(a.code, a);
+    });
+    return Array.from(unique.values());
+  }, [athletes, searchQuery]);
 
   const handleStatClick = (view: ActiveView) => {
     setActiveView(activeView === view ? "none" : view);
@@ -228,12 +135,9 @@ export default function Dashboard() {
     );
   }
 
-
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-50">
+      <header className="border-b border-border bg-card sticky top-0 z-50 print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 flex items-center justify-center">
@@ -249,60 +153,68 @@ export default function Dashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`${window.location.origin}/auth?register=instructor`, '_blank')}
-                  className="gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+                  asChild
+                  className="gap-2 bg-sky-100 border-sky-300 text-sky-700 hover:bg-sky-200 hover:border-sky-400"
                   title="Apri pagina iscrizione istruttore"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  Apri Istruttore
+                  <a href={`${window.location.origin}/auth?register=instructor`} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4" />
+                    Accesso
+                  </a>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(`${window.location.origin}/enroll`, '_blank')}
-                  className="gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+                  asChild
+                  className="gap-2 bg-yellow-100 border-yellow-300 text-yellow-700 hover:bg-yellow-200 hover:border-yellow-400"
                   title="Apri pagina iscrizione gare"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  Apri Iscrizione
+                  <a href={`${window.location.origin}/enroll`} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-4 h-4" />
+                    Link iscrizioni
+                  </a>
                 </Button>
               </>
             )}
-
 
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigate("/anomalies")}
-              className="gap-2"
+              className="gap-2 bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 hover:border-orange-400"
             >
               <FileWarning className="w-4 h-4" />
               Anomalie
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-              Aggiorna
-            </Button>
+
             {role === "admin" && (
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={() => navigate("/instructors")}
                 aria-label="Gestione istruttori"
                 title="Istruttori"
+                className="gap-2 bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 hover:border-gray-400"
               >
                 <Users className="w-4 h-4" />
+                Istruttori
               </Button>
             )}
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="w-4 h-4" />
             </Button>
+            {role === "admin" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                Sincronizza Excel
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci
@@ -326,53 +238,56 @@ export default function Dashboard() {
                     <>
                       <Button
                         variant="outline"
-                        className="w-full justify-start gap-2"
-                        onClick={() => window.open(`${window.location.origin}/auth?register=instructor`, '_blank')}
+                        asChild
+                        className="w-full justify-start gap-2 bg-sky-100 border-sky-300 text-sky-700 hover:bg-sky-200 hover:border-sky-400"
                       >
-                        <ExternalLink className="w-4 h-4" />
-                        Iscrizione Istruttore
+                        <a href={`${window.location.origin}/auth?register=instructor`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4" />
+                          Accesso
+                        </a>
                       </Button>
                       <Button
                         variant="outline"
-                        className="w-full justify-start gap-2"
-                        onClick={() => window.open(`${window.location.origin}/enroll`, '_blank')}
+                        asChild
+                        className="w-full justify-start gap-2 bg-yellow-100 border-yellow-300 text-yellow-700 hover:bg-yellow-200 hover:border-yellow-400"
                       >
-                        <ExternalLink className="w-4 h-4" />
-                        Iscrizione Gare
+                        <a href={`${window.location.origin}/enroll`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4" />
+                          Link iscrizioni
+                        </a>
                       </Button>
                     </>
                   )}
-
                   <Button
                     variant="outline"
-                    className="w-full justify-start gap-2"
+                    className="w-full justify-start gap-2 bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200 hover:border-orange-400"
                     onClick={() => navigate("/anomalies")}
                   >
                     <FileWarning className="w-4 h-4" />
                     Anomalie
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2"
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                  >
-                    <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                    Aggiorna Dati
-                  </Button>
-
                   {role === "admin" && (
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-2"
-                      onClick={() => navigate("/instructors")}
-                    >
-                      <Users className="w-4 h-4" />
-                      Gestione Istruttori
-                    </Button>
+                    <>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-2"
+                        onClick={() => navigate("/instructors")}
+                      >
+                        <Users className="w-4 h-4" />
+                        Gestione Istruttori
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                      >
+                        <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                        Sincronizza Excel
+                      </Button>
+                    </>
                   )}
-
                   <Button
                     variant="ghost"
                     className="w-full justify-start gap-2"
@@ -381,9 +296,7 @@ export default function Dashboard() {
                     <Settings className="w-4 h-4" />
                     Impostazioni
                   </Button>
-
                   <div className="h-px bg-border my-2" />
-
                   <Button
                     variant="destructive"
                     className="w-full justify-start gap-2"
@@ -400,8 +313,7 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Stats - Clickable */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 print:hidden">
           <StatCard
             icon={Users}
             value={athletes.length}
@@ -418,20 +330,22 @@ export default function Dashboard() {
             onClick={() => handleStatClick("couples")}
             isActive={activeView === "couples"}
           />
-          <div
-            onClick={() => navigate("/competition-enrollments")}
-            className="cursor-pointer hover:scale-[1.02] transition-transform"
-          >
-            <div className="stat-card flex items-center gap-4 p-6 bg-card border border-border rounded-xl">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-accent/10">
-                <ClipboardList className="w-6 h-6 text-accent" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">Iscrizioni Gara</p>
-                <p className="text-sm text-muted-foreground">Gestisci classi</p>
+          {role === "admin" && (
+            <div
+              onClick={() => navigate("/competition-enrollments")}
+              className="cursor-pointer hover:-translate-y-0.5 transition-transform duration-200"
+            >
+              <div className="stat-card flex items-center gap-4 p-6 bg-card border border-border rounded-xl">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-accent/10">
+                  <ClipboardList className="w-6 h-6 text-accent" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">Iscrizioni Gara</p>
+                  <p className="text-sm text-muted-foreground">Gestisci classi</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <StatCard
             icon={Trophy}
             value={competitions.length}
@@ -442,7 +356,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Dynamic List Views */}
         {activeView === "athletes" && (
           <AthletesList
             athletes={athletes}
@@ -467,11 +380,10 @@ export default function Dashboard() {
             athletes={allAthletes}
             profiles={profiles}
             onClose={() => setActiveView("none")}
-            onRefresh={fetchData}
+            onRefresh={refresh}
           />
         )}
 
-        {/* Search - Only show when no view is active */}
         {activeView === "none" && (
           <>
             <Card className="mb-8">
@@ -491,7 +403,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Search Results */}
             {searchQuery && (
               <Card className="mb-8 animate-fade-in">
                 <CardHeader>
@@ -501,7 +412,7 @@ export default function Dashboard() {
                   {filteredAthletes.length === 0 ? (
                     <p className="text-muted-foreground text-center py-8">Nessun atleta trovato</p>
                   ) : (
-                    <div className="overflow-x-auto">
+                    <div className="data-table-container">
                       <table className="data-table">
                         <thead>
                           <tr>
@@ -510,6 +421,7 @@ export default function Dashboard() {
                             <th>Categoria</th>
                             <th>Classe</th>
                             <th>Certificato</th>
+                            <th>Istruttori</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -544,6 +456,11 @@ export default function Dashboard() {
                                     <span className="status-badge status-badge-warning">Mancante</span>
                                   )}
                                 </td>
+                                <td className="text-sm">
+                                  {athlete.responsabili && athlete.responsabili.length > 0
+                                    ? athlete.responsabili.join(", ")
+                                    : "-"}
+                                </td>
                               </tr>
                             );
                           })}
@@ -555,7 +472,6 @@ export default function Dashboard() {
               </Card>
             )}
 
-            {/* Empty State */}
             {athletes.length === 0 && !searchQuery && (
               <Card>
                 <CardContent className="py-12 text-center">

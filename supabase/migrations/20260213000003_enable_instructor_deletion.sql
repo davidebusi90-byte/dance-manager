@@ -2,6 +2,7 @@
 -- This allows admins to delete instructors and clean up related data
 
 -- 1. Allow admins to delete profiles
+DROP POLICY IF EXISTS "Admins can delete profiles" ON public.profiles;
 CREATE POLICY "Admins can delete profiles"
 ON profiles
 FOR DELETE
@@ -15,6 +16,7 @@ USING (
 );
 
 -- 2. Allow admins to delete athlete-instructor links
+DROP POLICY IF EXISTS "Admins can delete athlete instructors" ON public.athlete_instructors;
 CREATE POLICY "Admins can delete athlete instructors"
 ON athlete_instructors
 FOR DELETE
@@ -28,6 +30,7 @@ USING (
 );
 
 -- 3. Allow admins to delete user roles
+DROP POLICY IF EXISTS "Admins can delete user roles" ON public.user_roles;
 CREATE POLICY "Admins can delete user roles"
 ON user_roles
 FOR DELETE

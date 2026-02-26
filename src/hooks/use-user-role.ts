@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type UserRole = "admin" | "instructor" | "loading" | null;
+type UserRole = "admin" | "supervisor" | "instructor" | "loading" | null;
 
 export function useUserRole() {
     const [role, setRole] = useState<UserRole>("loading");
@@ -33,6 +33,17 @@ export function useUserRole() {
 
                 if (isAdmin) {
                     if (mounted) setRole("admin");
+                    return;
+                }
+
+                // Check for supervisor role
+                const { data: isSupervisor } = await supabase.rpc("has_role", {
+                    _user_id: session.user.id,
+                    _role: "supervisor",
+                });
+
+                if (isSupervisor) {
+                    if (mounted) setRole("supervisor");
                     return;
                 }
 

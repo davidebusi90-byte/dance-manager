@@ -85,29 +85,23 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
 
         if (rawData.length < 2) throw new Error("File vuoto o formato non valido");
 
-        // Parse header row from row 2 (index 1)
         const headerRow = (rawData[1] || []).map((h: any) => String(h).toUpperCase().trim());
 
-        // Column mapping for the PRIMARY athlete (the one on the left)
-        // User confirmed: One row = One Athlete. Partner is just referenced.
         const colIdx = {
-            COGNOME: 0, // A
-            NOME: 1,    // B
-            DATA_NASCITA: 3, // D
-            SESSO: 4,   // E
-            CID: 5,     // F
-            SCADENZA_CERT_MEDICO: 7, // H
-            CAT: 10,    // K
-            RESP_1: 11, // L
-            RESP_2: 12, // M
-            RESP_3: 13, // N
-            RESP_4: 14, // O
-
-            // Partner Reference Columns (for linking only)
-            PARTNER_CID: 18, // S
+            COGNOME: 0,
+            NOME: 1,
+            DATA_NASCITA: 3,
+            SESSO: 4,
+            CID: 5,
+            SCADENZA_CERT_MEDICO: 7,
+            CAT: 10,
+            RESP_1: 11,
+            RESP_2: 12,
+            RESP_3: 13,
+            RESP_4: 14,
+            PARTNER_CID: 18,
         };
 
-        // Find dynamic discipline columns
         const findColIdx = (names: string[]) => {
             return headerRow.findIndex(h => names.some(n => h.includes(n.toUpperCase())));
         };
@@ -122,155 +116,185 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
 
         const athletes: any[] = [];
 
-        // Data starts from row 4 (index 3)
         for (let i = 3; i < rawData.length; i++) {
             const row = rawData[i];
             if (!row || row.length === 0) continue;
 
-            // Helper to extract athlete from row (Single Athlete Logic)
-            const extractAthlete = () => {
+            const code = String(row[colIdx.CID] || "").trim();
+            const firstName = String(row[colIdx.NOME] || "").trim();
+            const lastName = String(row[colIdx.COGNOME] || "").trim();
+            let sex = String(row[colIdx.SESSO] || "").trim().toUpperCase();
+            if (!["M", "F"].includes(sex)) sex = "M";
 
+            if (!code || !firstName || !lastName) continue;
 
-                const code = String(row[colIdx.CID] || "").trim();
-                const firstName = String(row[colIdx.NOME] || "").trim();
-                const lastName = String(row[colIdx.COGNOME] || "").trim();
-                // Read Sex always from Col E (Index 4)
-                let sex = String(row[colIdx.SESSO] || "").trim().toUpperCase();
-
-                // Se la colonna sesso è vuota o non valida, usa il valore di default in base al prefisso
-                if (!["M", "F"].includes(sex)) sex = "M"; // Fallback
-
-                if (!code || !firstName || !lastName) return null;
-
-                // Partner CID (from Col S / Index 18)
-                const partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
-
-                const disciplines: { discipline: DanceCategory; class: string; raw: string }[] = [];
-                for (const { disc, cls } of discIndices) {
-                    const discValue = String(row[disc] || "").trim();
-                    const clsValue = String(row[cls] || "").trim().toUpperCase();
-                    const parsedDisc = parseDiscipline(discValue);
-
-                    if (parsedDisc && clsValue) {
-                        disciplines.push({ discipline: parsedDisc, class: clsValue, raw: discValue });
-                    }
+            const partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
+            const disciplines: { discipline: DanceCategory; class: string; raw: string }[] = [];
+            for (const { disc, cls } of discIndices) {
+                const discValue = String(row[disc] || "").trim();
+                const clsValue = String(row[cls] || "").trim().toUpperCase();
+                const parsedDisc = parseDiscipline(discValue);
+                if (parsedDisc && clsValue) {
+                    disciplines.push({ discipline: parsedDisc, class: clsValue, raw: discValue });
                 }
+            }
 
-                const responsabili: string[] = [];
-                const respIndices = [colIdx.RESP_1, colIdx.RESP_2, colIdx.RESP_3, colIdx.RESP_4].filter(idx => idx !== -1);
-                for (const idx of respIndices) {
-                    const resp = String(row[idx] || "").trim();
-                    if (resp) responsabili.push(resp);
-                }
+            const responsabili: string[] = [];
+            for (const idx of [colIdx.RESP_1, colIdx.RESP_2, colIdx.RESP_3, colIdx.RESP_4].filter(i => i !== -1)) {
+                const resp = String(row[idx] || "").trim();
+                if (resp) responsabili.push(resp);
+            }
 
-                return {
-                    code,
-                    firstName,
-                    lastName,
-                    birthDate: parseExcelDate(row[colIdx.DATA_NASCITA]),
-                    sex,
-                    category: parseCategory(String(row[colIdx.CAT] || "")),
-                    medicalExpiry: parseExcelDate(row[colIdx.SCADENZA_CERT_MEDICO]),
-                    disciplines,
-                    partnerCode: partnerCode || null,
-                    partnerFirstName: null,
-                    partnerLastName: null,
-                    partnerBirthDate: null,
-                    partnerMedicalExpiry: null,
-                    responsabili,
-                };
+            const athleteData = {
+                code,
+                firstName,
+                lastName,
+                birthDate: parseExcelDate(row[colIdx.DATA_NASCITA]),
+                sex,
+                category: parseCategory(String(row[colIdx.CAT] || "")),
+                medicalExpiry: parseExcelDate(row[colIdx.SCADENZA_CERT_MEDICO]),
+                disciplines,
+                partnerCode: partnerCode && partnerCode !== code ? partnerCode : null,
+                partnerFirstName: null,
+                partnerLastName: null,
+                partnerBirthDate: null,
+                partnerMedicalExpiry: null,
+                responsabili,
             };
 
-            const athlete = extractAthlete();
-            if (athlete) {
-                const validation = validateAthleteRow(athlete, i);
-                if (validation.ok) athletes.push(validation.data);
-            }
+            const validation = validateAthleteRow(athleteData, i);
+            if (validation.ok) athletes.push(validation.data);
         }
 
         if (athletes.length === 0) return { success: false, message: "Nessun atleta valido trovato." };
 
-        // UPSERT LOGIC
+        // Dedup Excel data by code (keep first occurrence)
+        const excelAthleteMap = new Map<string, any>();
+        athletes.forEach(a => { if (!excelAthleteMap.has(a.code)) excelAthleteMap.set(a.code, a); });
+        const excelCodes = new Set(excelAthleteMap.keys());
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error("Utente non autenticato");
 
         const { data: profile } = await supabase.from("profiles").select("id").eq("user_id", user.id).maybeSingle();
         const instructorId = profile?.id || null;
 
-        const uniqueAthletesMap = new Map();
-        athletes.forEach((a: any) => {
-            if (!uniqueAthletesMap.has(a.code)) {
-                uniqueAthletesMap.set(a.code, {
-                    code: a.code,
-                    first_name: a.firstName,
-                    last_name: a.lastName,
-                    category: a.category || "Senza categoria",
-                    class: a.disciplines.length > 0 ? a.disciplines[0].class : "D",
-                    birth_date: a.birthDate,
-                    gender: a.sex,
-                    medical_certificate_expiry: a.medicalExpiry,
-                    instructor_id: instructorId,
-                    responsabili: a.responsabili,
-                });
-            }
-        });
-
-        const athletesData = Array.from(uniqueAthletesMap.values());
-
-        const { data: insertedAthletes, error: athletesError } = await supabase
+        // --- STEP 1: Fetch existing athletes from DB ---
+        const { data: existingAthletes, error: fetchError } = await (supabase
             .from("athletes")
-            .upsert(athletesData, { onConflict: 'code' })
-            .select('id, code');
+            .select("id, code, first_name, last_name, birth_date, gender, medical_certificate_expiry, category, class, responsabili, is_deleted") as any);
+        if (fetchError) throw fetchError;
 
-        if (athletesError) throw athletesError;
+        const dbAthleteMap = new Map<string, any>(
+            (existingAthletes || []).map(a => [a.code, a])
+        );
 
-        const codeToId = new Map(insertedAthletes.map(a => [a.code, a.id]));
+        // --- STEP 2: Determine inserts, updates, soft-deletes ---
+        const toInsert: any[] = [];
+        const toUpdate: { id: string; changes: any }[] = [];
 
-        // Couples
-        const couplesToUpsert: any[] = [];
+        for (const [code, a] of excelAthleteMap) {
+            const dbAthlete = dbAthleteMap.get(code);
+            const newData = {
+                code,
+                first_name: a.firstName,
+                last_name: a.lastName,
+                category: a.category || "Senza categoria",
+                class: a.disciplines.length > 0 ? a.disciplines[0].class : "D",
+                birth_date: a.birthDate,
+                gender: a.sex,
+                medical_certificate_expiry: a.medicalExpiry,
+                instructor_id: instructorId,
+                responsabili: a.responsabili,
+            };
+
+            if (!dbAthlete) {
+                // New athlete
+                toInsert.push(newData);
+            } else {
+                // Check if anything changed
+                const changed =
+                    dbAthlete.first_name !== newData.first_name ||
+                    dbAthlete.last_name !== newData.last_name ||
+                    dbAthlete.birth_date !== newData.birth_date ||
+                    dbAthlete.gender !== newData.gender ||
+                    dbAthlete.medical_certificate_expiry !== newData.medical_certificate_expiry ||
+                    dbAthlete.category !== newData.category ||
+                    dbAthlete.class !== newData.class ||
+                    JSON.stringify(dbAthlete.responsabili) !== JSON.stringify(newData.responsabili) ||
+                    dbAthlete.is_deleted;
+
+                if (changed) {
+                    toUpdate.push({ id: dbAthlete.id, changes: { ...newData, is_deleted: false } as any });
+                }
+            }
+        }
+
+        // Soft-delete athletes no longer in Excel
+        const toSoftDelete = (existingAthletes || [])
+            .filter(a => !a.is_deleted && !excelCodes.has(a.code))
+            .map(a => a.id);
+
+        let inserted = 0, updated = 0, deleted = 0;
+
+        if (toInsert.length > 0) {
+            const { error } = await supabase.from("athletes").insert(toInsert);
+            if (error) throw new Error(`Errore inserimento: ${error.message}`);
+            inserted = toInsert.length;
+        }
+
+        for (const { id, changes } of toUpdate) {
+            const { error } = await supabase.from("athletes").update(changes).eq("id", id);
+            if (error) console.error(`Errore aggiornamento atleta ${id}:`, error.message);
+            else updated++;
+        }
+
+        if (toSoftDelete.length > 0) {
+            const { error } = await (supabase.from("athletes").update({ is_deleted: true } as any).in("id", toSoftDelete) as any);
+            if (error) console.error("Errore soft-delete atleti:", error.message);
+            else deleted = toSoftDelete.length;
+        }
+
+        // --- STEP 3: Re-fetch all active athletes to get current IDs ---
+        const { data: activeAthletes } = await (supabase
+            .from("athletes")
+            .select("id, code, is_deleted")
+            .eq("is_deleted", false) as any);
+
+        const activeCodeToId = new Map<string, string>(
+            ((activeAthletes || []) as any[]).map((a: any) => [a.code, a.id])
+        );
+
+        // --- STEP 4: Sync couples ---
+        // Build expected couples from Excel
+        const expectedPairs = new Set<string>();
+        const couplesToCreate: any[] = [];
         const processedPairs = new Set<string>();
 
-        for (const athlete of athletes) {
-            if (!codeToId.has(athlete.code) || !athlete.partnerCode || !codeToId.has(athlete.partnerCode)) continue;
+        for (const a of athletes) {
+            if (!a.partnerCode || a.partnerCode === a.code) continue;
+            if (!activeCodeToId.has(a.code) || !activeCodeToId.has(a.partnerCode)) continue;
 
-            const pairKey = [athlete.code, athlete.partnerCode].sort().join("-");
+            const pairKey = [a.code, a.partnerCode].sort().join("-");
             if (processedPairs.has(pairKey)) continue;
             processedPairs.add(pairKey);
+            expectedPairs.add(pairKey);
 
-            const athlete1Id = codeToId.get(athlete.code)!;
-            const athlete2Id = codeToId.get(athlete.partnerCode)!;
-
-            const athlete1 = athlete;
-            const athlete2 = athletes.find((a: any) => a.code === athlete.partnerCode);
-
-            if (athlete1 && athlete2) {
-                // Validation logic removed as hasAnomaly/anomalyReason were unused
-                validateCoupleCategory({
-                    storedCategory: athlete.category || "Senza categoria",
-                    athlete1BirthDateISO: athlete1.birthDate,
-                    athlete2BirthDateISO: athlete2.birthDate,
-                    onDate: new Date(),
-                });
-            }
+            const athlete1Id = activeCodeToId.get(a.code)!;
+            const athlete2Id = activeCodeToId.get(a.partnerCode)!;
+            const partner = athletes.find((p: any) => p.code === a.partnerCode);
 
             const disciplineInfo: Record<string, string> = {};
-            const allDisciplineEntries = [...(athlete1?.disciplines || []), ...(athlete2?.disciplines || [])];
-
-            const uniqueDisciplineNames = [...new Set(allDisciplineEntries.map(d => d.discipline))];
+            const allDiscs = [...(a.disciplines || []), ...(partner?.disciplines || [])];
+            const uniqueDiscNames = [...new Set(allDiscs.map(d => d.discipline))];
             let bestOverallClass = "D";
 
-            uniqueDisciplineNames.forEach(discName => {
-                const discClasses = allDisciplineEntries
-                    .filter(d => d.discipline === discName)
-                    .map(d => d.class);
-
-                let bestDiscClass = discClasses[0];
-                for (let k = 1; k < discClasses.length; k++) {
-                    bestDiscClass = getBestClass(bestDiscClass, discClasses[k]);
-                }
-
-                const rawEntries = allDisciplineEntries.filter(d => d.discipline === discName);
-                rawEntries.forEach(re => {
+            uniqueDiscNames.forEach(discName => {
+                const classes = allDiscs.filter(d => d.discipline === discName).map(d => d.class);
+                let best = classes[0];
+                for (let k = 1; k < classes.length; k++) best = getBestClass(best, classes[k]);
+                const raws = allDiscs.filter(d => d.discipline === discName);
+                raws.forEach(re => {
                     const rawNorm = (re.raw || "").toLowerCase();
                     let key = re.discipline as string;
                     if (re.discipline === "show_dance") {
@@ -279,50 +303,69 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
                     }
                     disciplineInfo[key] = disciplineInfo[key] ? getBestClass(disciplineInfo[key], re.class) : re.class;
                 });
-                bestOverallClass = getBestClass(bestOverallClass, bestDiscClass);
+                bestOverallClass = getBestClass(bestOverallClass, best);
             });
 
             if (disciplineInfo["combinata"] || (disciplineInfo["standard"] && disciplineInfo["latino"])) {
-                const latClass = disciplineInfo["latino"];
-                const stdClass = disciplineInfo["standard"];
-                const combClass = disciplineInfo["combinata"];
-                let resolvedCombClass = combClass || "D";
-                if (latClass) resolvedCombClass = getBestClass(resolvedCombClass, latClass);
-                if (stdClass) resolvedCombClass = getBestClass(resolvedCombClass, stdClass);
-                disciplineInfo["combinata"] = resolvedCombClass;
-                bestOverallClass = getBestClass(bestOverallClass, resolvedCombClass);
+                const resolved = getBestClass(disciplineInfo["combinata"] || "D", disciplineInfo["latino"] || "D");
+                disciplineInfo["combinata"] = getBestClass(resolved, disciplineInfo["standard"] || "D");
+                bestOverallClass = getBestClass(bestOverallClass, disciplineInfo["combinata"]);
             }
 
-            couplesToUpsert.push({
+            couplesToCreate.push({
                 athlete1_id: athlete1Id,
                 athlete2_id: athlete2Id,
-                category: athlete.category || "Senza categoria",
+                category: a.category || "Senza categoria",
                 class: bestOverallClass,
-                disciplines: uniqueDisciplineNames,
+                disciplines: uniqueDiscNames,
                 discipline_info: disciplineInfo,
                 instructor_id: instructorId,
                 is_active: true,
             });
         }
 
-        if (couplesToUpsert.length > 0) {
-            const { error: couplesError } = await supabase
+        // Upsert only couples from Excel (insert new, update existing)
+        if (couplesToCreate.length > 0) {
+            const { error } = await supabase
                 .from("couples")
-                .upsert(couplesToUpsert, { onConflict: 'athlete1_id,athlete2_id' });
-
-            if (couplesError) {
-                console.error("Couples upsert error:", couplesError);
-                throw new Error(`Errore creazione coppie: ${couplesError.message}`);
-            }
+                .upsert(couplesToCreate, { onConflict: 'athlete1_id,athlete2_id' });
+            if (error) console.error("Errore upsert coppie:", error.message);
         }
 
-        return { success: true, count: insertedAthletes.length, couples: couplesToUpsert.length };
+        // Deactivate couples no longer in Excel
+        const { data: activeCouples } = await supabase
+            .from("couples")
+            .select("id, athlete1_id, athlete2_id")
+            .eq("is_active", true);
+
+        const couplesToDeactivate = (activeCouples || []).filter(c => {
+            if (c.athlete1_id === c.athlete2_id) return true; // self-couples → deactivate
+            const a1Code = [...activeCodeToId.entries()].find(([, id]) => id === c.athlete1_id)?.[0];
+            const a2Code = [...activeCodeToId.entries()].find(([, id]) => id === c.athlete2_id)?.[0];
+            if (!a1Code || !a2Code) return true;
+            const pairKey = [a1Code, a2Code].sort().join("-");
+            return !expectedPairs.has(pairKey);
+        }).map(c => c.id);
+
+        if (couplesToDeactivate.length > 0) {
+            await supabase.from("couples").update({ is_active: false }).in("id", couplesToDeactivate);
+        }
+
+        return {
+            success: true,
+            count: activeAthletes?.length || 0,
+            inserted,
+            updated,
+            deleted,
+            couples: couplesToCreate.length,
+        };
 
     } catch (error: any) {
         console.error("Import error:", error);
         return { success: false, message: error.message };
     }
 }
+
 
 export async function importCompetitions(arrayBuffer: ArrayBuffer) {
     try {
@@ -351,16 +394,17 @@ export async function importCompetitions(arrayBuffer: ArrayBuffer) {
 
         if (nameIdx === -1 || dateIdx === -1) throw new Error("Colonne 'Nome' e 'Data' mancanti.");
 
-        const competitions: any[] = [];
+        const rawCompetitions: any[] = [];
         for (let i = 1; i < rawData.length; i++) {
             const row = rawData[i];
             if (!row || row.length === 0) continue;
             const name = String(row[nameIdx] || "").trim();
-            if (!name) continue;
+            const date = parseExcelDate(row[dateIdx]);
+            if (!name || !date) continue;
 
-            competitions.push({
+            rawCompetitions.push({
                 name,
-                date: parseExcelDate(row[dateIdx]),
+                date,
                 end_date: endDateIdx !== -1 ? parseExcelDate(row[endDateIdx]) : null,
                 location: locationIdx !== -1 ? String(row[locationIdx] || "").trim() || null : null,
                 registration_deadline: deadlineIdx !== -1 ? parseExcelDate(row[deadlineIdx]) : null,
@@ -369,11 +413,31 @@ export async function importCompetitions(arrayBuffer: ArrayBuffer) {
             });
         }
 
+        // Deduplicate before processing
+        const uniqueCompsMap = new Map();
+        rawCompetitions.forEach(c => {
+            const key = `${c.name.toLowerCase()}-${c.date}`;
+            if (!uniqueCompsMap.has(key)) {
+                uniqueCompsMap.set(key, c);
+            }
+        });
+        const competitions = Array.from(uniqueCompsMap.values());
+
         let created = 0, updated = 0;
         for (const comp of competitions) {
-            if (!comp.date) continue;
-            const { data: existing } = await supabase.from("competitions").select("id").eq("name", comp.name).eq("date", comp.date).maybeSingle();
+            const { data: existing } = await supabase
+                .from("competitions")
+                .select("id, is_deleted")
+                .eq("name", comp.name)
+                .eq("date", comp.date)
+                .limit(1)
+                .maybeSingle() as any;
+
             if (existing) {
+                if (existing.is_deleted) {
+                    // Skip re-importing manually deleted competition
+                    continue;
+                }
                 await supabase.from("competitions").update(comp).eq("id", existing.id);
                 updated++;
             } else {

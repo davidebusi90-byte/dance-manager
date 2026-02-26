@@ -4,22 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
-type AuthMode = "login" | "signup" | "otp_request" | "otp_verify" | "reset_request" | "reset_password";
+type AuthMode = "login" | "otp_request" | "otp_verify" | "reset_request" | "reset_password";
 
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [otpCode, setOtpCode] = useState("");
-  const [isInstructor, setIsInstructor] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,12 +34,7 @@ export default function Auth() {
         setMode("reset_password");
       }
 
-      // Check for registration mode
-      const registerMode = hashParams.get("register") || new URLSearchParams(window.location.search).get("register");
-      if (registerMode === "instructor") {
-        setMode("signup");
-        setIsInstructor(true);
-      }
+
     };
 
     checkRecoverySession();
@@ -66,23 +58,6 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate("/dashboard");
-      } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: fullName, is_instructor_request: isInstructor },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-        toast({
-          title: "Registrazione completata!",
-          description: isInstructor
-            ? "La tua richiesta come istruttore è in attesa di approvazione da parte di un amministratore."
-            : "Ora puoi accedere."
-        });
-        setMode("login");
       } else if (mode === "otp_request") {
         const { error } = await supabase.auth.signInWithOtp({
           email,
@@ -153,7 +128,6 @@ export default function Auth() {
   const getTitle = () => {
     switch (mode) {
       case "login": return "Accedi al tuo account";
-      case "signup": return "Crea un nuovo account istruttore";
       case "otp_request": return "Accedi con codice temporaneo";
       case "otp_verify": return "Inserisci il codice ricevuto";
       case "reset_request": return "Recupera la tua password";
@@ -165,7 +139,6 @@ export default function Auth() {
     if (loading) return "Caricamento...";
     switch (mode) {
       case "login": return "Accedi";
-      case "signup": return "Registrati";
       case "otp_request": return "Invia codice";
       case "otp_verify": return "Verifica codice";
       case "reset_request": return "Invia link reset";
@@ -184,7 +157,7 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md animate-fade-in">
+      <Card className="w-full max-w-md animate-fade-in bg-sky-50 border-sky-200">
         <CardHeader className="text-center relative">
           {showBackButton && (
             <button
@@ -203,19 +176,7 @@ export default function Auth() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
-            {mode === "signup" && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nome completo</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={mode === "signup"}
-                />
-              </div>
-            )}
-
-            {(mode === "login" || mode === "signup" || mode === "otp_request" || mode === "reset_request") && (
+            {(mode === "login" || mode === "otp_request" || mode === "reset_request") && (
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -252,7 +213,7 @@ export default function Auth() {
               </div>
             )}
 
-            {(mode === "login" || mode === "signup") && (
+            {mode === "login" && (
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -263,28 +224,13 @@ export default function Auth() {
                   required
                   minLength={6}
                 />
-                {mode === "login" && (
-                  <button
-                    type="button"
-                    onClick={() => setMode("reset_request")}
-                    className="text-sm text-accent hover:underline"
-                  >
-                    Password dimenticata?
-                  </button>
-                )}
-              </div>
-            )}
-
-            {mode === "signup" && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="instructor"
-                  checked={isInstructor}
-                  onCheckedChange={(checked) => setIsInstructor(checked === true)}
-                />
-                <Label htmlFor="instructor" className="text-sm cursor-pointer">
-                  Sono un istruttore
-                </Label>
+                <button
+                  type="button"
+                  onClick={() => setMode("reset_request")}
+                  className="text-sm text-accent hover:underline"
+                >
+                  Password dimenticata?
+                </button>
               </div>
             )}
 
@@ -332,17 +278,7 @@ export default function Auth() {
             </Button>
           </form>
 
-          {(mode === "login" || mode === "signup") && (
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              {mode === "login" ? "Non hai un account?" : "Hai già un account?"}{" "}
-              <button
-                onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                className="text-accent hover:underline font-medium"
-              >
-                {mode === "login" ? "Registrati" : "Accedi"}
-              </button>
-            </p>
-          )}
+
 
           {mode === "otp_verify" && (
             <p className="mt-4 text-center text-sm text-muted-foreground">

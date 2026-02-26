@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, Search, ShieldAlert, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, KeyRound } from "lucide-react";
+import { ArrowLeft, CheckCircle, Search, ShieldAlert, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, KeyRound, ShieldCheck, Shield } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,6 +16,7 @@ type Instructor = {
   user_id: string;
   full_name: string;
   email: string | null;
+  is_supervisor: boolean;
 };
 
 type PendingUser = {
@@ -53,6 +54,7 @@ export default function Instructors() {
   const [newInstructorPassword, setNewInstructorPassword] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingRoleId, setTogglingRoleId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -102,6 +104,7 @@ export default function Instructors() {
             user_id: p.user_id,
             full_name: p.full_name,
             email: p.email,
+            is_supervisor: userRoles.includes("supervisor"),
           });
         } else if (userRoles.length === 0) {
           // User has no roles at all - pending approval
@@ -298,6 +301,42 @@ export default function Instructors() {
     }
   };
 
+  const handleToggleSupervisor = async (instructor: Instructor) => {
+    setTogglingRoleId(instructor.user_id);
+    try {
+      if (instructor.is_supervisor) {
+        // Remove supervisor role
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", instructor.user_id)
+          .eq("role", "supervisor");
+
+        if (error) throw error;
+        toast({
+          title: "Ruolo rimosso",
+          description: `${instructor.full_name} non è più supervisore.`,
+        });
+      } else {
+        // Add supervisor role
+        const { error } = await supabase
+          .from("user_roles")
+          .insert({ user_id: instructor.user_id, role: "supervisor" });
+
+        if (error) throw error;
+        toast({
+          title: "Supervisore assegnato",
+          description: `${instructor.full_name} ora ha accesso globale in sola lettura.`,
+        });
+      }
+      await fetchData();
+    } catch (e: any) {
+      toast({ title: "Errore", description: e.message, variant: "destructive" });
+    } finally {
+      setTogglingRoleId(null);
+    }
+  };
+
   const handleUpdatePassword = async () => {
     if (!selected) return;
     if (newPassword.length < 6) {
@@ -311,11 +350,28 @@ export default function Instructors() {
 
     setSaving(true);
     try {
+      // Verify we have a valid session before calling the function
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("[admin-update-password] Session:", sessionData?.session ? "Active" : "Missing");
+
       const { data, error } = await supabase.functions.invoke("admin-update-password", {
         body: { user_id: selected.user_id, new_password: newPassword },
       });
 
-      if (error) throw error;
+      // Log full error for diagnostics
+      if (error) {
+        console.error("[admin-update-password] Invoke error:", error);
+        console.error("[admin-update-password] Error context:", (error as any)?.context);
+        // Try to read actual error body
+        const errorBody = (error as any)?.context;
+        if (errorBody && typeof errorBody.json === "function") {
+          try {
+            const bodyJson = await errorBody.json();
+            console.error("[admin-update-password] Error body JSON:", bodyJson);
+          } catch (_) { /* ignore */ }
+        }
+        throw error;
+      }
       if (data?.error) throw new Error(data.error);
 
       toast({
@@ -325,6 +381,7 @@ export default function Instructors() {
       setNewPassword("");
       setSelected(null);
     } catch (e: any) {
+      console.error("[admin-update-password] Caught error:", e);
       toast({ title: "Errore", description: e.message, variant: "destructive" });
     } finally {
       setSaving(false);
@@ -446,16 +503,14 @@ export default function Instructors() {
 
     setIsAdding(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-create-instructor", {
-        body: {
-          full_name: newInstructorName,
-          email: newInstructorEmail,
-          password: newInstructorPassword,
-        },
+      const { data, error } = await supabase.rpc("admin_create_instructor", {
+        p_full_name: newInstructorName,
+        p_email: newInstructorEmail,
+        p_password: newInstructorPassword,
       });
 
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (data?.success === false) throw new Error(data.error);
 
       toast({
         title: "Istruttore creato",
@@ -636,7 +691,7 @@ export default function Instructors() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              <div className="data-table-container">
                 <table className="data-table">
                   <thead>
                     <tr>
@@ -671,27 +726,12 @@ export default function Instructors() {
           </Card>
         )}
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              Cerca
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Input
-              placeholder="Cerca per nome o email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="search-input"
-            />
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-warning" />
+              <div className="w-8 h-8 bg-accent/10 rounded-xl flex items-center justify-center">
+                <Users className="w-4 h-4 text-accent" />
+              </div>
               Elenco istruttori ({filtered.length})
             </CardTitle>
           </CardHeader>
@@ -701,7 +741,7 @@ export default function Instructors() {
             ) : filtered.length === 0 ? (
               <div className="text-muted-foreground">Nessun istruttore trovato.</div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="data-table-container">
                 <table className="data-table">
                   <thead>
                     <tr>
@@ -859,6 +899,28 @@ export default function Instructors() {
                                     </DialogFooter>
                                   </DialogContent>
                                 </Dialog>
+                                <Button
+                                  variant={i.is_supervisor ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handleToggleSupervisor(i)}
+                                  disabled={togglingRoleId === i.user_id}
+                                  className={i.is_supervisor ? "bg-accent hover:bg-accent/90" : ""}
+                                  title={i.is_supervisor ? "Rimuovi accesso sola lettura" : "Promuovi a supervisore (accesso globale sola lettura)"}
+                                >
+                                  {togglingRoleId === i.user_id ? (
+                                    <span className="w-4 h-4 spinner" />
+                                  ) : i.is_supervisor ? (
+                                    <>
+                                      <ShieldCheck className="w-4 h-4 mr-1" />
+                                      Admin (Sola Lettura)
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Shield className="w-4 h-4 mr-1" />
+                                      Rendi Admin (SL)
+                                    </>
+                                  )}
+                                </Button>
 
                                 <Button
                                   variant="ghost"

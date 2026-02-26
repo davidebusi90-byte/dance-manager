@@ -49,6 +49,7 @@ END;
 $$;
 
 -- Create trigger that fires BEFORE deleting a profile
+DROP TRIGGER IF EXISTS cleanup_instructor_responsabili_on_delete ON public.profiles;
 CREATE TRIGGER cleanup_instructor_responsabili_on_delete
   BEFORE DELETE ON public.profiles
   FOR EACH ROW

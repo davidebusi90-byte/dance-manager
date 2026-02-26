@@ -125,14 +125,19 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .stat-card {
-    @apply bg-card rounded-xl p-6 shadow-sm border border-border/50 transition-all duration-200 hover:shadow-md;
+    @apply bg-card rounded-xl p-6 shadow-sm border border-border/50 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
 
   .stat-value {
@@ -171,8 +176,12 @@
     @apply w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring transition-all;
   }
 
+  .data-table-container {
+    @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+  }
+
   .data-table {
-    @apply w-full text-sm;
+    @apply w-full text-sm min-w-[600px];
   }
 
   .data-table th {
@@ -189,5 +198,17 @@
 
   .data-table tbody tr {
     @apply transition-colors hover:bg-secondary/30;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1.5cm;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }

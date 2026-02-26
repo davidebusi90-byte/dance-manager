@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useIsAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSupervisor, setIsSupervisor] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,19 +15,34 @@ export function useIsAdmin() {
         } = await supabase.auth.getSession();
 
         if (!session?.user) {
-          if (mounted) setIsAdmin(false);
+          if (mounted) {
+            setIsAdmin(false);
+            setIsSupervisor(false);
+          }
           return;
         }
 
-        const { data, error } = await supabase.rpc("has_role", {
+        // Check for admin role
+        const { data: adminData } = await supabase.rpc("has_role", {
           _user_id: session.user.id,
           _role: "admin",
         });
 
-        if (error) throw error;
-        if (mounted) setIsAdmin(Boolean(data));
+        // Check for supervisor role
+        const { data: supervisorData } = await supabase.rpc("has_role", {
+          _user_id: session.user.id,
+          _role: "supervisor",
+        });
+
+        if (mounted) {
+          setIsAdmin(Boolean(adminData));
+          setIsSupervisor(Boolean(supervisorData));
+        }
       } catch {
-        if (mounted) setIsAdmin(false);
+        if (mounted) {
+          setIsAdmin(false);
+          setIsSupervisor(false);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -38,5 +54,10 @@ export function useIsAdmin() {
     };
   }, []);
 
-  return { isAdmin, loading };
+  return {
+    isAdmin,
+    isSupervisor,
+    isAnyAdmin: isAdmin || isSupervisor,
+    loading
+  };
 }

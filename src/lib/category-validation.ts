@@ -4,7 +4,6 @@ export type CategoryLabel =
   | "Junior 1"
   | "Junior 2"
   | "Youth"
-  | "Under 21"
   | "Adult"
   | "Senior 1"
   | "Senior 2"
@@ -28,8 +27,6 @@ const CATEGORY_RULES: CategoryRule[] = [
   { label: "Junior 1", minAge: 12, maxAge: 13, displayCode: "12/13" },
   { label: "Junior 2", minAge: 14, maxAge: 15, displayCode: "14/15" },
   { label: "Youth", minAge: 16, maxAge: 18, displayCode: "16/18" },
-  // Under 21 is a sub-category for ages 19-20.
-  { label: "Under 21", minAge: 19, maxAge: 20, displayCode: "19-34" },
   { label: "Adult", minAge: 19, maxAge: 34, displayCode: "19/34" },
   { label: "Senior 1", minAge: 35, maxAge: 44, displayCode: "35/44" },
   { label: "Senior 2", minAge: 45, maxAge: 54, displayCode: "45/54" },
@@ -37,8 +34,29 @@ const CATEGORY_RULES: CategoryRule[] = [
   { label: "Senior 3b", minAge: 61, maxAge: 64, displayCode: "61/64" },
   { label: "Senior 4a", minAge: 65, maxAge: 69, displayCode: "65/69" },
   { label: "Senior 4b", minAge: 70, maxAge: 74, displayCode: "70/74" },
-  { label: "Senior 5", minAge: 75, maxAge: null, displayCode: "75+" },
+  { label: "Senior 5", minAge: 75, maxAge: null, displayCode: "75/0" },
 ];
+
+export const ALLOWED_CLASSES_BY_CATEGORY: Record<string, string[]> = {
+  "juvenile1": ["D", "C", "B3", "B2", "B1"],
+  "juvenile2": ["D", "C", "B3", "B2", "B1", "A"],
+  "junior1": ["D", "C", "B3", "B2", "B1", "A"],
+  "junior2": ["D", "C", "B3", "B2", "B1", "A", "AS"],
+  "youth": ["D", "C", "B3", "B2", "B1", "A", "AS"],
+  "adult": ["D", "C", "B3", "B2", "B1", "A2", "A1", "AS", "MASTER"],
+  "senior1": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
+  "senior2": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
+  "senior3a": ["D", "C", "B3", "B2", "B1", "A", "AS"],
+  "senior3b": ["D", "C", "B3", "B2", "B1", "A", "AS"],
+  "senior4a": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
+  "senior4b": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
+  "senior5": ["D", "C", "B3", "B2", "B1", "A", "AS"],
+};
+
+export function getAllowedClassesForCategory(categoryLabel: CategoryLabel): string[] {
+  const norm = normalizeCategoryLabel(categoryLabel);
+  return ALLOWED_CLASSES_BY_CATEGORY[norm] || ["D", "C", "B3", "B2", "B1"];
+}
 
 export function getSportsAge(birthDateISO: string, referenceDate: Date): number {
   const birthYear = new Date(birthDateISO).getFullYear();
@@ -76,6 +94,12 @@ export function expectedCategoryFromAge(age: number): CategoryLabel {
   return match?.label ?? "Adult";
 }
 
+export function getCategoryMinAge(categoryLabel: string): number {
+  const norm = normalizeCategory(categoryLabel);
+  const match = CATEGORY_RULES.find(r => normalizeCategoryLabel(r.label) === norm);
+  return match?.minAge ?? 0;
+}
+
 /**
  * Resolve any supported category input (label, abbreviation, or age-range code)
  * to the canonical normalised key such as "juvenile1", "senior3a", etc.
@@ -84,7 +108,7 @@ export function normalizeCategory(input: string): string {
   const s = input
     .toLowerCase()
     .replace(/\s+/g, "")
-    .replace(/[-_.\/]/g, "");
+    .replace(/[-_./]/g, "");
 
   // Common abbreviations & label forms
   const labelMap: Record<string, string> = {
@@ -201,7 +225,7 @@ export function validateCoupleCategory(params: {
   const sportsAge1 = getSportsAge(athlete1BirthDateISO, onDate);
   const sportsAge2 = getSportsAge(athlete2BirthDateISO, onDate);
 
-  const olderAge = Math.max(sportsAge1, sportsAge2);
+  const youngPartnerBirthDate = sportsAge1 >= sportsAge2 ? athlete2BirthDateISO : athlete1BirthDateISO;
   const youngerAge = Math.min(sportsAge1, sportsAge2);
 
   const allowed = getAllowedCategories(
@@ -226,26 +250,15 @@ export function validateCoupleCategory(params: {
   const okYounger = youngerAge >= minAge - 5;
 
   if (!okYounger) {
-    // If the younger is too young, and we are in a Senior category, fall back to "Adult".
-    // Note: We might need a more generic fallback if we have multiple levels (Senior 3 -> Senior 2 etc),
-    // but the user only specifically mentioned the fallback to 19-34 (Adult).
-    // Let's implement a specific check: if effective is Senior X, and younger is too young, set effective to Adult.
-
-    if (effectiveCategoryLabel.startsWith("Senior")) {
-      // Check if they are eligible for Adult
-      // Adult min is 19. Younger must be >= 19-5 = 14.
-      const adultRule = CATEGORY_RULES.find(r => r.label === "Adult")!;
-      if (youngerAge >= adultRule.minAge - 5) {
-        effectiveCategoryLabel = "Adult";
-        effectiveRule = adultRule;
-      }
-    }
+    // Fallback alla categoria del componente più giovane
+    effectiveCategoryLabel = expectedCategoryFromAge(youngerAge);
+    effectiveRule = CATEGORY_RULES.find(r => r.label === effectiveCategoryLabel)!;
   }
 
   // Now validate against the *effective* category
   const storedNorm = normalizeCategory(storedCategory);
   const effectiveNorm = normalizeCategory(effectiveCategoryLabel);
-  const isCategoryMatch = storedNorm === effectiveNorm || (effectiveNorm === "under21" && storedNorm === "adult");
+  const isCategoryMatch = storedNorm === effectiveNorm;
 
   // Re-check younger age against the NEW effective category (should be OK if we fell back correctly)
   const finalMinAge = effectiveRule.minAge;

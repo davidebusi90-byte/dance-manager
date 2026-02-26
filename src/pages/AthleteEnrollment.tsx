@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getBestClass } from "@/lib/class-utils";
+import { getCategoryMinAge } from "@/lib/category-validation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useUserRole } from "@/hooks/use-user-role";
 
 
 interface Athlete {
@@ -65,6 +68,7 @@ export default function AthleteEnrollment() {
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<"cid" | "enrollment" | "success" | "couple">("cid");
   const { toast } = useToast();
+  const { role: userRole } = useUserRole();
 
   // Lookup athlete by CID code
   const handleCidLookup = async () => {
@@ -126,7 +130,7 @@ export default function AthleteEnrollment() {
       if (result.error) {
         toast({ title: result.error, variant: "destructive" });
       } else {
-        const couplesData = (result.data as any) || [];
+        const couplesData = (result.data as Couple[]) || [];
         setCouples(couplesData);
 
         // Auto-select if only one active couple
@@ -155,7 +159,6 @@ export default function AthleteEnrollment() {
         toast({ title: result.error, variant: "destructive" });
       } else {
         setCompetitions(result.competitions || []);
-        // setClassRules(result.classRules || []);
         setExistingEntries(new Set(result.existingEntries || []));
         setEventTypes(result.eventTypes || []);
       }
@@ -189,6 +192,11 @@ export default function AthleteEnrollment() {
       if (stdClass) resolvedClass = getBestClass(resolvedClass, stdClass);
       return resolvedClass;
     }
+
+    // Handle specific Adult classes A1/A2
+    if (eventNameNorm.includes("a1")) return couple.discipline_info["a1"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class;
+    if (eventNameNorm.includes("a2")) return couple.discipline_info["a2"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class;
+    if (eventNameNorm.includes("master")) return couple.discipline_info["master"] || couple.class;
     if (eventNameNorm.includes("south american"))
       return couple.discipline_info["show_dance_sa"] || couple.class;
     if (eventNameNorm.includes("classic showdance"))
@@ -199,33 +207,64 @@ export default function AthleteEnrollment() {
     return couple.class;
   };
 
+  const isEventAllowedByAge = (et: EventType, category: string) => {
+    const coupleMinAge = getCategoryMinAge(category);
+    // If event has min_age, couple's category min_age must be >= event.min_age
+    if (et.min_age !== null && coupleMinAge < et.min_age) return false;
+    // If event has max_age, couple's category min_age must be <= event.max_age
+    if (et.max_age !== null && coupleMinAge > et.max_age) return false;
+    return true;
+  };
+
   /* 
     STRICT ENROLLMENT LOGIC:
     - If a competition has NO event types configured, it is NOT allowed.
     - If event types are configured, the couple must match at least one (Class + Discipline + Age).
   */
   const isCompetitionAllowed = (competition: Competition, couple: Couple) => {
-    // 1. Get events for this competition
     const compEvents = eventTypes.filter(et => et.competition_id === competition.id);
-
-    // If no events configured => Not allowed (Strict Mode)
     if (compEvents.length === 0) return false;
 
-    // 2. Check if ANY event allows this couple
+    // Se la coppia è classe D, nascondi la competizione se contiene SOLO gare di classe A
+    // (verrà filtrata meglio a livello di singoli eventi, ma questo aiuta a nascondere comp intere)
+    const isClasseD = couple.class.toUpperCase() === "D";
+
     const hasAllowedEvent = compEvents.some(et => {
-      // Check 1: Discipline match
+      // Regola base Classe D: non può mai vedere classi A
+      if (isClasseD && (et.event_name.toUpperCase().includes("CLASSE A") || et.event_name.toUpperCase().includes(" A1") || et.event_name.toUpperCase().includes(" A2") || et.event_name.toUpperCase().includes(" AS"))) {
+        return false;
+      }
+
+      const effectiveClass = getEffectiveClass(couple, et.event_name);
+
+      // Controllo Disciplina
       if (!isEventMatchingCoupleDiscipline(et.event_name, couple.disciplines)) return false;
 
-      // Check 2: Class match
-      const effectiveClass = getEffectiveClass(couple, et.event_name);
-      if (!et.allowed_classes.includes(effectiveClass)) return false;
+      // Controllo Età
+      if (!isEventAllowedByAge(et, couple.category)) return false;
 
-      // Check 3: Age match (if configured)
-      // Note: Age logic is complex. For now, we rely on class/discipline and trust the "Adult/Senior" in event name matches the class.
-      // If we need strict age checking, we should use et.min_age/max_age against couple's birth dates (if available).
-      // Given the previous legacy code had age parsing from names, we can try to incorporate it if needed,
-      // but usually Class restricts Age (e.g., "Over 35" class).
-      // Let's assume Class + Discipline is sufficient for now, as users select Classes based on age.
+      // Regole Speciali Classe D per visibilità e iscrizione
+      if (isClasseD) {
+        const eventNameNorm = et.event_name.toLowerCase();
+
+        // 1. D può ballare C Open, B Open
+        if (eventNameNorm.includes("c open") || eventNameNorm.includes("b open")) return true;
+      }
+
+      // Regola Universale: Open Classe A solo per 16+ anni
+      if (et.event_name.toUpperCase().includes("OPEN CLASSE A")) {
+        const coupleMinAge = getCategoryMinAge(couple.category);
+        if (coupleMinAge < 16) return false;
+      }
+
+      // Regola Universale Under 16 per Classi D, C, B, A
+      if (et.event_name.toLowerCase().includes("under 16")) {
+        const c = couple.class.toUpperCase();
+        if (["D", "C", "B", "B1", "B2", "B3", "A", "A1", "A2"].includes(c)) return true;
+      }
+
+      // Controllo Classe standard
+      if (!et.allowed_classes.includes(effectiveClass)) return false;
 
       return true;
     });
@@ -236,26 +275,47 @@ export default function AthleteEnrollment() {
   const getEventDiscipline = (eventName: string): string | null => {
     const lowerName = eventName.toLowerCase();
 
-    // New prefixes (user requested)
-    if (lowerName.startsWith("danze standard -")) return "standard";
-    if (lowerName.startsWith("danze latino americane -")) return "latino";
-    if (lowerName.startsWith("combinata -")) return "combinata";
-
-    // Legacy prefixes (compatibility)
-    if (lowerName.startsWith("standard -")) return "standard";
-    if (lowerName.startsWith("latini -")) return "latino";
+    // Riconoscimento flessibile (cerca la parola chiave ovunque nel nome)
+    if (lowerName.includes("standard")) return "standard";
+    if (lowerName.includes("latino") || lowerName.includes("latini") || lowerName.includes("latin")) return "latino";
+    if (lowerName.includes("combinata")) return "combinata";
 
     return null;
   };
 
   const isEventMatchingCoupleDiscipline = (eventName: string, coupleDisciplines: string[]): boolean => {
     const eventDiscipline = getEventDiscipline(eventName);
-    if (!eventDiscipline) return true; // Show legacy/unprefixed events to everyone (or filter them out if preferred)
+    if (!eventDiscipline) return true;
 
-    // Normalize couple disciplines
     const normalizedCoupleDisciplines = coupleDisciplines.map(d => d.toLowerCase());
 
+    // Supporto per nuovi nomi completi richiesti
+    const isLatino = normalizedCoupleDisciplines.includes("latino") || normalizedCoupleDisciplines.includes("danze latino americane");
+    const isStandard = normalizedCoupleDisciplines.includes("standard") || normalizedCoupleDisciplines.includes("danze standard");
+    const isCombinata = normalizedCoupleDisciplines.includes("combinata");
+
+    if (eventDiscipline === "latino" && isLatino) return true;
+    if (eventDiscipline === "standard" && isStandard) return true;
+    if (eventDiscipline === "combinata" && isCombinata) return true;
+
     return normalizedCoupleDisciplines.includes(eventDiscipline);
+  };
+
+  const sortEventTypes = (events: EventType[]) => {
+    const getPriority = (name: string) => {
+      const lower = name.toLowerCase();
+      if (lower.startsWith("danze standard") || lower.startsWith("standard")) return 1;
+      if (lower.startsWith("danze latino") || lower.startsWith("latini") || lower.startsWith("latino")) return 2;
+      if (lower.startsWith("combinata")) return 3;
+      return 4;
+    };
+
+    return [...events].sort((a, b) => {
+      const pA = getPriority(a.event_name);
+      const pB = getPriority(b.event_name);
+      if (pA !== pB) return pA - pB;
+      return a.event_name.localeCompare(b.event_name);
+    });
   };
 
   const isDeadlinePassed = (competition: Competition) => {
@@ -305,7 +365,31 @@ export default function AthleteEnrollment() {
     });
   };
 
+  const resetFlow = () => {
+    setCidCode("");
+    setAthlete(null);
+    setCouples([]);
+    setSelectedCouple(null);
+    setCompetitions([]);
+    setEventTypes([]);
+    setExistingEntries(new Set());
+    setSelectedCompetitions(new Set());
+    setExpandedCompetitions(new Set());
+    setSelectedRaces({});
+    setStep("cid");
+  };
+
+  const isReadOnly = userRole === "instructor" || userRole === "supervisor";
+
   const handleSubmit = async () => {
+    if (isReadOnly) {
+      toast({
+        title: "Azione non consentita",
+        description: "Il tuo account ha permessi di sola lettura.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!selectedCouple || selectedCompetitions.size === 0) return;
 
     setSubmitting(true);
@@ -346,8 +430,8 @@ export default function AthleteEnrollment() {
       } else {
         setStep("success");
         toast({
-          title: "Iscrizione completata!",
-          description: result.message || `Hai iscritto la coppia a ${selectedCompetitions.size} gara/e`,
+          title: "FATTO!",
+          description: "La tua iscrizione è stata registrata.",
         });
       }
     } catch (err) {
@@ -361,19 +445,7 @@ export default function AthleteEnrollment() {
     setSubmitting(false);
   };
 
-  const resetFlow = () => {
-    setCidCode("");
-    setAthlete(null);
-    setCouples([]);
-    setSelectedCouple(null);
-    setCompetitions([]);
-    setEventTypes([]);
-    setExistingEntries(new Set());
-    setSelectedCompetitions(new Set());
-    setExpandedCompetitions(new Set());
-    setSelectedRaces({});
-    setStep("cid");
-  };
+
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("it-IT", {
@@ -392,12 +464,33 @@ export default function AthleteEnrollment() {
           <div className="w-20 h-20 mx-auto mb-4 bg-white/10 rounded-full p-3 flex items-center justify-center">
             <img src="/logo.png" alt="Dance Manager Logo" className="w-full h-full object-contain brightness-0 invert" />
           </div>
-          <h1 className="text-3xl font-bold">Competitori</h1>
-          <p className="mt-2 opacity-90">Inserisci il tuo codice CID per iscriverti alle competizioni</p>
+          <h1 className="text-3xl font-bold">Iscrizione Gara</h1>
+          <p className="mt-2 opacity-90">Per qualsiasi anomalia contattare <a href="mailto:ufficiogare@ritmodanza.net" className="underline underline-offset-2">ufficiogare@ritmodanza.net</a></p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-2xl">
+        {userRole === "instructor" && (
+          <Alert className="mb-6 border-warning bg-warning/10 text-warning-foreground">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Modalità Sola Lettura</AlertTitle>
+            <AlertDescription>
+              In qualità di istruttore, puoi visualizzare le iscrizioni ma non puoi effettuarne di nuove.
+              Questa funzione è ora riservata agli amministratori o agli atleti stessi tramite il portale pubblico.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {userRole === "supervisor" && (
+          <Alert className="mb-6 border-accent bg-accent/10 text-accent-foreground">
+            <ShieldCheck className="h-4 w-4" />
+            <AlertTitle>Accesso Supervisore</AlertTitle>
+            <AlertDescription>
+              Hai accesso in sola lettura a tutte le competizioni. Non puoi effettuare nuove iscrizioni.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Step indicator */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
@@ -430,10 +523,10 @@ export default function AthleteEnrollment() {
 
         {/* Step 1: CID Input */}
         {step === "cid" && (
-          <Card>
+          <Card className="bg-yellow-50/50 border-yellow-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
+                <User className="w-5 h-5 text-yellow-700" />
                 Inserisci Codice CID
               </CardTitle>
               <CardDescription>
@@ -592,7 +685,7 @@ export default function AthleteEnrollment() {
                       Seleziona Gare
                     </CardTitle>
                     <CardDescription>
-                      Gare disponibili per la classe {selectedCouple.class}
+                      Gare disponibili per la tua categoria e classe
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -602,182 +695,203 @@ export default function AthleteEnrollment() {
                       </div>
                     ) : competitions.length > 0 ? (
                       <div className="space-y-3">
-                        {competitions.map((competition) => {
-                          const isAllowed = isCompetitionAllowed(competition, selectedCouple);
-                          const alreadyEnrolled = existingEntries.has(competition.id);
-                          const deadlinePassed = isDeadlinePassed(competition);
-                          const isDisabled = !isAllowed || alreadyEnrolled || deadlinePassed;
-                          const isSelected = selectedCompetitions.has(competition.id);
-                          const isExpanded = expandedCompetitions.has(competition.id);
+                        {competitions
+                          .filter(competition => isCompetitionAllowed(competition, selectedCouple)) // Mostra solo competizioni permesse
+                          .map((competition) => {
+                            const isAllowed = true; // Già filtrato sopra
+                            const alreadyEnrolled = existingEntries.has(competition.id);
+                            const deadlinePassed = isDeadlinePassed(competition);
+                            const isDisabled = !isAllowed || alreadyEnrolled || deadlinePassed;
+                            const isSelected = selectedCompetitions.has(competition.id);
+                            const isExpanded = expandedCompetitions.has(competition.id);
 
-                          const selectedRacesCount = (selectedRaces[competition.id]?.length || 0) + (selectedRaces[`${competition.id}_disciplines`]?.length || 0);
+                            const selectedRacesCount = (selectedRaces[competition.id]?.length || 0) + (selectedRaces[`${competition.id}_disciplines`]?.length || 0);
 
-                          return (
-                            <div
-                              key={competition.id}
-                              className={`border rounded-lg overflow-hidden transition-all ${isDisabled
-                                ? "opacity-50 bg-muted"
-                                : isSelected
-                                  ? "border-primary/50 bg-primary/5"
-                                  : "hover:border-primary/50"
-                                }`}
-                            >
-                              {/* Accordion Header */}
+                            return (
                               <div
-                                className={`p-4 flex items-center gap-3 cursor-pointer ${isExpanded ? "bg-muted/50" : ""}`}
-                                onClick={() => !isDisabled && toggleExpansion(competition.id)}
+                                key={competition.id}
+                                className={`border rounded-lg overflow-hidden transition-all ${isDisabled
+                                  ? "opacity-50 bg-muted"
+                                  : isSelected
+                                    ? "border-primary/50 bg-primary/5"
+                                    : "hover:border-primary/50"
+                                  }`}
                               >
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                                  }`}>
-                                  {isSelected ? <Check className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-medium truncate">{competition.name}</div>
-                                  <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                                    <Calendar className="w-3 h-3" />
-                                    {formatDate(competition.date)}
+                                {/* Accordion Header */}
+                                <div
+                                  className={`p-4 flex items-center gap-3 cursor-pointer ${isExpanded ? "bg-muted/50" : ""}`}
+                                  onClick={() => !isDisabled && toggleExpansion(competition.id)}
+                                >
+                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                    }`}>
+                                    {isSelected ? <Check className="w-5 h-5" /> : <Trophy className="w-5 h-5" />}
                                   </div>
 
-                                  {/* Badges */}
-                                  <div className="flex flex-wrap gap-2 mt-2">
-                                    {alreadyEnrolled && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        <CheckCircle className="w-3 h-3 mr-1" />
-                                        Già iscritto
-                                      </Badge>
-                                    )}
-                                    {!isAllowed && (
-                                      <Badge variant="destructive" className="text-xs">
-                                        <AlertCircle className="w-3 h-3 mr-1" />
-                                        Non disponibile
-                                      </Badge>
-                                    )}
-                                    {deadlinePassed && !alreadyEnrolled && (
-                                      <Badge variant="outline" className="text-xs">
-                                        Iscrizioni chiuse
-                                      </Badge>
-                                    )}
-                                    {isSelected && (
-                                      <Badge variant="default" className="text-xs bg-primary/80 hover:bg-primary/80">
-                                        {selectedRacesCount} gare selezionate
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium truncate">{competition.name}</div>
+                                    <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                      <Calendar className="w-3 h-3" />
+                                      {formatDate(competition.date)}
+                                    </div>
 
-                                {/* Right Side: Chevron & Confirm Button */}
-                                <div className="flex items-center gap-2 shrink-0">
-                                  {isExpanded && !isDisabled && (
-                                    <Button
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleExpansion(competition.id);
-                                      }}
-                                      className="gap-2 h-8 hidden sm:flex"
-                                    >
-                                      <Check className="w-3 h-3" />
-                                      Conferma
-                                    </Button>
-                                  )}
-
-                                  {!isDisabled && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="shrink-0"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleExpansion(competition.id);
-                                      }}
-                                    >
-                                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Expanded Content */}
-                              {isExpanded && !isDisabled && (
-                                <div className="p-4 pt-0 border-t bg-background animate-in slide-in-from-top-2">
-                                  <div className="mt-4 space-y-3">
-                                    <p className="text-sm font-semibold flex items-center gap-2 mb-4">
-                                      Seleziona le gare:
-                                    </p>
-
-                                    <div className="grid gap-2">
-                                      {eventTypes
-                                        .filter(et => et.competition_id === competition.id)
-                                        .filter(et => isEventMatchingCoupleDiscipline(et.event_name, selectedCouple.disciplines))
-                                        .map(et => {
-                                          const effectiveClass = getEffectiveClass(selectedCouple, et.event_name);
-                                          const isRaceAllowed = et.allowed_classes.includes(effectiveClass);
-                                          const isRaceSelected = (selectedRaces[competition.id] || []).includes(et.id);
-
-                                          return (
-                                            <div
-                                              key={et.id}
-                                              className={`flex items-center gap-3 p-3 rounded-md transition-colors border ${isRaceSelected
-                                                ? "bg-primary/5 border-primary"
-                                                : "hover:bg-muted border-transparent bg-muted/30"
-                                                } ${!isRaceAllowed ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                                              onClick={() => isRaceAllowed && toggleRace(competition.id, et.id)}
-                                            >
-                                              <Checkbox
-                                                id={et.id}
-                                                checked={isRaceSelected}
-                                                onCheckedChange={() => isRaceAllowed && toggleRace(competition.id, et.id)}
-                                                disabled={!isRaceAllowed}
-                                                onClick={(e) => e.stopPropagation()}
-                                              />
-                                              <div className="flex-1">
-                                                <Label
-                                                  htmlFor={et.id}
-                                                  className="text-sm font-medium cursor-pointer"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                >
-                                                  {et.event_name}
-                                                </Label>
-                                                <p className="text-xs text-muted-foreground mt-0.5">
-                                                  Classi ammesse: {et.allowed_classes.join(", ")}
-                                                </p>
-                                                {!isRaceAllowed && (
-                                                  <p className="text-[10px] text-destructive font-medium uppercase mt-1">
-                                                    La tua classe ({effectiveClass}) non è ammessa
-                                                  </p>
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        })
-                                      }
-
-                                      {eventTypes.filter(et => et.competition_id === competition.id).length === 0 && (
-                                        <div className="p-4 bg-muted/50 rounded-lg text-center">
-                                          <p className="text-sm text-destructive font-medium">
-                                            Nessuna gara disponibile per la tua categoria/disciplina.
-                                          </p>
-                                        </div>
+                                    {/* Badges */}
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                      {alreadyEnrolled && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          <CheckCircle className="w-3 h-3 mr-1" />
+                                          Già iscritto
+                                        </Badge>
+                                      )}
+                                      {!isAllowed && (
+                                        <Badge variant="destructive" className="text-xs">
+                                          <AlertCircle className="w-3 h-3 mr-1" />
+                                          Non disponibile
+                                        </Badge>
+                                      )}
+                                      {deadlinePassed && !alreadyEnrolled && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Iscrizioni chiuse
+                                        </Badge>
+                                      )}
+                                      {isSelected && (
+                                        <Badge variant="default" className="text-xs bg-primary/80 hover:bg-primary/80">
+                                          {selectedRacesCount} gare selezionate
+                                        </Badge>
                                       )}
                                     </div>
+                                  </div>
 
-                                    <div className="flex justify-end pt-4 mt-4 border-t sm:hidden">
+                                  {/* Right Side: Chevron & Confirm Button */}
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    {isExpanded && !isDisabled && (
                                       <Button
                                         size="sm"
-                                        onClick={() => toggleExpansion(competition.id)}
-                                        className="gap-2 w-full"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleExpansion(competition.id);
+                                        }}
+                                        className="gap-2 h-8 hidden sm:flex"
                                       >
-                                        <Check className="w-4 h-4" />
-                                        Conferma Selezione
+                                        <Check className="w-3 h-3" />
+                                        Conferma
                                       </Button>
-                                    </div>
+                                    )}
+
+                                    {!isDisabled && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="shrink-0"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleExpansion(competition.id);
+                                        }}
+                                      >
+                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                      </Button>
+                                    )}
                                   </div>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
+
+                                {/* Expanded Content */}
+                                {isExpanded && !isDisabled && (
+                                  <div className="p-4 pt-0 border-t bg-background animate-in slide-in-from-top-2">
+                                    <div className="mt-4 space-y-3">
+                                      <p className="text-sm font-semibold flex items-center gap-2 mb-4">
+                                        Seleziona le gare:
+                                      </p>
+
+                                      <div className="grid gap-2">
+                                        {sortEventTypes(eventTypes)
+                                          .filter(et => et.competition_id === competition.id)
+                                          .filter(et => isEventMatchingCoupleDiscipline(et.event_name, selectedCouple.disciplines))
+                                          .filter(et => isEventAllowedByAge(et, selectedCouple.category))
+                                          .filter(et => {
+                                            // 1. Controllo Idoneità (Età e Classe)
+                                            const effectiveClass = getEffectiveClass(selectedCouple, et.event_name);
+                                            let isRaceAllowed = et.allowed_classes.includes(effectiveClass);
+                                            const eventNameNorm = et.event_name.toLowerCase();
+                                            const c = selectedCouple.class.toUpperCase();
+
+                                            // Regola Universale Under 16 (D-A)
+                                            if (eventNameNorm.includes("under 16") && ["D", "C", "B", "B1", "B2", "B3", "A", "A1", "A2"].includes(c)) {
+                                              isRaceAllowed = true;
+                                            } else if (c === "D") {
+                                              const coupleMinAge = getCategoryMinAge(selectedCouple.category);
+                                              if (eventNameNorm.includes("c open") || eventNameNorm.includes("b open") || eventNameNorm.includes("under 16")) isRaceAllowed = true;
+                                              else if (coupleMinAge >= 35 && (eventNameNorm.includes("over") || eventNameNorm.includes("adult open"))) isRaceAllowed = true;
+                                              else if (coupleMinAge >= 16 && coupleMinAge <= 18 && (eventNameNorm.includes("youth open") || eventNameNorm.includes("adult open"))) isRaceAllowed = true;
+                                              else if (coupleMinAge >= 19 && coupleMinAge <= 34 && eventNameNorm.includes("adult open")) isRaceAllowed = true;
+                                              else if (coupleMinAge >= 19 && coupleMinAge <= 20 && eventNameNorm.includes("under 21")) isRaceAllowed = true;
+                                            }
+
+                                            if (!isRaceAllowed) return false;
+
+                                            // 2. Filtro aggiuntivo visibilità Classe D (A, A1, A2, AS)
+                                            if (c === "D") {
+                                              const name = et.event_name.toUpperCase();
+                                              if (name.includes("CLASSE A") || name.includes(" A1") || name.includes(" A2") || name.includes(" AS")) return false;
+                                            }
+                                            return true;
+                                          })
+                                          .map(et => {
+                                            const isRaceSelected = (selectedRaces[competition.id] || []).includes(et.id);
+
+                                            return (
+                                              <div
+                                                key={et.id}
+                                                className={`flex items-center gap-3 p-3 rounded-md transition-colors border ${isRaceSelected
+                                                  ? "bg-primary/5 border-primary"
+                                                  : "hover:bg-muted border-transparent bg-muted/30"
+                                                  } cursor-pointer`}
+                                                onClick={() => toggleRace(competition.id, et.id)}
+                                              >
+                                                <Checkbox
+                                                  id={et.id}
+                                                  checked={isRaceSelected}
+                                                  onCheckedChange={() => toggleRace(competition.id, et.id)}
+                                                  onClick={(e) => e.stopPropagation()}
+                                                />
+                                                <div className="flex-1">
+                                                  <Label
+                                                    htmlFor={et.id}
+                                                    className="text-sm font-medium cursor-pointer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                  >
+                                                    {et.event_name}
+                                                  </Label>
+                                                </div>
+                                              </div>
+                                            );
+                                          })
+                                        }
+
+                                        {eventTypes.filter(et => et.competition_id === competition.id).length === 0 && (
+                                          <div className="p-4 bg-muted/50 rounded-lg text-center">
+                                            <p className="text-sm text-destructive font-medium">
+                                              Nessuna gara disponibile per la tua categoria/disciplina.
+                                            </p>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      <div className="flex justify-end pt-4 mt-4 border-t sm:hidden">
+                                        <Button
+                                          size="sm"
+                                          onClick={() => toggleExpansion(competition.id)}
+                                          className="gap-2 w-full"
+                                          disabled={isReadOnly}
+                                        >
+                                          <Check className="w-4 h-4" />
+                                          Conferma Selezione
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                       </div>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
@@ -825,10 +939,10 @@ export default function AthleteEnrollment() {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Iscrizione Completata!</h2>
+              <h2 className="text-2xl font-bold mb-2">Fatto!</h2>
               <p className="text-muted-foreground mb-6">
                 La tua iscrizione è stata registrata. <br />
-                Il tuo istruttore riceverà una notifica.
+                Ricorda di lasciare la quota in buchetta.
               </p>
               <Button onClick={resetFlow}>Nuova Iscrizione</Button>
             </CardContent>
