@@ -4,10 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, RefreshCw, ExternalLink, Menu } from "lucide-react";
+import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, ExternalLink, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import { importCompetitors, importCompetitions } from "@/lib/import-utils";
 import StatCard from "@/components/dashboard/StatCard";
 import AthletesList from "@/components/dashboard/AthletesList";
 import CouplesList from "@/components/dashboard/CouplesList";
@@ -21,7 +20,6 @@ type ActiveView = "none" | "athletes" | "couples" | "competitions";
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeView, setActiveView] = useState<ActiveView>("none");
-  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -45,54 +43,6 @@ export default function Dashboard() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      // Import Athletes
-      try {
-        const resp = await fetch("/files/Competitori_ok.xls");
-        if (resp.ok) {
-          const blob = await resp.arrayBuffer();
-          const result = await importCompetitors(blob);
-          if (result.success) {
-            toast({ title: "Import Atleti", description: `Processati: ${result.count}` });
-          } else {
-            console.error("Import atleti failed:", result.message);
-            toast({ title: "Errore Import Atleti", description: result.message || "Errore sconosciuto", variant: "destructive" });
-          }
-        }
-      } catch (e) {
-        console.error("Auto-import athletes error", e);
-      }
-
-      // Import Competitions
-      try {
-        const resp = await fetch(`/files/Competizioni.xlsx?t=${new Date().getTime()}`);
-        if (resp.ok) {
-          const blob = await resp.arrayBuffer();
-          const result = await importCompetitions(blob);
-          if (result.success) {
-            toast({ title: "Import Competizioni", description: `Nuove: ${result.created}, Aggiornate: ${result.updated}` });
-          } else {
-            console.error("Auto-import competitions failed:", result.message);
-            toast({ title: "Errore Import Competizioni", description: result.message || "Errore sconosciuto", variant: "destructive" });
-          }
-        }
-      } catch (e: any) {
-        console.error("Auto-import competitions error", e);
-        toast({ title: "Errore Import Competizioni", description: e.message || "Errore di rete", variant: "destructive" });
-      }
-    } catch (globalError) {
-      console.error("Global auto-import error", globalError);
-    }
-
-    await refresh();
-    setRefreshing(false);
-    toast({
-      title: "Sistema aggiornato",
-      description: "Dati ricaricati e sincronizzati con i file Excel locali.",
-    });
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -203,18 +153,6 @@ export default function Dashboard() {
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="w-4 h-4" />
             </Button>
-            {role === "admin" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                Sincronizza Excel
-              </Button>
-            )}
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci
@@ -276,15 +214,6 @@ export default function Dashboard() {
                       >
                         <Users className="w-4 h-4" />
                         Gestione Istruttori
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                      >
-                        <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                        Sincronizza Excel
                       </Button>
                     </>
                   )}
