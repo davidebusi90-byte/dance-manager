@@ -118,8 +118,8 @@ export default function Auth() {
         setPassword("");
         setConfirmPassword("");
       }
-    } catch (error: any) {
-      toast({ title: "Errore", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Errore", description: (error instanceof Error ? error.message : String(error)), variant: "destructive" });
     } finally {
       setLoading(false);
     }

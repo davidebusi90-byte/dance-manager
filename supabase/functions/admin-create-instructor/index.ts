@@ -160,9 +160,9 @@ serve(async (req) => {
             headers: { "Content-Type": "application/json", ...corsHeaders },
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("admin-create-instructor error:", error);
-        return new Response(JSON.stringify({ error: error.message || "Unknown error" }), {
+        return new Response(JSON.stringify({ error: (error instanceof Error ? error.message : String(error)) || "Unknown error" }), {
             status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
         });

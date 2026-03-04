@@ -225,7 +225,6 @@ export function validateCoupleCategory(params: {
   const sportsAge1 = getSportsAge(athlete1BirthDateISO, onDate);
   const sportsAge2 = getSportsAge(athlete2BirthDateISO, onDate);
 
-  const youngPartnerBirthDate = sportsAge1 >= sportsAge2 ? athlete2BirthDateISO : athlete1BirthDateISO;
   const youngerAge = Math.min(sportsAge1, sportsAge2);
 
   const allowed = getAllowedCategories(

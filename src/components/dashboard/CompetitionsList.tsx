@@ -47,12 +47,13 @@ interface Profile {
 interface CompetitionsListProps {
   competitions: Competition[];
   athletes?: Athlete[];
+  couples?: any[];
   profiles?: Profile[];
   onClose: () => void;
   onRefresh: () => void;
 }
 
-export default function CompetitionsList({ competitions, athletes = [], profiles = [], onClose, onRefresh }: CompetitionsListProps) {
+export default function CompetitionsList({ competitions, athletes = [], couples = [], profiles = [], onClose, onRefresh }: CompetitionsListProps) {
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
   const [competitionToDelete, setCompetitionToDelete] = useState<Competition | null>(null);
   const [competitionToComplete, setCompetitionToComplete] = useState<Competition | null>(null);
@@ -173,6 +174,7 @@ export default function CompetitionsList({ competitions, athletes = [], profiles
       <CompetitionEntriesDetail
         competition={selectedCompetition}
         athletes={athletes}
+        allCouples={couples}
         profiles={profiles}
         onClose={() => setSelectedCompetition(null)}
       />

@@ -71,10 +71,10 @@ export default function Settings() {
       });
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Errore",
-        description: error.message,
+        description: (error instanceof Error ? error.message : String(error)),
         variant: "destructive"
       });
     } finally {
@@ -114,7 +114,7 @@ export default function Settings() {
             toast({ title: "Errore Import Competizioni", description: result.message || "Errore sconosciuto", variant: "destructive" });
           }
         }
-      } catch (e: any) {
+      } catch (e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
         console.error("Auto-import competitions error", e);
         toast({ title: "Errore Import Competizioni", description: e.message || "Errore di rete", variant: "destructive" });
       }

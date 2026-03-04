@@ -2,7 +2,6 @@
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { validateAthleteRow } from "@/lib/import-validation";
-import { validateCoupleCategory } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -47,20 +46,20 @@ const parseExcelDate = (value: any): string | null => {
 
     // Support DD/MM/YYYY or DD-MM-YYYY (Italian standard)
     // We prioritize this over MM/DD/YYYY
-    const dmyy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
+    const dmyy = str.match(/^(\d{1,2})[/\-](\d{1,2})[/\-](\d{2})$/);
     if (dmyy) {
         const year = parseInt(dmyy[3]) > 50 ? `19${dmyy[3]}` : `20${dmyy[3]}`;
         // Map as Day/Month/Year
         return `${year}-${dmyy[2].padStart(2, "0")}-${dmyy[1].padStart(2, "0")}`;
     }
 
-    const dmyyyy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    const dmyyyy = str.match(/^(\d{1,2})[/\-](\d{1,2})[/\-](\d{4})$/);
     if (dmyyyy) {
         // Map as Day/Month/Year
         return `${dmyyyy[3]}-${dmyyyy[2].padStart(2, "0")}-${dmyyyy[1].padStart(2, "0")}`;
     }
 
-    const yyyymmdd = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+    const yyyymmdd = str.match(/^(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})$/);
     if (yyyymmdd) {
         return `${yyyymmdd[1]}-${yyyymmdd[2].padStart(2, "0")}-${yyyymmdd[3].padStart(2, "0")}`;
     }

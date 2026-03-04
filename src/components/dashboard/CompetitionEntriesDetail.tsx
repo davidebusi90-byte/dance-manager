@@ -1,15 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail, Printer } from "lucide-react";
+import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail, Printer, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/use-user-role";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { isInstructorResponsibleForCoupleByResponsabili } from "@/lib/instructor-utils";
+import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
+import { extractTextFromPdf, extractCidsFromText } from "@/lib/pdf-utils";
 import CoupleDetailModal from "./CoupleDetailModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Search, Info } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +51,9 @@ interface Competition {
 interface EventType {
   id: string;
   event_name: string;
+  allowed_classes: string[];
+  min_age: number | null;
+  max_age: number | null;
 }
 
 interface Athlete {
@@ -43,6 +64,7 @@ interface Athlete {
   gender?: string | null;
   instructor_id?: string | null;
   responsabili?: string[] | null;
+  birth_date?: string | null;
 }
 
 
@@ -75,6 +97,7 @@ interface Profile {
 interface CompetitionEntriesDetailProps {
   competition: Competition;
   athletes: Athlete[];
+  allCouples: any[];
   profiles: Profile[];
   onClose: () => void;
 }
@@ -82,6 +105,7 @@ interface CompetitionEntriesDetailProps {
 export default function CompetitionEntriesDetail({
   competition,
   athletes,
+  allCouples,
   profiles,
   onClose
 }: CompetitionEntriesDetailProps) {
@@ -90,11 +114,21 @@ export default function CompetitionEntriesDetail({
   const [loading, setLoading] = useState(true);
   const [isSendingReport, setIsSendingReport] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CompetitionEntry | null>(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState<string>("all");
   const { toast } = useToast();
   const { role, userId } = useUserRole();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [comparingPdf, setComparingPdf] = useState(false);
+  const [comparisonResults, setComparisonResults] = useState<{
+    missingInApp: { cid: string; names?: string }[];
+    extraInApp: { cid: string; names: string }[];
+    matches: string[];
+  } | null>(null);
+  const [showComparisonDialog, setShowComparisonDialog] = useState(false);
 
   useEffect(() => {
     fetchEntries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [competition.id, role, userId, athletes]);
 
   const fetchEntries = async () => {
@@ -124,7 +158,8 @@ export default function CompetitionEntriesDetail({
               last_name,
               gender,
               instructor_id,
-              responsabili
+              responsabili,
+              birth_date
             ),
             athlete2:athletes!couples_athlete2_id_fkey (
               id,
@@ -133,14 +168,15 @@ export default function CompetitionEntriesDetail({
               last_name,
               gender,
               instructor_id,
-              responsabili
+              responsabili,
+              birth_date
             )
           )
         `)
         .eq("competition_id", competition.id),
       supabase
         .from("competition_event_types")
-        .select("id, event_name")
+        .select("id, event_name, allowed_classes, min_age, max_age")
         .eq("competition_id", competition.id)
     ]);
 
@@ -188,6 +224,20 @@ export default function CompetitionEntriesDetail({
     setLoading(false);
   };
 
+  const instructors = profiles.filter(p => !!p.full_name).sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+  const filteredEntries = entries.filter(entry => {
+    if (role !== "admin" || selectedInstructorId === "all") return true;
+
+    const instructor = profiles.find(p => p.id === selectedInstructorId);
+    if (!instructor) return true;
+
+    return isInstructorResponsibleForCoupleByResponsabili(
+      instructor.full_name,
+      entry.couples?.responsabili || []
+    );
+  });
+
   const getAthlete = (entry: CompetitionEntry, athleteNum: 1 | 2) => {
     const couple = entry.couples;
     if (!couple) return null;
@@ -226,10 +276,42 @@ export default function CompetitionEntriesDetail({
   // Paid -> Confermati e Pagati
   // Not Paid + Late -> Iscritte in ritardo (Mora)
   // Not Paid + Regular -> Confermati ma non pagati
-  const activeEntries = entries.filter(e => e.status === "registered" || e.status === "confirmed" || e.status === "pending");
+  // Not Paid + Regular -> Confermati ma non pagati
+  const activeEntries = filteredEntries.filter(e => e.status === "registered" || e.status === "confirmed" || e.status === "pending");
   const paidEntries = activeEntries.filter(e => e.is_paid);
   const lateUnpaidEntries = activeEntries.filter(e => !e.is_paid && isLateEntry(e.created_at));
   const regularUnpaidEntries = activeEntries.filter(e => !e.is_paid && !isLateEntry(e.created_at));
+
+  const notRegisteredCouples = allCouples.filter(couple => {
+    // Check if couple is already registered for this competition
+    const isRegistered = entries.some(e => e.couple_id === couple.id);
+    if (isRegistered) return false;
+
+    // Filter for instructors if role is instructor
+    if (role === "instructor" && userId) {
+      const currentUserProfile = profiles.find(p => p.user_id === userId);
+      if (currentUserProfile) {
+        return isInstructorResponsibleForCoupleByResponsabili(
+          currentUserProfile.full_name,
+          couple.responsabili || []
+        );
+      }
+      return false;
+    }
+    return true;
+  });
+
+  const filteredNotRegisteredCouples = notRegisteredCouples.filter(couple => {
+    if (role !== "admin" || selectedInstructorId === "all") return true;
+
+    const instructor = profiles.find(p => p.id === selectedInstructorId);
+    if (!instructor) return true;
+
+    return isInstructorResponsibleForCoupleByResponsabili(
+      instructor.full_name,
+      couple.responsabili || []
+    );
+  });
 
 
   const deleteEntry = async (entryId: string) => {
@@ -332,6 +414,59 @@ export default function CompetitionEntriesDetail({
     }
   };
 
+  const handlePdfComparison = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setComparingPdf(true);
+    try {
+      const pdfText = await extractTextFromPdf(file);
+      const pdfCids = extractCidsFromText(pdfText);
+
+      // App registered CIDs
+      const appCidsWithNames: { cid: string; names: string }[] = [];
+      entries.forEach(e => {
+        const a1 = getAthlete(e, 1);
+        const a2 = getAthlete(e, 2);
+        if (a1?.code) appCidsWithNames.push({ cid: a1.code, names: `${a1.first_name} ${a1.last_name}` });
+        if (a2?.code) appCidsWithNames.push({ cid: a2.code, names: `${a2.first_name} ${a2.last_name}` });
+      });
+
+      const appCidSet = new Set(appCidsWithNames.map(a => a.cid));
+      const pdfCidSet = new Set(pdfCids);
+
+      const missingInApp = pdfCids
+        .filter(cid => !appCidSet.has(cid))
+        .map(cid => ({ cid }));
+
+      const extraInApp = appCidsWithNames.filter(a => !pdfCidSet.has(a.cid));
+      const matches = pdfCids.filter(cid => appCidSet.has(cid));
+
+      setComparisonResults({
+        missingInApp,
+        extraInApp,
+        matches
+      });
+      setShowComparisonDialog(true);
+
+      toast({
+        title: "Confronto completato",
+        description: `Trovati ${pdfCids.length} codici nel PDF.`,
+      });
+    } catch (error) {
+      console.error("PDF Comparison error:", error);
+      toast({
+        title: "Errore",
+        description: "Impossibile leggere il PDF per il confronto.",
+        variant: "destructive",
+      });
+    } finally {
+      setComparingPdf(false);
+      // Reset input
+      if (event.target) event.target.value = "";
+    }
+  };
+
   const renderEntryRow = (entry: CompetitionEntry, showLateFlag = false) => {
     const couple = entry.couples;
     if (!couple) return null;
@@ -340,9 +475,15 @@ export default function CompetitionEntriesDetail({
     const athlete2 = getAthlete(entry, 2);
     const isLate = isLateEntry(entry.created_at);
 
-    const entryEventNames = (entry.event_type_ids || [])
+    const enrolledEventIds = entry.event_type_ids || [];
+    const entryEventNames = enrolledEventIds
       .map(id => eventTypes.find(et => et.id === id)?.event_name)
       .filter(Boolean);
+
+    const missingEventNames = eventTypes
+      .filter(et => !enrolledEventIds.includes(et.id))
+      .filter(et => isEventAllowedForCouple(et, couple))
+      .map(et => et.event_name);
 
     return (
       <tr
@@ -350,11 +491,11 @@ export default function CompetitionEntriesDetail({
         className={`${isLate && showLateFlag ? "bg-warning/10" : ""} ${role === "admin" ? "cursor-pointer hover:bg-muted/50" : ""} transition-colors`}
         onClick={() => role === "admin" && setSelectedEntry(entry)}
       >
-        <td className="font-mono text-sm print:hidden">{athlete1?.code || "-"}</td>
+        <td className="font-mono text-sm print:hidden hidden xl:table-cell">{athlete1?.code || "-"}</td>
         <td className="font-medium">
           {athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}
         </td>
-        <td className="font-mono text-sm print:hidden">{athlete2?.code || "-"}</td>
+        <td className="font-mono text-sm print:hidden hidden xl:table-cell">{athlete2?.code || "-"}</td>
         <td className="font-medium">
           {athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}
         </td>
@@ -364,20 +505,24 @@ export default function CompetitionEntriesDetail({
             <div className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</div>
           </div>
         </td>
-        <td className="max-w-[200px] print:max-w-[400px]">
-          <div className="flex flex-wrap gap-1">
-            {entryEventNames.length > 0 ? (
-              entryEventNames.map(name => (
-                <Badge key={name!} variant="outline" className="text-[10px] py-1 h-auto min-h-[1.5rem] px-2 bg-primary/5 border-primary/20 whitespace-normal text-left print:border-none print:p-0 print:bg-transparent print:text-xs">
-                  {name}
-                </Badge>
-              ))
-            ) : (
+        <td className="max-w-[200px] print:max-w-none hidden md:table-cell">
+          <div className="flex flex-wrap print:flex-col gap-1">
+            {entryEventNames.map(name => (
+              <Badge key={`enrolled-${name}`} variant="outline" className="text-[10px] py-1 h-auto min-h-[1.5rem] px-2 bg-primary/5 border-primary/20 whitespace-normal text-left print:border-none print:p-0 print:bg-transparent print:text-xs">
+                {name}
+              </Badge>
+            ))}
+            {missingEventNames.map(name => (
+              <Badge key={`missing-${name}`} variant="outline" className="text-[10px] py-1 h-auto min-h-[1.5rem] px-2 bg-gray-50 border-gray-300 text-black line-through whitespace-normal text-left print:border-none print:p-0 print:bg-transparent print:text-xs print:line-through print:text-gray-500">
+                {name}
+              </Badge>
+            ))}
+            {entryEventNames.length === 0 && missingEventNames.length === 0 ? (
               <span className="text-muted-foreground italic text-xs">-</span>
-            )}
+            ) : null}
           </div>
         </td>
-        <td className="print:hidden">
+        <td className="print:hidden hidden lg:table-cell">
           <div className="text-xs">
             {getCombinedResponsabili(entry).join(", ") || "-"}
           </div>
@@ -395,7 +540,7 @@ export default function CompetitionEntriesDetail({
                 Mora
               </Badge>
             ) : (
-              <Badge variant="secondary">Da Pagare</Badge>
+              <Badge variant="secondary" className="text-black">Da Pagare</Badge>
             )}
           </div>
         </td>
@@ -404,13 +549,19 @@ export default function CompetitionEntriesDetail({
             <Checkbox
               checked={entry.is_paid}
               onCheckedChange={() => handlePaymentToggle(entry.id, entry.is_paid)}
+              onClick={(e) => e.stopPropagation()}
               title="Segna come pagato"
               disabled={role !== "admin"}
             />
             {role === "admin" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </AlertDialogTrigger>
@@ -461,16 +612,45 @@ export default function CompetitionEntriesDetail({
           </div>
           <div className="flex items-center gap-2 print:hidden">
             {role === "admin" && (
-              <Button variant="outline" onClick={handleSendReport} disabled={isSendingReport} className="gap-2">
-                <Mail className="w-4 h-4" />
-                {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleSendReport}
+                  disabled={isSendingReport}
+                  className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm"
+                >
+                  <Mail className="w-4 h-4" />
+                  {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
+                </Button>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePdfComparison}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={comparingPdf}
+                  >
+                    {comparingPdf ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                    {comparingPdf ? "Confronto..." : "Confronta con PDF"}
+                  </Button>
+                </div>
+              </>
             )}
-            <Button variant="outline" onClick={generateReport} className="gap-2">
+            <Button variant="outline" onClick={generateReport} className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
               <FileSpreadsheet className="w-4 h-4" />
               Genera Report Excel
             </Button>
-            <Button variant="outline" onClick={() => window.print()} className="gap-2">
+            <Button variant="outline" onClick={() => window.print()} className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
               <Printer className="w-4 h-4" />
               Stampa / PDF
             </Button>
@@ -479,65 +659,199 @@ export default function CompetitionEntriesDetail({
             </Button>
           </div>
         </CardHeader>
+
+        {role === "admin" && (
+          <div className="px-6 pb-4 border-b">
+            <div className="flex items-center gap-4 max-w-sm">
+              <label className="text-sm font-medium whitespace-nowrap">Filtra per Istruttore:</label>
+              <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tutti gli istruttori" />
+                </SelectTrigger>
+                <SelectContent position="popper" side="bottom">
+                  <SelectItem value="all">Tutti gli istruttori</SelectItem>
+                  {instructors.map(instructor => (
+                    <SelectItem key={instructor.id} value={instructor.id}>
+                      {instructor.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
         <CardContent>
           {entries.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Nessuna iscrizione per questa competizione</p>
           ) : (
             <div className="space-y-4">
-              {/* Stat Cards */}
-              <div className="grid grid-cols-3 gap-3 print:hidden">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 border border-green-200">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-green-700">{paidEntries.length}</p>
-                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Coppie Pagate</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-50 border border-orange-200">
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-orange-700">{regularUnpaidEntries.length}</p>
-                    <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">Da Pagare</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-amber-700">{lateUnpaidEntries.length}</p>
-                    <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">In Ritardo (Mora)</p>
-                  </div>
-                </div>
-              </div>
+              <Tabs defaultValue="iscritti" className="w-full print:hidden">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="iscritti">Iscritti ({filteredEntries.length})</TabsTrigger>
+                  <TabsTrigger value="non-iscritti">Non Iscritti ({filteredNotRegisteredCouples.length})</TabsTrigger>
+                </TabsList>
 
-              {/* Table */}
-              <div className="overflow-x-auto print:overflow-visible">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th className="print:hidden">Cod. Cavaliere</th>
-                      <th>Cavaliere</th>
-                      <th className="print:hidden">Cod. Dama</th>
-                      <th>Dama</th>
-                      <th>Categoria / Classe</th>
-                      <th>Gare Selezionate</th>
-                      <th className="print:hidden">Responsabili</th>
-                      <th className="print:hidden">Stato</th>
-                      <th className="print:hidden">Pagato</th>
-                      <th className="print:hidden"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paidEntries.map(entry => renderEntryRow(entry))}
-                    {lateUnpaidEntries.map(entry => renderEntryRow(entry, true))}
-                    {regularUnpaidEntries.map(entry => renderEntryRow(entry))}
-                  </tbody>
-                </table>
+                <TabsContent value="iscritti" className="space-y-4">
+                  {/* Stat Cards */}
+                  <div className="grid grid-cols-3 gap-3 print:hidden">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-success/5 border border-success/10">
+                      <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center shrink-0">
+                        <CheckCircle className="w-5 h-5 text-success/80" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-success/90">{paidEntries.length}</p>
+                        <p className="text-xs font-semibold text-success/70 uppercase tracking-wide">Coppie Pagate</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/5 border border-accent/10">
+                      <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center shrink-0">
+                        <Users className="w-5 h-5 text-accent/80" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-accent/90">{regularUnpaidEntries.length}</p>
+                        <p className="text-xs font-semibold text-accent/70 uppercase tracking-wide">Da Pagare</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-warning/5 border border-warning/10">
+                      <div className="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center shrink-0">
+                        <Clock className="w-5 h-5 text-warning/80" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-amber-700">{lateUnpaidEntries.length}</p>
+                        <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">In Ritardo (Mora)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-x-auto print:overflow-visible">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th className="print:hidden hidden xl:table-cell">Cod. Cavaliere</th>
+                          <th>Cavaliere</th>
+                          <th className="print:hidden hidden xl:table-cell">Cod. Dama</th>
+                          <th>Dama</th>
+                          <th>Categoria / Classe</th>
+                          <th className="hidden md:table-cell">Gare Selezionate</th>
+                          <th className="print:hidden hidden lg:table-cell">Responsabili</th>
+                          <th className="print:hidden">Stato</th>
+                          <th className="print:hidden">Pagato</th>
+                          <th className="print:hidden"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paidEntries.map(entry => renderEntryRow(entry))}
+                        {lateUnpaidEntries.map(entry => renderEntryRow(entry, true))}
+                        {regularUnpaidEntries.map(entry => renderEntryRow(entry))}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="non-iscritti" className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Cod. Cavaliere</th>
+                          <th>Cavaliere</th>
+                          <th>Cod. Dama</th>
+                          <th>Dama</th>
+                          <th>Categoria / Classe</th>
+                          <th>Responsabili</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredNotRegisteredCouples.map(couple => {
+                          const a1 = athletes.find(a => a.id === couple.athlete1_id);
+                          const a2 = athletes.find(a => a.id === couple.athlete2_id);
+                          return (
+                            <tr key={couple.id}>
+                              <td className="font-mono text-sm">{a1?.code || "-"}</td>
+                              <td className="font-medium">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
+                              <td className="font-mono text-sm">{a2?.code || "-"}</td>
+                              <td className="font-medium">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
+                              <td>
+                                <div>
+                                  <div className="text-sm">{couple.category}</div>
+                                  <div className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</div>
+                                </div>
+                              </td>
+                              <td className="text-xs">
+                                {couple.responsabili?.join(", ") || "-"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {/* Print Only Section: Sequential Lists */}
+              <div className="hidden print:block space-y-8">
+                <div>
+                  <h3 className="text-lg font-bold mb-4 border-b pb-2">Elenco Iscritti ({filteredEntries.length})</h3>
+                  <div className="overflow-x-auto">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Cavaliere</th>
+                          <th>Dama</th>
+                          <th>Categoria / Classe</th>
+                          <th>Gare Selezionate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paidEntries.map(entry => renderEntryRow(entry))}
+                        {lateUnpaidEntries.map(entry => renderEntryRow(entry, true))}
+                        {regularUnpaidEntries.map(entry => renderEntryRow(entry))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {filteredNotRegisteredCouples.length > 0 && (
+                  <div className="pt-8">
+                    <h3 className="text-lg font-bold mb-4 border-b pb-2">Elenco Potenziali Coppie Non Iscritte ({filteredNotRegisteredCouples.length})</h3>
+                    <div className="overflow-x-auto">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Cavaliere</th>
+                            <th>Dama</th>
+                            <th>Categoria / Classe</th>
+                            <th>Responsabili</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredNotRegisteredCouples.map(couple => {
+                            const a1 = athletes.find(a => a.id === couple.athlete1_id);
+                            const a2 = athletes.find(a => a.id === couple.athlete2_id);
+                            return (
+                              <tr key={couple.id}>
+                                <td className="font-medium">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
+                                <td className="font-medium">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
+                                <td>
+                                  <div>
+                                    <div className="text-sm">{couple.category}</div>
+                                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</div>
+                                  </div>
+                                </td>
+                                <td className="text-xs">
+                                  {couple.responsabili?.join(", ") || "-"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -549,6 +863,77 @@ export default function CompetitionEntriesDetail({
         eventTypes={eventTypes}
         onClose={() => setSelectedEntry(null)}
       />
+
+      <Dialog open={showComparisonDialog} onOpenChange={setShowComparisonDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="w-5 h-5 text-accent" />
+              Risultati del Confronto PDF
+            </DialogTitle>
+            <DialogDescription>
+              Analisi basata sui codici CID estratti dal PDF selezionato.
+            </DialogDescription>
+          </DialogHeader>
+
+          {comparisonResults && (
+            <div className="space-y-6 pt-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 bg-green-50 rounded-lg border border-green-100 text-center">
+                  <div className="text-2xl font-bold text-green-700">{comparisonResults.matches.length}</div>
+                  <div className="text-[10px] text-green-600 uppercase font-bold">Corrispondenze</div>
+                </div>
+                <div className="p-3 bg-red-50 rounded-lg border border-red-100 text-center">
+                  <div className="text-2xl font-bold text-red-700">{comparisonResults.missingInApp.length}</div>
+                  <div className="text-[10px] text-red-600 uppercase font-bold">Mancanti in App</div>
+                </div>
+                <div className="p-3 bg-amber-50 rounded-lg border border-amber-100 text-center">
+                  <div className="text-2xl font-bold text-amber-700">{comparisonResults.extraInApp.length}</div>
+                  <div className="text-[10px] text-amber-600 uppercase font-bold">Eccessi in App</div>
+                </div>
+              </div>
+
+              {comparisonResults.missingInApp.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2 text-red-700">
+                    <AlertTriangle className="w-4 h-4" />
+                    CID nel PDF non presenti tra gli iscritti in App:
+                  </h4>
+                  <div className="bg-muted/30 p-2 rounded border text-xs grid grid-cols-4 gap-2">
+                    {comparisonResults.missingInApp.map(m => (
+                      <code key={m.cid} className="bg-white px-1 py-0.5 rounded border">{m.cid}</code>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {comparisonResults.extraInApp.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold flex items-center gap-2 text-amber-700">
+                    <Info className="w-4 h-4" />
+                    Iscritti in App non rilevati nel testo del PDF:
+                  </h4>
+                  <div className="bg-muted/30 p-2 rounded border divide-y divide-border/50">
+                    {comparisonResults.extraInApp.map(e => (
+                      <div key={e.cid} className="flex justify-between py-1 text-xs px-2">
+                        <span className="font-medium">{e.names}</span>
+                        <code className="text-muted-foreground">{e.cid}</code>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">
+                    * Nota: Se il PDF è un'immagine o ha formati non testuali complessi, alcuni codici potrebbero non essere rilevati correttamente.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button onClick={() => setShowComparisonDialog(false)}>Chiudi</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

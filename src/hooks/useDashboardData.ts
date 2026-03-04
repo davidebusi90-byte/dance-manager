@@ -60,10 +60,10 @@ export function useDashboardData(role: string, userId: string | null) {
         setLoading(true);
         try {
             const [athletesRes, couplesRes, competitionsRes, profilesRes] = await Promise.all([
-                supabase.from("athletes").select("*").eq("is_deleted", false) as any,
-                supabase.from("couples").select("*").eq("is_active", true) as any,
-                supabase.from("competitions").select("*").eq("is_deleted", false).order("date", { ascending: true }) as any,
-                supabase.from("profiles").select("id, user_id, full_name") as any,
+                supabase.from("athletes").select("*").eq("is_deleted", false) as unknown,
+                supabase.from("couples").select("*").eq("is_active", true) as unknown,
+                supabase.from("competitions").select("*").eq("is_deleted", false).order("date", { ascending: true }) as unknown,
+                supabase.from("profiles").select("id, user_id, full_name") as unknown,
             ]);
 
             if (athletesRes.error) throw athletesRes.error;
@@ -105,7 +105,7 @@ export function useDashboardData(role: string, userId: string | null) {
 
             // Deduplicate competitions by name and date
             const uniqueCompetitionsMap = new Map();
-            (competitionsRes.data || []).forEach((c: any) => {
+            (competitionsRes.data || []).forEach((c: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
                 const key = `${c.name.toLowerCase()}-${c.date}`;
                 if (!uniqueCompetitionsMap.has(key)) {
                     uniqueCompetitionsMap.set(key, c);
@@ -113,11 +113,11 @@ export function useDashboardData(role: string, userId: string | null) {
             });
             setCompetitions(Array.from(uniqueCompetitionsMap.values()));
             setProfiles(rawProfiles);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("fetchData error:", error);
             toast({
                 title: "Errore nel caricamento",
-                description: error.message || "Impossibile caricare i dati della dashboard.",
+                description: (error instanceof Error ? error.message : String(error)) || "Impossibile caricare i dati della dashboard.",
                 variant: "destructive",
             });
         } finally {

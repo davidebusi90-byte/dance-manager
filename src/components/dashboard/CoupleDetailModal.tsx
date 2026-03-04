@@ -7,6 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import { validateCoupleCategory } from "@/lib/category-validation";
+import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
 
 interface Athlete {
     id: string;
@@ -42,6 +43,9 @@ interface CompetitionEntry {
 interface EventType {
     id: string;
     event_name: string;
+    allowed_classes: string[];
+    min_age: number | null;
+    max_age: number | null;
 }
 
 interface CoupleDetailModalProps {
@@ -68,10 +72,15 @@ export default function CoupleDetailModal({
         [athlete1, athlete2] = [athlete2, athlete1];
     }
 
-    // Get enrolled event names
-    const enrolledEvents = (entry.event_type_ids || [])
+    const enrolledEventIds = entry.event_type_ids || [];
+    const enrolledEvents = enrolledEventIds
         .map(id => eventTypes.find(et => et.id === id)?.event_name)
         .filter(Boolean);
+
+    const missingEvents = eventTypes
+        .filter(et => !enrolledEventIds.includes(et.id))
+        .filter(et => isEventAllowedForCouple(et, couple))
+        .map(et => et.event_name);
 
     // Check for category anomalies
     const categoryCheck = validateCoupleCategory({
@@ -85,25 +94,25 @@ export default function CoupleDetailModal({
 
     return (
         <Dialog open={!!entry} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl sm:max-h-[90vh] w-full h-full sm:h-auto overflow-y-auto p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="text-xl">Dettagli Coppia</DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-6">
                     {/* Athletes Info */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-sm text-muted-foreground">Cavaliere</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2 bg-muted/10 p-3 rounded-lg sm:bg-transparent sm:p-0">
+                            <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Cavaliere</h3>
                             <div className="space-y-1">
-                                <p className="font-medium">{athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}</p>
+                                <p className="font-bold sm:font-medium text-lg sm:text-base">{athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}</p>
                                 <p className="text-sm text-muted-foreground">Codice: {athlete1?.code || "-"}</p>
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-sm text-muted-foreground">Dama</h3>
+                        <div className="space-y-2 bg-muted/10 p-3 rounded-lg sm:bg-transparent sm:p-0">
+                            <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Dama</h3>
                             <div className="space-y-1">
-                                <p className="font-medium">{athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}</p>
+                                <p className="font-bold sm:font-medium text-lg sm:text-base">{athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}</p>
                                 <p className="text-sm text-muted-foreground">Codice: {athlete2?.code || "-"}</p>
                             </div>
                         </div>
@@ -111,21 +120,21 @@ export default function CoupleDetailModal({
 
                     {/* Category and Class */}
                     <div className="space-y-2">
-                        <h3 className="font-semibold text-sm text-muted-foreground">Categoria e Classe</h3>
-                        <div className="flex items-center gap-2">
-                            <span className="font-medium">{couple.category}</span>
-                            <span className="text-muted-foreground">-</span>
-                            <span className="font-medium">Classe {couple.class}</span>
+                        <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Categoria e Classe</h3>
+                        <div className="flex items-center gap-2 bg-success/5 p-3 rounded-lg border border-success/10">
+                            <span className="font-bold text-success-foreground">{couple.category}</span>
+                            <span className="text-muted-foreground">/</span>
+                            <span className="font-bold text-success-foreground">Classe {couple.class}</span>
                         </div>
                     </div>
 
                     {/* Responsabili */}
                     {responsabiliArray.length > 0 && (
                         <div className="space-y-2">
-                            <h3 className="font-semibold text-sm text-muted-foreground">Responsabili</h3>
+                            <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Responsabili</h3>
                             <div className="flex flex-wrap gap-2">
                                 {responsabiliArray.map(resp => (
-                                    <Badge key={resp} variant="secondary">{resp}</Badge>
+                                    <Badge key={resp} variant="secondary" className="px-3 py-1">{resp}</Badge>
                                 ))}
                             </div>
                         </div>
@@ -134,28 +143,33 @@ export default function CoupleDetailModal({
                     {/* Disciplines */}
                     {couple.disciplines && couple.disciplines.length > 0 && (
                         <div className="space-y-2">
-                            <h3 className="font-semibold text-sm text-muted-foreground">Discipline</h3>
+                            <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Discipline</h3>
                             <div className="flex flex-wrap gap-2">
                                 {couple.disciplines.map(disc => (
-                                    <Badge key={disc} variant="outline">{disc}</Badge>
+                                    <Badge key={disc} variant="outline" className="px-3 py-1">{disc}</Badge>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {/* Enrolled Events */}
-                    <div className="space-y-2">
-                        <h3 className="font-semibold text-sm text-muted-foreground">Gare Iscritte</h3>
-                        {enrolledEvents.length > 0 ? (
+                    {/* Enrolled Events - Hidden on Mobile */}
+                    <div className="space-y-2 hidden sm:block">
+                        <h3 className="font-semibold text-sm text-muted-foreground">Gare Selezionate</h3>
+                        {(enrolledEvents.length > 0 || missingEvents.length > 0) ? (
                             <div className="flex flex-wrap gap-2">
                                 {enrolledEvents.map(event => (
-                                    <Badge key={event} className="bg-primary/10 text-primary border-primary/20">
+                                    <Badge key={`enrolled-${event}`} className="bg-primary/10 text-primary border-primary/20">
+                                        {event}
+                                    </Badge>
+                                ))}
+                                {missingEvents.map(event => (
+                                    <Badge key={`missing-${event}`} variant="outline" className="bg-gray-50 border-gray-300 text-black line-through">
                                         {event}
                                     </Badge>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground italic">Nessuna gara selezionata</p>
+                            <p className="text-sm text-muted-foreground italic">-</p>
                         )}
                     </div>
 
@@ -184,7 +198,7 @@ export default function CoupleDetailModal({
                     {/* Payment Status */}
                     <div className="space-y-2">
                         <h3 className="font-semibold text-sm text-muted-foreground">Stato Pagamento</h3>
-                        <Badge className={entry.is_paid ? "bg-success text-success-foreground" : "bg-secondary"}>
+                        <Badge variant="secondary" className={entry.is_paid ? "bg-success text-success-foreground" : "text-black"}>
                             {entry.is_paid ? "Pagato" : "Da Pagare"}
                         </Badge>
                     </div>

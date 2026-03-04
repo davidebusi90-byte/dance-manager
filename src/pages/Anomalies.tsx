@@ -66,13 +66,13 @@ export default function Anomalies() {
       if (profilesRes.error) throw profilesRes.error;
 
       const rawAthletes = athletesRes.data || [];
-      const rawCouples = (couplesRes.data as any) || [];
+      const rawCouples = (couplesRes.data as unknown) || [];
 
       let fetchedAthletes = [...rawAthletes];
       let fetchedCouples = [...rawCouples];
 
       if (role !== "admin" && role !== "supervisor") {
-        const currentUserProfile = (profilesRes.data as any[]).find(p => p.user_id === userId);
+        const currentUserProfile = (profilesRes.data as unknown[]).find(p => p.user_id === userId);
         if (currentUserProfile) {
           const titles = ["maestro", "maestra", "m.", "prof.", "prof", "istruttore"];
           const normalize = (s: string) =>
@@ -121,7 +121,7 @@ export default function Anomalies() {
           onDate: today,
         });
 
-        const categoryIssue = validation.ok ? null : (validation as any).reason;
+        const categoryIssue = validation.ok ? null : (validation as unknown).reason;
 
         // Check certificate issues
         const certificateIssues: string[] = [];
@@ -219,11 +219,11 @@ export default function Anomalies() {
 
       setAnomalies(sortedAnomalies);
       setOrphanAthletes(orphans);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("fetchAnomalies error:", error);
       toast({
         title: "Errore nel caricamento",
-        description: error.message || "Si è verificato un errore nel caricamento delle anomalie.",
+        description: (error instanceof Error ? error.message : String(error)) || "Si è verificato un errore nel caricamento delle anomalie.",
         variant: "destructive",
       });
     } finally {

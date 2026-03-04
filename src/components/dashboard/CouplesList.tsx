@@ -144,11 +144,11 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                 return (
                   <div key={couple.id} className="p-4 rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
                     <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 bg-muted/20 p-2 rounded-lg">
+                      <div className="flex items-center gap-2 bg-muted/10 p-2 rounded-lg">
                         <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">CAV</span>
                         <span className="font-bold text-sm text-primary/80">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-muted/20 p-2 rounded-lg">
+                      <div className="flex items-center gap-2 bg-muted/10 p-2 rounded-lg">
                         <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">DAM</span>
                         <span className="font-bold text-sm text-primary/80">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</span>
                       </div>

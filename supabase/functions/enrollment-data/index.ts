@@ -70,7 +70,7 @@ serve(async (req) => {
         supabase.from("competition_entries").select("competition_id").eq("couple_id", coupleId).neq("status", "cancelled"),
         supabase.from("competition_event_types").select("id, competition_id, event_name, allowed_classes, min_age, max_age"),
       ]);
-      return new Response(JSON.stringify({ competitions: cRes.data || [], existingEntries: (eRes.data || []).map((e: any) => e.competition_id), eventTypes: tRes.data || [] }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
+      return new Response(JSON.stringify({ competitions: cRes.data || [], existingEntries: (eRes.data || []).map((e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => e.competition_id), eventTypes: tRes.data || [] }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
     return new Response(JSON.stringify({ error: "Azione non valida" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });

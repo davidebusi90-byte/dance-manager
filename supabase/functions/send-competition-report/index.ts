@@ -70,7 +70,7 @@ serve(async (req) => {
         const isLate = (d: string) => deadline && new Date(d) > deadline;
 
         const emailSet = new Set<string>();
-        const addE = (c: any) => {
+        const addE = (c: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
             if (c?.instructor?.email) emailSet.add(c.instructor.email);
             [c?.athlete1?.responsabili, c?.athlete2?.responsabili].flat().forEach(name => {
                 if (!name) return;

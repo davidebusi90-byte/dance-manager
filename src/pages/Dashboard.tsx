@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, ExternalLink, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useToast } from "@/hooks/use-toast";
 import StatCard from "@/components/dashboard/StatCard";
 import AthletesList from "@/components/dashboard/AthletesList";
 import CouplesList from "@/components/dashboard/CouplesList";
@@ -21,7 +20,6 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeView, setActiveView] = useState<ActiveView>("none");
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useIsAdmin();
   const { role, userId } = useUserRole();
@@ -307,6 +305,7 @@ export default function Dashboard() {
           <CompetitionsList
             competitions={competitions}
             athletes={allAthletes}
+            couples={couples}
             profiles={profiles}
             onClose={() => setActiveView("none")}
             onRefresh={refresh}

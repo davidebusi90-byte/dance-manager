@@ -7,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Trophy, Settings, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CompetitionsImport from "@/components/CompetitionsImport";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
 import * as XLSX from "xlsx";
@@ -110,14 +109,14 @@ export default function CompetitionEnrollments() {
     if (!isRefetch) setLoading(true);
     try {
       const [competitionsRes, eventTypesRes] = await Promise.all([
-        supabase.from("competitions").select("id, name, date, end_date, is_deleted").eq("is_deleted", false).order("date", { ascending: true }) as any,
+        supabase.from("competitions").select("id, name, date, end_date, is_deleted").eq("is_deleted", false).order("date", { ascending: true }) as unknown,
         supabase.from("competition_event_types").select("*"),
       ]);
 
       if (competitionsRes.data) {
         // Extra safety: deduplicate by name and date in case duplicates already exist in DB
         const unique = new Map();
-        (competitionsRes.data as any[]).forEach(c => {
+        (competitionsRes.data as unknown[]).forEach(c => {
           const key = `${c.name.toLowerCase()}-${c.date}`;
           if (!unique.has(key)) unique.set(key, c);
         });
