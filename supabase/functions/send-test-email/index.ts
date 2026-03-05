@@ -15,11 +15,8 @@ serve(async (req) => {
         const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
         const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-        /*
         // Check auth
         const authHeader = req.headers.get("Authorization");
-        console.log("Auth Header presence:", authHeader ? "Yes" : "No");
-
         if (!authHeader) {
             return new Response(JSON.stringify({ error: "Manca l'header di autorizzazione" }), {
                 status: 401, headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -40,7 +37,6 @@ serve(async (req) => {
                 status: 401, headers: { "Content-Type": "application/json", ...corsHeaders },
             });
         }
-        */
 
 
         // For test purposes, we'll allow any authenticated user to send a test email.
@@ -80,7 +76,7 @@ serve(async (req) => {
                 "Authorization": `Bearer ${RESEND_API_KEY}`,
             },
             body: JSON.stringify({
-                from: "onboarding@resend.dev",
+                from: "Dance Manager <info@antigravity.it>",
                 to: [to],
                 subject: "✅ Test Email – Dance Manager funziona!",
                 html,
