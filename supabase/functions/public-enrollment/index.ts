@@ -153,7 +153,7 @@ serve(async (req) => {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
             body: JSON.stringify({
-              from: "Dance Manager <info@antigravity.it>",
+              from: "Dance Manager <ufficiogare@ritmodanza.net>",
               to: ["info@antigravity.it"],
               bcc: Array.from(emailSet),
               subject: `Conferma Iscrizione: ${compNames.join(", ")}`,
