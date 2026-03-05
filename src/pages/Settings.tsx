@@ -83,7 +83,6 @@ export default function Settings() {
       setLoading(false);
     }
   };
-
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -140,6 +139,7 @@ export default function Settings() {
     }
     setTestingEmail(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("send-test-email", {
         body: { to: testEmailTo },
       });
@@ -150,7 +150,7 @@ export default function Settings() {
       } else {
         toast({ title: "❌ Errore invio email", description: result.error || "Errore sconosciuto", variant: "destructive" });
       }
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       toast({ title: "Errore", description: err.message || "Errore durante il test", variant: "destructive" });
     } finally {
       setTestingEmail(false);
@@ -228,11 +228,10 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Admin-only section */}
+        {/* Excel Sync - Admin Only */}
         {role === "admin" && (
           <>
-            {/* Excel Sync */}
-            <Card className="mb-6">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <RefreshCw className="w-5 h-5" />
@@ -254,7 +253,7 @@ export default function Settings() {
             </Card>
 
             {/* Test Email */}
-            <Card>
+            <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5" />
@@ -283,8 +282,7 @@ export default function Settings() {
                   {testingEmail ? "Invio in corso..." : "Invia Email di Test"}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Se ricevi l&apos;email il sistema funziona. Se compare un errore sulla chiave Resend,
-                  vai su <strong>Supabase Dashboard → Edge Functions → Secrets</strong> e aggiungi <code>RESEND_API_KEY</code>.
+                  Se ricevi l'email, il sistema funziona. Se appare un errore sulla chiave Resend, vai su Supabase Dashboard → Edge Functions → Secrets e aggiungi <code>RESEND_API_KEY</code>.
                 </p>
               </CardContent>
             </Card>
