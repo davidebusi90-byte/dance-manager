@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Lock, User, RefreshCw } from "lucide-react";
+import { ArrowLeft, Lock, User, RefreshCw, Mail } from "lucide-react";
 import { importCompetitors, importCompetitions } from "@/lib/import-utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -17,6 +17,8 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [testEmailTo, setTestEmailTo] = useState("");
+  const [testingEmail, setTestingEmail] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -81,6 +83,7 @@ export default function Settings() {
       setLoading(false);
     }
   };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -128,6 +131,30 @@ export default function Settings() {
       title: "Sistema aggiornato",
       description: "Dati ricaricati e sincronizzati con i file Excel locali.",
     });
+  };
+
+  const handleTestEmail = async () => {
+    if (!testEmailTo) {
+      toast({ title: "Errore", description: "Inserisci un indirizzo email di destinazione", variant: "destructive" });
+      return;
+    }
+    setTestingEmail(true);
+    try {
+      const res = await supabase.functions.invoke("send-test-email", {
+        body: { to: testEmailTo },
+      });
+      if (res.error) throw res.error;
+      const result = res.data as { success: boolean; error?: string; id?: string };
+      if (result.success) {
+        toast({ title: "✅ Email inviata!", description: `Email di test inviata correttamente a ${testEmailTo}` });
+      } else {
+        toast({ title: "❌ Errore invio email", description: result.error || "Errore sconosciuto", variant: "destructive" });
+      }
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      toast({ title: "Errore", description: err.message || "Errore durante il test", variant: "destructive" });
+    } finally {
+      setTestingEmail(false);
+    }
   };
 
   return (
@@ -201,28 +228,67 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Excel Sync - Admin Only */}
+        {/* Admin-only section */}
         {role === "admin" && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <RefreshCw className="w-5 h-5" />
-                Sincronizzazione
-              </CardTitle>
-              <CardDescription>Sincronizza i dati con i file Excel locali</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="w-full gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
-                variant="outline"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                Sincronizza Excel
-              </Button>
-            </CardContent>
-          </Card>
+          <>
+            {/* Excel Sync */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5" />
+                  Sincronizzazione
+                </CardTitle>
+                <CardDescription>Sincronizza i dati con i file Excel locali</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="w-full gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
+                  variant="outline"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+                  Sincronizza Excel
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Test Email */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Test Invio Email
+                </CardTitle>
+                <CardDescription>Verifica che il sistema di notifiche email funzioni correttamente</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="testEmailTo">Indirizzo email destinatario</Label>
+                  <Input
+                    id="testEmailTo"
+                    type="email"
+                    placeholder="es. tua@email.com"
+                    value={testEmailTo}
+                    onChange={(e) => setTestEmailTo(e.target.value)}
+                  />
+                </div>
+                <Button
+                  onClick={handleTestEmail}
+                  disabled={testingEmail}
+                  className="w-full gap-2"
+                  variant="outline"
+                >
+                  <Mail className="w-4 h-4" />
+                  {testingEmail ? "Invio in corso..." : "Invia Email di Test"}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Se ricevi l&apos;email il sistema funziona. Se compare un errore sulla chiave Resend,
+                  vai su <strong>Supabase Dashboard → Edge Functions → Secrets</strong> e aggiungi <code>RESEND_API_KEY</code>.
+                </p>
+              </CardContent>
+            </Card>
+          </>
         )}
       </main>
     </div>
