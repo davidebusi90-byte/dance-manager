@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, X, Search } from "lucide-react";
+import { Users, X, Search, Mail } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +15,7 @@ interface Athlete {
   code: string;
   first_name: string;
   last_name: string;
+  email: string | null;
   category: string;
   class: string;
   birth_date: string | null;
@@ -194,7 +195,15 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-bold text-lg text-primary/90">{athlete.first_name} {athlete.last_name}</p>
-                        <p className="text-xs font-mono text-muted-foreground">{athlete.code}</p>
+                        <div className="flex flex-col gap-0.5 mt-0.5">
+                          <p className="text-xs font-mono text-muted-foreground">{athlete.code}</p>
+                          {athlete.email && (
+                            <a href={`mailto:${athlete.email}`} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                              <Mail className="w-3 h-3" />
+                              {athlete.email}
+                            </a>
+                          )}
+                        </div>
                       </div>
                       <div className={`status-badge ${certStatus.class} text-xs px-2 py-1 rounded-full font-semibold`}>
                         {certStatus.label}
@@ -235,6 +244,7 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
                   <tr>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Codice</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Nome e Cognome</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Email</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Categoria</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Nascita</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Certificato</th>
@@ -264,6 +274,16 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
                       <tr key={athlete.id} className={`${rowBg} transition-colors duration-200`}>
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{athlete.code}</td>
                         <td className="px-4 py-3 font-semibold text-primary/80">{athlete.first_name} {athlete.last_name}</td>
+                        <td className="px-4 py-3">
+                          {athlete.email ? (
+                            <a href={`mailto:${athlete.email}`} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 truncate max-w-[150px]" title={athlete.email}>
+                              <Mail className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{athlete.email}</span>
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground/30 italic text-xs">-</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{categoryDisplay}</span>

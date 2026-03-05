@@ -104,6 +104,7 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
         const findColIdx = (names: string[]) => {
             return headerRow.findIndex(h => names.some(n => h.includes(n.toUpperCase())));
         };
+        const emailIdx = findColIdx(["EMAIL", "E-MAIL", "MAIL"]);
         const discIndices: { disc: number, cls: number }[] = [];
         for (let j = 1; j <= 10; j++) {
             const dIdx = findColIdx([`DISC_${j}`, `DISC. ${j}`, `DISC.${j}`, `DISC ${j}`]);
@@ -135,6 +136,9 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
 
             if (!code || !firstName || !lastName) continue;
 
+            const emailRaw = emailIdx !== -1 ? String(row[emailIdx] || "").trim() : "";
+            const email = emailRaw === "" ? null : emailRaw;
+
             const partnerCode = String(row[colIdx.PARTNER_CID] || "").trim();
             const disciplines: { discipline: DanceCategory; class: string; raw: string }[] = [];
             for (const { disc, cls } of discIndices) {
@@ -156,6 +160,7 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
                 code,
                 firstName,
                 lastName,
+                email,
                 birthDate: parseExcelDate(row[colIdx.DATA_NASCITA]),
                 sex,
                 category: parseCategory(String(row[colIdx.CAT] || "")),
@@ -189,7 +194,7 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
         // --- STEP 1: Fetch existing athletes from DB ---
         const { data: existingAthletes, error: fetchError } = await (supabase
             .from("athletes")
-            .select("id, code, first_name, last_name, birth_date, gender, medical_certificate_expiry, category, class, responsabili, is_deleted") as any);
+            .select("id, code, first_name, last_name, email, birth_date, gender, medical_certificate_expiry, category, class, responsabili, is_deleted") as any);
         if (fetchError) throw fetchError;
 
         const dbAthleteMap = new Map<string, any>(
@@ -206,6 +211,7 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
                 code,
                 first_name: a.firstName,
                 last_name: a.lastName,
+                email: a.email,
                 category: a.category || "Senza categoria",
                 class: a.disciplines.length > 0 ? a.disciplines[0].class : "D",
                 birth_date: a.birthDate,
@@ -223,6 +229,7 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
                 const changed =
                     dbAthlete.first_name !== newData.first_name ||
                     dbAthlete.last_name !== newData.last_name ||
+                    dbAthlete.email !== newData.email ||
                     dbAthlete.birth_date !== newData.birth_date ||
                     dbAthlete.gender !== newData.gender ||
                     dbAthlete.medical_certificate_expiry !== newData.medical_certificate_expiry ||

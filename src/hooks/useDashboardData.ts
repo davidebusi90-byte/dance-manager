@@ -8,6 +8,7 @@ export interface Athlete {
     code: string;
     first_name: string;
     last_name: string;
+    email: string | null;
     category: string;
     class: string;
     birth_date: string | null;

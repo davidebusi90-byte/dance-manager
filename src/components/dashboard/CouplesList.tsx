@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserCheck, X, Search } from "lucide-react";
+import { UserCheck, X, Search, Mail } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,7 @@ interface Athlete {
   code: string;
   first_name: string;
   last_name: string;
+  email: string | null;
   birth_date: string | null;
   responsabili: string[] | null;
   gender?: string | null;
@@ -143,14 +144,30 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
 
                 return (
                   <div key={couple.id} className="p-4 rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 bg-muted/10 p-2 rounded-lg">
-                        <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">CAV</span>
-                        <span className="font-bold text-sm text-primary/80">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</span>
+                    <div className="space-y-4 mb-4">
+                      <div className="flex items-center justify-between bg-muted/10 p-2 rounded-lg gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">CAV</span>
+                          <span className="font-bold text-sm text-primary/80">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</span>
+                        </div>
+                        {a1?.email && (
+                          <a href={`mailto:${a1.email}`} className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 shrink-0">
+                            <Mail className="w-3 h-3" />
+                            Email
+                          </a>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 bg-muted/10 p-2 rounded-lg">
-                        <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">DAM</span>
-                        <span className="font-bold text-sm text-primary/80">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</span>
+                      <div className="flex items-center justify-between bg-muted/10 p-2 rounded-lg gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/50 uppercase">DAM</span>
+                          <span className="font-bold text-sm text-primary/80">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</span>
+                        </div>
+                        {a2?.email && (
+                          <a href={`mailto:${a2.email}`} className="text-[10px] text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 shrink-0">
+                            <Mail className="w-3 h-3" />
+                            Email
+                          </a>
+                        )}
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-4">
@@ -193,8 +210,10 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                   <tr>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cav. Cod.</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cavaliere</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cav. Email</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dam. Cod.</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dama</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dam. Email</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700 text-center min-w-[120px]">Categoria</th>
                     <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">LAT</th>
                     <th className="px-2 py-3 font-bold uppercase tracking-wider text-teal-700 text-center">STD</th>
@@ -222,8 +241,28 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                       <tr key={couple.id} className="hover:bg-muted/80 transition-colors">
                         <td className="px-3 py-2.5 font-mono text-muted-foreground">{a1?.code || "-"}</td>
                         <td className="px-3 py-2.5 font-bold text-primary/80">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
+                        <td className="px-3 py-2.5">
+                          {a1?.email ? (
+                            <a href={`mailto:${a1.email}`} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 truncate max-w-[120px]" title={a1.email}>
+                              <Mail className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{a1.email}</span>
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground/30 italic text-xs">-</span>
+                          )}
+                        </td>
                         <td className="px-3 py-2.5 font-mono text-muted-foreground">{a2?.code || "-"}</td>
                         <td className="px-3 py-2.5 font-bold text-primary/80">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
+                        <td className="px-3 py-2.5">
+                          {a2?.email ? (
+                            <a href={`mailto:${a2.email}`} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 truncate max-w-[120px]" title={a2.email}>
+                              <Mail className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{a2.email}</span>
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground/30 italic text-xs">-</span>
+                          )}
+                        </td>
                         <td className="px-3 py-2.5 text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             <span className="font-bold">{couple.category}</span>

@@ -68,7 +68,16 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
 
-    const { data: couple, error: coupleError } = await supabase.from("couples").select("id, class, disciplines, is_active").eq("id", body.couple_id).single();
+    const { data: couple, error: coupleError } = await supabase
+      .from("couples")
+      .select(`
+        id, class, disciplines, is_active,
+        athlete1:athletes!couples_athlete1_id_fkey(first_name, last_name, email, responsabili),
+        athlete2:athletes!couples_athlete2_id_fkey(first_name, last_name, email, responsabili),
+        instructor:profiles!couples_instructor_id_fkey(full_name, email)
+      `)
+      .eq("id", body.couple_id)
+      .single();
     if (coupleError || !couple) return new Response(JSON.stringify({ error: "Coppia non trovata" }), { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } });
     if (!couple.is_active) return new Response(JSON.stringify({ error: "La coppia non è attiva" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
 
@@ -98,6 +107,73 @@ serve(async (req) => {
     if (insertError) return new Response(JSON.stringify({ error: "Errore durante l'iscrizione" }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
 
     console.log(`Enrollment successful: couple=${body.couple_id}, count=${newEntries.length}, ip=${clientIp}`);
+
+    // Send email notification
+    try {
+      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+      if (RESEND_API_KEY) {
+        const emailSet = new Set<string>();
+        // @ts-ignore - Supabase type casting workaround
+        const c = couple as any;
+
+        if (c?.athlete1?.email) emailSet.add(c.athlete1.email);
+        if (c?.athlete2?.email) emailSet.add(c.athlete2.email);
+        if (c?.instructor?.email) emailSet.add(c.instructor.email);
+
+        const responsabiliNames = [...(c?.athlete1?.responsabili || []), ...(c?.athlete2?.responsabili || [])].filter(Boolean);
+        if (responsabiliNames.length > 0) {
+          const { data: respProfiles } = await supabase.from("profiles").select("email").in("full_name", responsabiliNames);
+          (respProfiles || []).forEach((p: any) => { if (p.email) emailSet.add(p.email); });
+        }
+
+        if (emailSet.size > 0) {
+          const compNames = newEntries.map(e => {
+            const comp = competitions?.find((comp: any) => comp.id === e.competition_id);
+            return comp ? comp.name : "Competizione Sconosciuta";
+          });
+
+          const a1Name = `${c?.athlete1?.first_name || ""} ${c?.athlete1?.last_name || ""}`.trim();
+          const a2Name = `${c?.athlete2?.first_name || ""} ${c?.athlete2?.last_name || ""}`.trim();
+          const coupleName = `${a1Name} / ${a2Name}`;
+
+          const html = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+              <h2 style="color: #4f46e5;">Conferma Iscrizione Competizioni</h2>
+              <p>La coppia <strong>${coupleName}</strong> (Classe: ${c.class}) è stata iscritta con successo alle seguenti competizioni:</p>
+              <ul>
+                ${compNames.map(name => `<li><strong>${name}</strong></li>`).join("")}
+              </ul>
+              <p>Visualizza i dettagli e le scadenze di pagamento sulla piattaforma.</p>
+              <br/>
+              <p>Cordiali saluti,<br>Il team di <strong>Dance Manager</strong></p>
+            </div>
+          `;
+
+          const res = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
+            body: JSON.stringify({
+              from: "Dance Manager <info@antigravity.it>",
+              to: ["info@antigravity.it"],
+              bcc: Array.from(emailSet),
+              subject: `Conferma Iscrizione: ${compNames.join(", ")}`,
+              html
+            }),
+          });
+
+          if (!res.ok) {
+            console.error("Failed to send email via Resend:", await res.text());
+          } else {
+            console.log(`Email notification sent to ${emailSet.size} recipients`);
+          }
+        }
+      } else {
+        console.warn("RESEND_API_KEY not found, skipping email notification");
+      }
+    } catch (emailErr) {
+      console.error("Error sending enrollment email:", emailErr);
+    }
+
     return new Response(JSON.stringify({ ok: true, enrolled_count: newEntries.length, message: `Iscrizione completata per ${newEntries.length} competizione/i` }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
 
   } catch (error: unknown) {

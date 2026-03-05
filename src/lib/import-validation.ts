@@ -30,6 +30,13 @@ export const athleteImportSchema = z.object({
     .min(1, "Cognome obbligatorio")
     .max(100, "Cognome troppo lungo (max 100)")
     .regex(nameRegex, "Cognome contiene caratteri non validi"),
+  email: z
+    .string()
+    .trim()
+    .email("Email non valida")
+    .or(z.literal(""))
+    .nullable()
+    .optional(),
   birthDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Data di nascita non valida")

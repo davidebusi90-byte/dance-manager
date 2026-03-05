@@ -1,0 +1,5455 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Ritmo Danza</title>
+
+        <style type="text/css">
+            body,td,th {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 12px;
+            }
+        </style>
+    </head>
+
+    <body>
+                <table width="900" border="1" cellpadding="2" cellspacing="0">
+            <tr class="TestoBianco">
+                <th colspan="4" align="center" bgcolor="#E5E5E5">NOMINATIVO ALLIEVO</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th colspan="3" align="center" bgcolor="#E5E5E5">NOMINATIVO GENITORE</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th colspan="5" align="center" bgcolor="#E5E5E5">IN COPPIA CON</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+                <th align="left" bgcolor="#E5E5E5">&nbsp;</th>
+            </tr>
+            <tr class="TestoBianco">
+                <th align="left" bgcolor="#E5E5E5">COGNOME</th>
+                <th align="left" bgcolor="#E5E5E5">NOME</th>
+                <th align="left" bgcolor="#E5E5E5">COD. FISCALE</th>
+                <th align="left" bgcolor="#E5E5E5">DATA NASCITA</th>
+                <th align="left" bgcolor="#E5E5E5">SESSO</th>
+                <th align="left" bgcolor="#E5E5E5">COMUNE NASCITA</th>
+                <th align="center" bgcolor="#E5E5E5">PROV.<br>NASCITA</th>
+                <th align="left" bgcolor="#E5E5E5">INDIRIZZO</th>
+                <th align="left" bgcolor="#E5E5E5">COGNOME</th>
+                <th align="left" bgcolor="#E5E5E5">NOME</th>
+                <th align="left" bgcolor="#E5E5E5">COD. FISCALE</th>
+                <th align="left" bgcolor="#E5E5E5">TELEFONO </th>
+                <th align="left" bgcolor="#E5E5E5">CELLULARE</th>
+                <th align="left" bgcolor="#E5E5E5">EMAIL</th>
+                <th align="left" bgcolor="#E5E5E5">SOCIETA'</th>
+                <th align="left" bgcolor="#E5E5E5">CODICE CID</th>
+                <th align="left" bgcolor="#E5E5E5">NUM. TESSERA RD</th>
+                <th align="left" bgcolor="#E5E5E5">SCADENZA CERT. MEDICO</th>
+                <th align="left" bgcolor="#E5E5E5">QUOTA RD</th>
+                <th align="left" bgcolor="#E5E5E5">QUOTA SOCIETA'</th>
+                <th align="left" bgcolor="#E5E5E5">CAT</th>
+                <th align="left" bgcolor="#E5E5E5">RESP. 1</th>
+                <th align="left" bgcolor="#E5E5E5">RESP. 2</th>
+                <th align="left" bgcolor="#E5E5E5">RESP. 3</th>
+                <th align="left" bgcolor="#E5E5E5">RESP. 4</th>
+                <th align="left" bgcolor="#E5E5E5">COGNOME</th>
+                <th align="left" bgcolor="#E5E5E5">NOME</th>
+                <th align="left" bgcolor="#E5E5E5">DATA NASCITA</th>
+                <th align="left" bgcolor="#E5E5E5">NUM. TESSERA CID</th>
+                <th align="left" bgcolor="#E5E5E5">NUM. TESSERA RD</th>
+                <th align="left" bgcolor="#E5E5E5">SCADENZA CERT. MEDICO</th>
+                <th align="left" bgcolor="#E5E5E5">DISC. 1 </th>
+                <th align="left" bgcolor="#E5E5E5">CLASSE 1</th>
+                <th align="left" bgcolor="#E5E5E5">DISC. 2</th>
+                <th align="left" bgcolor="#E5E5E5">CLASSE 2</th>
+                <th align="left" bgcolor="#E5E5E5">DISC. 3</th>
+                <th align="left" bgcolor="#E5E5E5">CLASSE 3</th>
+                <th align="left" bgcolor="#E5E5E5">DISC. 4</th>
+                <th align="left" bgcolor="#E5E5E5">CLASSE 4</th>
+                <th align="left" bgcolor="#E5E5E5">DISC. 5</th>
+                <th align="left" bgcolor="#E5E5E5">CLASSE 5</th>
+                <th align="left" bgcolor="#E5E5E5">DISC. 6</th>
+                <th align="left" bgcolor="#E5E5E5">CLASSE 6</th>
+            </tr>
+                        <tr>
+                <td>ABEL</td>
+                <td>RACHEL</td>
+                <td>ABEL9054095RA9HR18</td>
+                <td>09/04/2005</td>
+                <td>F</td>
+                <td>REGNO UNITO</td>
+                <td>REGNO UNITO</td>
+                <td>CAIRNWELL DRUM, KY130 - 40068 SAN LAZZARO DI SAVENA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>07799437651</td>
+                <td>rachelabel515@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>109952</td>
+                <td>107611</td>
+                <td></td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BERNARDINI</td>
+                <td>FABIO</td>
+                <td>20/04/1999</td>
+                <td>100198</td>
+                <td>100339</td>
+                <td>18/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A2</td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ACCORSI</td>
+                <td>LUDOVICO</td>
+                <td>CCRLVC13R12A785P</td>
+                <td>12/10/2013</td>
+                <td>M</td>
+                <td>BENTIVOGLIO</td>
+                <td>BO</td>
+                <td>VIA CENTO, 89/E - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>ALBERTO</td>
+                <td>ACCORSI</td>
+                <td>CCRLVC13R12A785P</td>
+                <td></td>
+                <td>3334842450</td>
+                <td>manuela.s36@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108024</td>
+                <td>106228</td>
+                <td>16/10/2026</td>
+                <td>30,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>LORENZANI</td>
+                <td>SERENA</td>
+                <td>03/10/2014</td>
+                <td>108094</td>
+                <td>105186</td>
+                <td>03/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>C</td>
+                <td>Danze Standard</td>
+                <td>C</td>
+                <td>Combinata Standard-Latini</td>
+                <td>C</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>AFFRONTI</td>
+                <td>ALESSIA</td>
+                <td>FFRLSS14T69A944Q</td>
+                <td>29/12/2014</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA MARIE CURIE, 14 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>TIZIANA FRANCESCA</td>
+                <td>PARISI</td>
+                <td>FFRLSS14T69A944Q</td>
+                <td>3478731430</td>
+                <td>3478731430</td>
+                <td>kolaehoney@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108025</td>
+                <td>103845</td>
+                <td>01/10/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>PERSICO</td>
+                <td>MATTEO</td>
+                <td>02/07/2012</td>
+                <td>110312</td>
+                <td>107232</td>
+                <td>10/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ALBERGHINI</td>
+                <td>CATERINA</td>
+                <td>LBRCRN99A52A944H</td>
+                <td>12/01/1999</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA RENATO TEGA, 3 - 40128 BOLOGNA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 326776</td>
+                <td>339 4540960</td>
+                <td>alberghini.caterina@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>101307</td>
+                <td>100341</td>
+                <td>27/10/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>REINA</td>
+                <td>ALESSANDRO</td>
+                <td>30/04/1999</td>
+                <td>100221</td>
+                <td>100335</td>
+                <td>27/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td>South American Showdance</td>
+                <td>A</td>
+                <td>Classic Showdance</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ALBERGHINI</td>
+                <td>GIULIA</td>
+                <td>LBRGLI09T54C469D</td>
+                <td>14/12/2009</td>
+                <td>F</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA M.RUGGERI, 3 - 44042 CENTO (FE)</td>
+                <td>SIMONE</td>
+                <td>ALBERGHINI</td>
+                <td>LBRGLI09T54C469D</td>
+                <td>051 6836729</td>
+                <td>333 8328183</td>
+                <td>agnese.grobelna@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100063</td>
+                <td>101098</td>
+                <td>04/08/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BARTOLOZZI</td>
+                <td>MICHELE</td>
+                <td>11/05/2005</td>
+                <td>100189</td>
+                <td>101251</td>
+                <td>10/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>A1</td>
+                <td>Danze Standard</td>
+                <td>A1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ALBERGHINI</td>
+                <td>LUCA</td>
+                <td>LBRLCU61B13C469H</td>
+                <td>13/02/1961</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA RENAZZO, 20/11 - 44045 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 909451</td>
+                <td></td>
+                <td>alberghini.luca61@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>107123</td>
+                <td>100099</td>
+                <td>15/01/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 61-64</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BABINKOVA</td>
+                <td>ELENA</td>
+                <td>31/03/1967</td>
+                <td>107124</td>
+                <td>104548</td>
+                <td>19/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ANSALONI</td>
+                <td>GIULIA</td>
+                <td>NSLGLI13H63A944X</td>
+                <td>23/06/2013</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA DELLA PACE , 144 - 40010 SALA BOLOGNESE (BO)</td>
+                <td>GIANLUCA</td>
+                <td>ANSALONI</td>
+                <td>NSLGLI13H63A944X</td>
+                <td>3486549578</td>
+                <td>3486549578</td>
+                <td>cinziacasoni@hotmail.it</td>
+                <td>Team Diablo</td>
+                <td>109510</td>
+                <td>105570</td>
+                <td>24/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>SERENA MONARI</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td>RUSSO</td>
+                <td>ANTONIO</td>
+                <td>17/02/2012</td>
+                <td>103294</td>
+                <td>106989</td>
+                <td>30/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BABINKOVA</td>
+                <td>ELENA</td>
+                <td>BBNLNE67C71Z154Z</td>
+                <td>31/03/1967</td>
+                <td>F</td>
+                <td>RUSSIA</td>
+                <td>RUSSIA</td>
+                <td>PILASTRO, 71 - 44045 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3331365878</td>
+                <td>elenaeffe2006@libero.it</td>
+                <td>Team Diablo</td>
+                <td>107124</td>
+                <td>104548</td>
+                <td>19/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 61-64</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>ALBERGHINI</td>
+                <td>LUCA</td>
+                <td>13/02/1961</td>
+                <td>107123</td>
+                <td>100099</td>
+                <td>15/01/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BALBONI</td>
+                <td>PAOLA</td>
+                <td>BLBPLA61B46C469Z</td>
+                <td>06/02/1961</td>
+                <td>F</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA COLLARI, 37 - 44045 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>347 8749246</td>
+                <td>balboniloretta@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100187</td>
+                <td>100097</td>
+                <td>29/09/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 65-69</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>GALLERANI</td>
+                <td>GRAZIANO</td>
+                <td>12/02/1959</td>
+                <td>100207</td>
+                <td>100098</td>
+                <td>29/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BALDASSARI</td>
+                <td>GIADA</td>
+                <td>BLDGDI16B53A944N</td>
+                <td>13/02/2016</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VICOLO BASSO, 5 - 40050 ARGELATO (BO)</td>
+                <td>MARIA CARLA</td>
+                <td>BONECHI</td>
+                <td>BLDGDI16B53A944N</td>
+                <td></td>
+                <td>3205658524</td>
+                <td>mc.bonechi@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108096</td>
+                <td>104479</td>
+                <td>20/10/2026</td>
+                <td>30,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>FRANCESCO BEVILACQUA</td>
+                <td>ANDREA GIANNOTTI</td>
+                <td></td>
+                <td></td>
+                <td>GHIMBRA ZUMBO</td>
+                <td>ALESSANDRO</td>
+                <td>04/06/2017</td>
+                <td>108095</td>
+                <td>106860</td>
+                <td>23/04/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>C</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BARTOLOZZI</td>
+                <td>MICHELE</td>
+                <td>BRTMHL05E11C469V</td>
+                <td>11/05/2005</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA LEONA, 14 - 44045 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>339 3278338 </td>
+                <td>347 4592346 </td>
+                <td>coryanna.lynam@yahoo.com</td>
+                <td>Team Diablo</td>
+                <td>100189</td>
+                <td>101251</td>
+                <td>10/02/2027</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>ALBERGHINI</td>
+                <td>GIULIA</td>
+                <td>14/12/2009</td>
+                <td>100063</td>
+                <td>101098</td>
+                <td>04/08/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A1</td>
+                <td>Danze Standard</td>
+                <td>A1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BATTISTINI</td>
+                <td>LINDA</td>
+                <td>BTTLND18L53C573Q</td>
+                <td>13/07/2018</td>
+                <td>F</td>
+                <td>CESENA</td>
+                <td>FC</td>
+                <td>MISSIROLI, 10 - 48015 CERVIA (RA)</td>
+                <td>FEDERICA</td>
+                <td>BALDISSERRI</td>
+                <td>BTTLND18L53C573Q</td>
+                <td></td>
+                <td>3397378651</td>
+                <td>federica.baldisserri@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>110132</td>
+                <td>107006</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>ROSATI</td>
+                <td>GIACOMO</td>
+                <td>11/02/2016</td>
+                <td>108182</td>
+                <td>106358</td>
+                <td>12/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BELLINATO</td>
+                <td>MATTIA</td>
+                <td>BLLMTT94S14D548Q</td>
+                <td>14/11/1994</td>
+                <td>M</td>
+                <td>FINALE EMILIA</td>
+                <td>MO</td>
+                <td>GIROLAMO AGAZZI, 25 - 41034 FINALE EMILIA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3473328964</td>
+                <td>mattiabellinato@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>106457</td>
+                <td>105415</td>
+                <td>02/10/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 19-34</td>
+                <td>FABIO BERNARDINI</td>
+                <td>GAIA GARUTI</td>
+                <td></td>
+                <td></td>
+                <td>SCIANGUETTA </td>
+                <td>ANGELICA </td>
+                <td>09/09/2000</td>
+                <td>106458</td>
+                <td>105667</td>
+                <td>22/05/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BENETTI</td>
+                <td>LUCA</td>
+                <td>BNTLCU08D20A944M</td>
+                <td>20/04/2008</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA R.LEVI MONTALCINI , 20 - 40011 ANZOLA DELL'EMILIA (BO)</td>
+                <td>MANUELA</td>
+                <td>SELVATICI</td>
+                <td>BNTLCU08D20A944M</td>
+                <td>051735061</td>
+                <td>3407868066</td>
+                <td>manuela@benetticesarinosrl.com</td>
+                <td>Team Diablo</td>
+                <td>100195</td>
+                <td>102849</td>
+                <td>03/09/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BOSCO</td>
+                <td>VANESSA</td>
+                <td>03/12/2011</td>
+                <td>100324</td>
+                <td>106611</td>
+                <td>11/03/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BENETTI </td>
+                <td>MARCO</td>
+                <td>BNTMRC04P15A944B</td>
+                <td>15/09/2004</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA RITA LEVI MONTALCINI, 20 - 40011 ANZOLA DELL'EMILIA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>340 7868066</td>
+                <td>marcobenetti15@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100197</td>
+                <td>100653</td>
+                <td>04/09/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MODESTI</td>
+                <td>MATILDE</td>
+                <td>14/06/2002</td>
+                <td>101254</td>
+                <td>107230</td>
+                <td>19/06/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BERNARDINI</td>
+                <td>FABIO</td>
+                <td>BRNFBA99D20A944M</td>
+                <td>20/04/1999</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA BERTELLI, 9 - 40068 SAN LAZZARO DI SAVENA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 451900</td>
+                <td>338 7125768</td>
+                <td>fabio.bernardini@ritmodanza.net</td>
+                <td>Team Diablo</td>
+                <td>100198</td>
+                <td>100339</td>
+                <td>18/09/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>ABEL</td>
+                <td>RACHEL</td>
+                <td>09/04/2005</td>
+                <td>109952</td>
+                <td>107611</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>A2</td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BEVILACQUA</td>
+                <td>EMANUEL</td>
+                <td>BVLMNL12S19A944I</td>
+                <td>19/11/2012</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>BOLOGNA, 64 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>ALESSIO</td>
+                <td>BEVILACQUA</td>
+                <td>BVLMNL12S19A944I</td>
+                <td></td>
+                <td>3925555708</td>
+                <td>bevilacqua.ale87@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>105296</td>
+                <td>105475</td>
+                <td>03/10/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 14-15</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MANDORINI</td>
+                <td>ALESSANDRA</td>
+                <td>16/06/2011</td>
+                <td>107399</td>
+                <td>104328</td>
+                <td>06/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BEVILACQUA</td>
+                <td>FRANCESCO</td>
+                <td>BVLFNC96A21B300N</td>
+                <td>21/01/1996</td>
+                <td>M</td>
+                <td>BUSTO ARSIZIO</td>
+                <td>VA</td>
+                <td>VIA PIO IX, 10 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3386826909</td>
+                <td>francescobevilacquabf@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>102055</td>
+                <td>105023</td>
+                <td>09/05/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>GIANNOTTI</td>
+                <td>GIULIA ANDREA</td>
+                <td>26/05/2002</td>
+                <td>100593</td>
+                <td>100333</td>
+                <td>27/04/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BOMBARDI</td>
+                <td>JACOPO</td>
+                <td>BMBJCP99A23H199O</td>
+                <td>23/01/1999</td>
+                <td>M</td>
+                <td>RAVENNA</td>
+                <td>RA</td>
+                <td>FOSSO NUOVO, 10 - 48125 RAVENNA (RA)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3347275586</td>
+                <td>jacopo.bombardi@outlook.it</td>
+                <td>Team Diablo</td>
+                <td>100234</td>
+                <td>104775</td>
+                <td>03/03/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>LAZZARI</td>
+                <td>DARIA</td>
+                <td>29/06/2005</td>
+                <td>109012</td>
+                <td>100382</td>
+                <td>25/01/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>B1</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BONADONNA</td>
+                <td>GIOVANNI</td>
+                <td>BNDGNN07P14A944K</td>
+                <td>14/09/2007</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA CORTICELLA , 16/2 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3282682119</td>
+                <td>loretta.venturi71@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100592</td>
+                <td>104397</td>
+                <td>23/05/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>NASI</td>
+                <td>LETIZIA</td>
+                <td>07/08/2009</td>
+                <td>108105</td>
+                <td>106162</td>
+                <td>28/08/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BOSCO</td>
+                <td>VANESSA</td>
+                <td>BSCVSS11T43A785I</td>
+                <td>03/12/2011</td>
+                <td>F</td>
+                <td>BENTIVOGLIO</td>
+                <td>BO</td>
+                <td>PROVINCIALE SUD, 326 - 40042 MOLINELLA (BO)</td>
+                <td>MARINA</td>
+                <td>FERRARI</td>
+                <td>BSCVSS11T43A785I</td>
+                <td></td>
+                <td>3491959727</td>
+                <td>vanevane.bos@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100324</td>
+                <td>106611</td>
+                <td>11/03/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BENETTI</td>
+                <td>LUCA</td>
+                <td>20/04/2008</td>
+                <td>100195</td>
+                <td>102849</td>
+                <td>03/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BRIGANTI</td>
+                <td>MARCO</td>
+                <td>BRGMRC12S26D969G</td>
+                <td>26/11/2012</td>
+                <td>M</td>
+                <td>GENOVA</td>
+                <td>GE</td>
+                <td>CASTELFRANCO, 44/U - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>PAOLO</td>
+                <td>BRIGANTI</td>
+                <td>BRGMRC12S26D969G</td>
+                <td></td>
+                <td>3922164517</td>
+                <td>daniela.severino@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108097</td>
+                <td>106202</td>
+                <td>03/12/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td>MUSAKU</td>
+                <td>WHITNEY</td>
+                <td>21/08/2012</td>
+                <td>108098</td>
+                <td>103106</td>
+                <td>24/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>BUSI</td>
+                <td>DAVIDE</td>
+                <td>BSUDVD90P06C469X</td>
+                <td>06/09/1990</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA ALDO MORO, 30/A - 40019 SANT'AGATA BOLOGNESE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>0516841142</td>
+                <td>3387139649</td>
+                <td>davidegiulia@ritmodanza.net</td>
+                <td>Team Diablo</td>
+                <td>100200</td>
+                <td>100646</td>
+                <td>01/09/2040</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 35-44</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>A2</td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A2</td>
+                <td>South American Showdance</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CABURAZZI</td>
+                <td>CHRISTIAN</td>
+                <td>CBRCRS05A25A944U</td>
+                <td>25/01/2005</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA GRAMSCI, 223 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>370 3303313 CHRISTIAN</td>
+                <td>347 0651226 MAMMA</td>
+                <td>daniela_fernando@virilio.it</td>
+                <td>Team Diablo</td>
+                <td>109453</td>
+                <td>106604</td>
+                <td>07/01/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 19-34</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CABURAZZI</td>
+                <td>SIMONE</td>
+                <td>CBRSMN07C01A944G</td>
+                <td>01/03/2007</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA GRAMSCI, 223 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>370 3043721 SIMONE</td>
+                <td>347 0651226 MAMMA</td>
+                <td>daniela_fernando@virgilio.it</td>
+                <td>Team Diablo</td>
+                <td>108169</td>
+                <td>106603</td>
+                <td>18/01/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 16-18</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>FANTONI</td>
+                <td>SARA</td>
+                <td>19/01/2010</td>
+                <td>108176</td>
+                <td>103057</td>
+                <td>07/12/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CANè</td>
+                <td>BARBARA</td>
+                <td>CNABBR70S46A944P</td>
+                <td>06/11/1970</td>
+                <td>F</td>
+                <td>ANZOLA DELL'EMILIA</td>
+                <td>BO</td>
+                <td>10 SETTEMBRE 1943, 11 - 40011 ANZOLA DELL'EMILIA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3479111988</td>
+                <td>3479111988</td>
+                <td>barbaracane@inwind.it</td>
+                <td>Team Diablo</td>
+                <td>108170</td>
+                <td>106745</td>
+                <td>12/11/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 55-60</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>ZANNONI</td>
+                <td>DAVIDE</td>
+                <td>23/02/1965</td>
+                <td>108185</td>
+                <td>106746</td>
+                <td>29/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CAPPELLINI</td>
+                <td>GAIA</td>
+                <td>CPPGAI13C54A944Q</td>
+                <td>14/03/2013</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA DOMENICO AIMO, 14 - 40129 BOLOGNA (BO)</td>
+                <td>MARCO </td>
+                <td>CAPPELLINI</td>
+                <td>CPPGAI13C54A944Q</td>
+                <td>347 4689094</td>
+                <td>347 4689094</td>
+                <td>zafede@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108171</td>
+                <td>105281</td>
+                <td>09/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>DILEO</td>
+                <td>GABRIELE</td>
+                <td>22/12/2013</td>
+                <td>108175</td>
+                <td>105650</td>
+                <td>24/09/2025</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CARNEVALE</td>
+                <td>GIACOMO</td>
+                <td>CRNGCM10T03H199T</td>
+                <td>03/12/2010</td>
+                <td>M</td>
+                <td>RAVENNA</td>
+                <td>RA</td>
+                <td>VIA PETROSA, 316 - 48125 RAVENNA (RA)</td>
+                <td>SERGIO</td>
+                <td>CARNEVALE</td>
+                <td>CRNGCM10T03H199T</td>
+                <td></td>
+                <td>3476900809</td>
+                <td>sergiocarnevale71@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100596</td>
+                <td>103722</td>
+                <td>08/12/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 16-18</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>ROSSI</td>
+                <td>RACHELE</td>
+                <td>08/06/2009</td>
+                <td>109581</td>
+                <td>107569</td>
+                <td>20/03/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CAZZOLI</td>
+                <td>GREGORIO</td>
+                <td>CZZGGR19A21A944H</td>
+                <td>21/01/2019</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>SANT'ANTONIO, 23 - 40010 SALA BOLOGNESE (BO)</td>
+                <td>VALENTINA</td>
+                <td>BALBONI</td>
+                <td>CZZGGR19A21A944H</td>
+                <td></td>
+                <td>3409218886</td>
+                <td>vally_83@libero.it</td>
+                <td>Ritmo Danza</td>
+                <td>109501</td>
+                <td>107223</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>COLOMBARI</td>
+                <td>SABRINA</td>
+                <td>CLMSRN80M50A944U</td>
+                <td>10/08/1980</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA CASTAGNOLO, 114 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>347 8218284</td>
+                <td></td>
+                <td>Team Diablo</td>
+                <td>107120</td>
+                <td>100062</td>
+                <td>22/11/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 45-54</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>LUPPI</td>
+                <td>CHRISTIAN</td>
+                <td>10/03/1980</td>
+                <td>107119</td>
+                <td>100061</td>
+                <td>15/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CRISTOFORI</td>
+                <td>AARON</td>
+                <td>CRSRNA12L05C469Y</td>
+                <td>05/07/2012</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA EINAUDI, 9 - 44042 CENTO (FE)</td>
+                <td>VALENTINA</td>
+                <td>LUGATO</td>
+                <td>CRSRNA12L05C469Y</td>
+                <td></td>
+                <td>3408115115</td>
+                <td>vale.lugato@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>103256</td>
+                <td>102870</td>
+                <td>01/10/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 12-13</td>
+                <td>DAVIDE BUSI</td>
+                <td>FABIO BERNARDINI</td>
+                <td></td>
+                <td></td>
+                <td>LICCIARDELLO</td>
+                <td>EMMA</td>
+                <td>09/01/2012</td>
+                <td>104824</td>
+                <td>104528</td>
+                <td>15/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>CRISTOFORI</td>
+                <td>GABRIEL</td>
+                <td>CRSGRL15C23C469M</td>
+                <td>23/03/2015</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA LUIGI EINAUDI, 9 - 44042 CENTO (FE)</td>
+                <td>VALENTINA</td>
+                <td>LUGATO</td>
+                <td>CRSGRL15C23C469M</td>
+                <td></td>
+                <td>3408115115</td>
+                <td>vale.lugato@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>105298</td>
+                <td>103922</td>
+                <td>01/10/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 10-11</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td>FURGERI</td>
+                <td>ASIA</td>
+                <td>25/04/2015</td>
+                <td>106467</td>
+                <td>103578</td>
+                <td>10/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DAVALLI O DALLAVALLE</td>
+                <td>CRISTINA </td>
+                <td>DVLCST76L67A944T</td>
+                <td>27/07/1976</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA MARTIRI DI PIAZZA FONTANA , 34 - 40033 CASALECCHIO DI RENO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 573882</td>
+                <td>338 9791138</td>
+                <td>massi.cristina@alice.it</td>
+                <td>Team Diablo</td>
+                <td>100244</td>
+                <td>102998</td>
+                <td>21/07/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 45-54</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>PIEROTTI </td>
+                <td>MASSIMILIANO </td>
+                <td>10/06/1973</td>
+                <td>100245</td>
+                <td>102997</td>
+                <td>21/07/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DI GIACINTO</td>
+                <td>PIERO</td>
+                <td>DGCPRI65L22A944K</td>
+                <td>22/07/1965</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>V.TIZZANO, 12 - 40033 CASALECCHIO DI RENO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>348 0710980</td>
+                <td></td>
+                <td>Team Diablo</td>
+                <td>105300</td>
+                <td>100754</td>
+                <td>28/02/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 55-60</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>SGHINOLFI</td>
+                <td>TATIANA</td>
+                <td>28/09/1969</td>
+                <td>105301</td>
+                <td>100753</td>
+                <td>28/02/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DI NONO </td>
+                <td>CRISTIAN </td>
+                <td>DNNCST12L13A944R</td>
+                <td>13/07/2012</td>
+                <td>M</td>
+                <td>ZOLA PREDOSA</td>
+                <td>BO</td>
+                <td>VIA RISORGIMENTO, 432/1d - 40069 ZOLA PREDOSA (BO)</td>
+                <td>GIORGIA </td>
+                <td>TASSONI</td>
+                <td>DNNCST12L13A944R</td>
+                <td>3331266033</td>
+                <td>3331266033</td>
+                <td>giorgiatassoni@hotmail.it</td>
+                <td>Team Diablo</td>
+                <td>103294</td>
+                <td>106366</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>DOBRESCU</td>
+                <td>MARINA ALEXANDRA</td>
+                <td>31/05/2012</td>
+                <td>109492</td>
+                <td>105015</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DI PASQUALE</td>
+                <td>BEATRICE</td>
+                <td>DPSBRC15M48A944V</td>
+                <td>08/08/2015</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA GALLIERA , 2B - 40013 CASTEL MAGGIORE (BO)</td>
+                <td>GIULIA</td>
+                <td>TRAINA</td>
+                <td>DPSBRC15M48A944V</td>
+                <td>3289249028</td>
+                <td>3289249028 Cell madre</td>
+                <td>giulia.traina1990@outlook.it</td>
+                <td>Team Diablo</td>
+                <td>106534</td>
+                <td>105174</td>
+                <td>22/12/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>PREVIATI</td>
+                <td>ALESSANDRO</td>
+                <td>06/05/2015</td>
+                <td>106533</td>
+                <td>105495</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DIANA</td>
+                <td>MASSIMILIANO</td>
+                <td>DNIMSM88E19A944L</td>
+                <td>19/05/1988</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA FORCOLE, 888F - 40014 CREVALCORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3385359068</td>
+                <td>massimiliano.diana@libero.it</td>
+                <td>Team Diablo</td>
+                <td>106535</td>
+                <td>104119</td>
+                <td>15/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 35-44</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>ONOFRIO</td>
+                <td>PAOLA</td>
+                <td>05/10/1989</td>
+                <td>106536</td>
+                <td>104120</td>
+                <td>15/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DILEO</td>
+                <td>GABRIELE</td>
+                <td>DLIGRL13T22A944Q</td>
+                <td>22/12/2013</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA BELVEDERE, 23/1 - 40069 ZOLA PREDOSA (BO)</td>
+                <td>MONIA</td>
+                <td>LAURENTI</td>
+                <td>DLIGRL13T22A944Q</td>
+                <td></td>
+                <td>3386436013</td>
+                <td>monia.laurenti@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108175</td>
+                <td>105650</td>
+                <td>24/09/2025</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>CAPPELLINI</td>
+                <td>GAIA</td>
+                <td>14/03/2013</td>
+                <td>108171</td>
+                <td>105281</td>
+                <td>09/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DITOMMASO</td>
+                <td>ERMINIA ANNA</td>
+                <td>DTMRNN77B61L738S</td>
+                <td>21/02/1977</td>
+                <td>F</td>
+                <td>VENOSA</td>
+                <td>PZ</td>
+                <td>CA' BIANCA, 25 - 48125 RAVENNA (RA)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3899940979</td>
+                <td>erminia.ditomaso77@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109507</td>
+                <td>106447</td>
+                <td>04/04/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 45-54</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>FERRENTI</td>
+                <td>LUIGI</td>
+                <td>03/04/1976</td>
+                <td>109505</td>
+                <td>106448</td>
+                <td>08/04/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DOBRESCU</td>
+                <td>ANDREEA GABRIELA</td>
+                <td>DBRNRG08D49Z129C</td>
+                <td>09/04/2008</td>
+                <td>F</td>
+                <td>ROMANIA</td>
+                <td>ROMANIA</td>
+                <td>VIA DI CORTICELLA, 200/2 - 40128 BOLOGNA (BO)</td>
+                <td>CATALIN YONUT</td>
+                <td>DOBRESCU</td>
+                <td>DBRNRG08D49Z129C</td>
+                <td></td>
+                <td>3245453789</td>
+                <td>marya7dob@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>109493</td>
+                <td>105001</td>
+                <td>11/11/2025</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 16-18</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>DOBRESCU</td>
+                <td>MARINA ALEXANDRA</td>
+                <td>DBRMNL12E71Z129V</td>
+                <td>31/05/2012</td>
+                <td>F</td>
+                <td>ROMANIA</td>
+                <td>ROMANIA</td>
+                <td>VIA DI CORTICELLA, 200/2 - 40128 BOLOGNA (BO)</td>
+                <td>CATALIN IANUT</td>
+                <td>DOBRESCU</td>
+                <td>DBRMNL12E71Z129V</td>
+                <td></td>
+                <td>3245453789</td>
+                <td>marya7dob@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109492</td>
+                <td>105015</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>DI NONO </td>
+                <td>CRISTIAN </td>
+                <td>13/07/2012</td>
+                <td>103294</td>
+                <td>106366</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>FANTONI</td>
+                <td>SARA</td>
+                <td>FNTSRA10A59A944X</td>
+                <td>19/01/2010</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIALE NICCOLO PAGANINI, 28 - 40050 ARGELATO (BO)</td>
+                <td>ELISABETTA</td>
+                <td>MATTEI </td>
+                <td>FNTSRA10A59A944X</td>
+                <td></td>
+                <td>3389033411</td>
+                <td>bettama74@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>108176</td>
+                <td>103057</td>
+                <td>07/12/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 16-18</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>CABURAZZI</td>
+                <td>SIMONE</td>
+                <td>01/03/2007</td>
+                <td>108169</td>
+                <td>106603</td>
+                <td>18/01/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>FANTUZZI</td>
+                <td>MAURA</td>
+                <td>FNTMRA62C59A944M</td>
+                <td>19/03/1962</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA MAVORA, 5 - 40019 SANT'AGATA BOLOGNESE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>393 8465135</td>
+                <td>fantuzzimaura@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>108021</td>
+                <td>100159</td>
+                <td>11/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 61-64</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>GHERARDI</td>
+                <td>MASSIMO</td>
+                <td>05/05/1960</td>
+                <td>108020</td>
+                <td>100160</td>
+                <td>11/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>FERRARI</td>
+                <td>REBECCA</td>
+                <td>FRRRCC10P45F257K</td>
+                <td>05/09/2010</td>
+                <td>F</td>
+                <td>MODENA</td>
+                <td>MO</td>
+                <td>VIA BERTOLDO, 31 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>ENIKO</td>
+                <td>KOOS</td>
+                <td>FRRRCC10P45F257K</td>
+                <td></td>
+                <td>3452132085</td>
+                <td>enikokoos@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>108102</td>
+                <td>103368</td>
+                <td>25/11/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>STALLONE</td>
+                <td>MARCELLO</td>
+                <td>15/11/2006</td>
+                <td>108103</td>
+                <td>106711</td>
+                <td>10/10/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>FERRENTI</td>
+                <td>LUIGI</td>
+                <td>FRRLGU76D03L738P</td>
+                <td>03/04/1976</td>
+                <td>M</td>
+                <td>VENOSA</td>
+                <td>PZ</td>
+                <td>CA' BIANCA, 25 - 48125 RAVENNA (RA)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3272628055</td>
+                <td>luigi.ferrenti@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109505</td>
+                <td>106448</td>
+                <td>08/04/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 45-54</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>DITOMMASO</td>
+                <td>ERMINIA ANNA</td>
+                <td>21/02/1977</td>
+                <td>109507</td>
+                <td>106447</td>
+                <td>04/04/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>FIORASO</td>
+                <td>NICHOLAS</td>
+                <td>FRSNHL02H06G224K</td>
+                <td>06/06/2002</td>
+                <td>M</td>
+                <td>PADOVA</td>
+                <td>PD</td>
+                <td>VIA MONTEGROTTO, 60 - 35031 ABANO TERME (PD)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3204660882</td>
+                <td>nicholas.fioraso@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>101023</td>
+                <td>107235</td>
+                <td>01/02/2027</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>VALENTE</td>
+                <td>CHARLIZE</td>
+                <td>23/04/2006</td>
+                <td>100222</td>
+                <td>101128</td>
+                <td>03/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>FURGERI</td>
+                <td>ASIA</td>
+                <td>FRGSAI15D65B819P</td>
+                <td>25/04/2015</td>
+                <td>F</td>
+                <td>CARPI</td>
+                <td>MO</td>
+                <td>VIA CARRADONA PROSPETTIVA , 11 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>DAVIDE</td>
+                <td>FURGERI</td>
+                <td>FRGSAI15D65B819P</td>
+                <td></td>
+                <td>3207471409</td>
+                <td>cottimila@libero.it</td>
+                <td>Team Diablo</td>
+                <td>106467</td>
+                <td>103578</td>
+                <td>10/09/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 10-11</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td>CRISTOFORI</td>
+                <td>GABRIEL</td>
+                <td>23/03/2015</td>
+                <td>105298</td>
+                <td>103922</td>
+                <td>01/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GALLERANI</td>
+                <td>GRAZIANO</td>
+                <td>GLLGZN59B12C469I</td>
+                <td>12/02/1959</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA COLLARI, 37 - 44045 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>347 8749246</td>
+                <td>balboniloretta@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100207</td>
+                <td>100098</td>
+                <td>29/09/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 65-69</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BALBONI</td>
+                <td>PAOLA</td>
+                <td>06/02/1961</td>
+                <td>100187</td>
+                <td>100097</td>
+                <td>29/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GATTI</td>
+                <td>VALERIO</td>
+                <td>GTTVLR61E24F267D</td>
+                <td>24/05/1961</td>
+                <td>M</td>
+                <td>MOGLIA</td>
+                <td>MN</td>
+                <td>ROCCHETTA, 47 B - 46024 MOGLIA (MN)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3356574556</td>
+                <td>valerio.gatti61@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109665</td>
+                <td>105432</td>
+                <td>27/08/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 61-64</td>
+                <td>FRANCESCO BEVILACQUA</td>
+                <td>ANDREA GIANNOTTI</td>
+                <td></td>
+                <td></td>
+                <td>METTA</td>
+                <td>PAOLA</td>
+                <td>15/09/1965</td>
+                <td>109666</td>
+                <td>105433</td>
+                <td>27/08/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GHERARDI</td>
+                <td>MASSIMO</td>
+                <td>GHRMSM60E05G467L</td>
+                <td>05/05/1960</td>
+                <td>M</td>
+                <td>SAN GIOVANNI IN PERSICETO</td>
+                <td>BO</td>
+                <td>VIA MAVORA, 5 - 40019 SANT'AGATA BOLOGNESE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>392 59867018</td>
+                <td>fantuzzimaura@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>108020</td>
+                <td>100160</td>
+                <td>11/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 61-64</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>FANTUZZI</td>
+                <td>MAURA</td>
+                <td>19/03/1962</td>
+                <td>108021</td>
+                <td>100159</td>
+                <td>11/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GHIMBRA ZUMBO</td>
+                <td>ALESSANDRO</td>
+                <td>GHMLSN17H04A944N</td>
+                <td>04/06/2017</td>
+                <td>M</td>
+                <td>ANZOLA DELL'EMILIA</td>
+                <td>BO</td>
+                <td>VIA GRAZIA DELEDDA , 2 - 40010 SALA BOLOGNESE (BO)</td>
+                <td>FRANCESCO</td>
+                <td>ZUMBO</td>
+                <td>GHMLSN17H04A944N</td>
+                <td></td>
+                <td>3203616797</td>
+                <td>francescozumbo@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>108095</td>
+                <td>106860</td>
+                <td>23/04/2026</td>
+                <td>30,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BALDASSARI</td>
+                <td>GIADA</td>
+                <td>13/02/2016</td>
+                <td>108096</td>
+                <td>104479</td>
+                <td>20/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>C</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GIANNOTTI</td>
+                <td>GIULIA ANDREA</td>
+                <td>GNNGND02E66A785S</td>
+                <td>26/05/2002</td>
+                <td>F</td>
+                <td>BENTIVOGLIO</td>
+                <td>BO</td>
+                <td>VIA ALBERTINA, 9 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 4845262</td>
+                <td>3936906605</td>
+                <td>g.andreagiannotti@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100593</td>
+                <td>100333</td>
+                <td>27/04/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BEVILACQUA</td>
+                <td>FRANCESCO</td>
+                <td>21/01/1996</td>
+                <td>102055</td>
+                <td>105023</td>
+                <td>09/05/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GIBERTI</td>
+                <td>MATHIAS</td>
+                <td>GBRMHS16C06D548G</td>
+                <td>06/03/2016</td>
+                <td>M</td>
+                <td>FERRARA</td>
+                <td>FE</td>
+                <td>VIA MAESTRA GRANDE, 1/1 - 44045 CENTO (FE)</td>
+                <td>ANGELA</td>
+                <td>ZANETTI</td>
+                <td>GBRMHS16C06D548G</td>
+                <td></td>
+                <td>3490995038</td>
+                <td>angela.89@hotmail.it</td>
+                <td>Team Diablo</td>
+                <td>106459</td>
+                <td>104978</td>
+                <td>25/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>FABIO BERNARDINI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>SANFILIPPO</td>
+                <td>NOEMI</td>
+                <td>07/02/2016</td>
+                <td>109511</td>
+                <td>104564</td>
+                <td>03/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GIGLI</td>
+                <td>ROSSELLA MARIA</td>
+                <td>GGLRSL95E64C469X</td>
+                <td>24/05/1995</td>
+                <td>F</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIALE COSTITUZIONE, 12 - 41034 FINALE EMILIA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3425865330</td>
+                <td></td>
+                <td>Team Diablo</td>
+                <td>106498</td>
+                <td>104115</td>
+                <td>26/01/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 35-44</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>ZANIBONI</td>
+                <td>TOMAS</td>
+                <td>02/11/1983</td>
+                <td>106497</td>
+                <td>104114</td>
+                <td>26/01/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GIOVANNINI</td>
+                <td>SARA</td>
+                <td>GVNSRA06D46A944T</td>
+                <td>06/04/2006</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA PARRI, 16 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>370 3043713</td>
+                <td>sara.giovannini.gs@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>105847</td>
+                <td>102125</td>
+                <td>31/08/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>MARCHETTI</td>
+                <td>MICHELE</td>
+                <td>20/06/2003</td>
+                <td>100212</td>
+                <td>100451</td>
+                <td>29/04/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A2</td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GIULIANI</td>
+                <td>RUBEN</td>
+                <td>GLNRBN16C28H199P</td>
+                <td>28/03/2016</td>
+                <td>M</td>
+                <td>RAVENNA</td>
+                <td>RA</td>
+                <td>PETROSA, 473/A - 48125 RAVENNA (RA)</td>
+                <td>FEDERICA</td>
+                <td>TRINCOSSI </td>
+                <td>GLNRBN16C28H199P</td>
+                <td></td>
+                <td>3280719146</td>
+                <td>federoby46@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>107213</td>
+                <td>105391</td>
+                <td>07/11/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>GRAZIANI</td>
+                <td>ANITA</td>
+                <td>06/05/2016</td>
+                <td>107214</td>
+                <td>105168</td>
+                <td>10/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GORETTI</td>
+                <td>EZIO</td>
+                <td>GRTZEI49E16G467N</td>
+                <td>16/05/1949</td>
+                <td>M</td>
+                <td>SAN GIOVANNI IN PERSICETO</td>
+                <td>BO</td>
+                <td>P.ZZA 5 APRILE , 1 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 19989969</td>
+                <td></td>
+                <td>ezio.goretti@libero.it</td>
+                <td>Team Diablo</td>
+                <td>105302</td>
+                <td>100693</td>
+                <td>29/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 70-74</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>SCAGLIARINI</td>
+                <td>SABRINA</td>
+                <td>03/07/1957</td>
+                <td>105303</td>
+                <td>100694</td>
+                <td>29/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GORETTI</td>
+                <td>SOFIA</td>
+                <td>GRTSFO12R63C469W</td>
+                <td>23/10/2012</td>
+                <td>F</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA VERONA, 32/C - 40019 SANT'AGATA BOLOGNESE (BO)</td>
+                <td>GIANCARLO</td>
+                <td>GORETTI</td>
+                <td>GRTSFO12R63C469W</td>
+                <td></td>
+                <td>3408391561</td>
+                <td>goretti2003@hotmail.it</td>
+                <td>Team Diablo</td>
+                <td>100233</td>
+                <td>102887</td>
+                <td>27/10/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 14-15</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GRAZIANI</td>
+                <td>ANITA</td>
+                <td>GRZNTA16E46H199X</td>
+                <td>06/05/2016</td>
+                <td>F</td>
+                <td>RAVENNA</td>
+                <td>RA</td>
+                <td>VIA PETROSA, 286 - 48125 RAVENNA (RA)</td>
+                <td>YLENIA</td>
+                <td>TAGLIAFERRI</td>
+                <td>GRZNTA16E46H199X</td>
+                <td></td>
+                <td>3471747754</td>
+                <td>ylet82@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>107214</td>
+                <td>105168</td>
+                <td>10/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>GUIDOCCI </td>
+                <td>EMMA</td>
+                <td>GDCMME15E70G999G</td>
+                <td>30/05/2015</td>
+                <td>F</td>
+                <td>PRATO</td>
+                <td>PO</td>
+                <td>VIALE DELLA REPUBBLICA , 52 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>FILOMENA </td>
+                <td>DE VINCENTI </td>
+                <td>GDCMME15E70G999G</td>
+                <td>3479112942</td>
+                <td>3479112942</td>
+                <td>filo.de.vincenti@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108073</td>
+                <td>106151</td>
+                <td>09/11/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MAGNANI </td>
+                <td>STEFANO </td>
+                <td>03/01/2014</td>
+                <td>108072</td>
+                <td>104832</td>
+                <td>09/12/2025</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LAZZARI</td>
+                <td>DARIA</td>
+                <td>LZZDRA05H69A785V</td>
+                <td>29/06/2005</td>
+                <td>F</td>
+                <td>BENTIVOGLIO</td>
+                <td>BO</td>
+                <td>VIA LAME, 320 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3387458396</td>
+                <td>3484616422</td>
+                <td>ariannadaria2005@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>109012</td>
+                <td>100382</td>
+                <td>25/01/2027</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>BOMBARDI</td>
+                <td>JACOPO</td>
+                <td>23/01/1999</td>
+                <td>100234</td>
+                <td>104775</td>
+                <td>03/03/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B1</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LICCIARDELLO</td>
+                <td>EMMA</td>
+                <td>LCCMME12A49C469H</td>
+                <td>09/01/2012</td>
+                <td>F</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>CARLO FRANCESCO DOTTI, 110 - 44045 CENTO (FE)</td>
+                <td>FABRIZIA</td>
+                <td>FALASCHI</td>
+                <td>LCCMME12A49C469H</td>
+                <td></td>
+                <td>3477171702</td>
+                <td>fabrizia.falaschi@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>104824</td>
+                <td>104528</td>
+                <td>15/09/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 10-11</td>
+                <td>DAVIDE BUSI</td>
+                <td>FABIO BERNARDINI</td>
+                <td></td>
+                <td></td>
+                <td>CRISTOFORI</td>
+                <td>AARON</td>
+                <td>05/07/2012</td>
+                <td>103256</td>
+                <td>102870</td>
+                <td>01/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LIN</td>
+                <td>JOY </td>
+                <td>LNIJYO14D42A944H</td>
+                <td>02/04/2014</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA CARLO JUSSI , 1 - 40128 BOLOGNA (BO)</td>
+                <td>SHUANGWEI </td>
+                <td>LIN </td>
+                <td>LNIJYO14D42A944H</td>
+                <td>3391893288</td>
+                <td>3391893288 </td>
+                <td>shuangwei.lin@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td></td>
+                <td>105282</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>MEZZACAPO</td>
+                <td>SEBASTIANO</td>
+                <td>12/05/2014</td>
+                <td>109498</td>
+                <td>107349</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LORENZANI</td>
+                <td>SERENA</td>
+                <td>LRNSRN14R43F257F</td>
+                <td>03/10/2014</td>
+                <td>F</td>
+                <td>MODENA</td>
+                <td>MO</td>
+                <td>VIA CARDUCCI, 641/B - 41017 RAVARINO (MO)</td>
+                <td>LORENZO</td>
+                <td>LORENZANI</td>
+                <td>LRNSRN14R43F257F</td>
+                <td></td>
+                <td>3336324645</td>
+                <td>erboristeriaprofumodilavanda@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108094</td>
+                <td>105186</td>
+                <td>03/10/2026</td>
+                <td>30,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>FRANCESCO BEVILACQUA</td>
+                <td>ANDREA GIANNOTTI</td>
+                <td></td>
+                <td></td>
+                <td>ACCORSI</td>
+                <td>LUDOVICO</td>
+                <td>12/10/2013</td>
+                <td>108024</td>
+                <td>106228</td>
+                <td>16/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>C</td>
+                <td>Danze Standard</td>
+                <td>C</td>
+                <td>Combinata Standard-Latini</td>
+                <td>C</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LUNEDEI</td>
+                <td>SARA</td>
+                <td>LNDSRA12H56C573O</td>
+                <td>16/06/2012</td>
+                <td>F</td>
+                <td>CESENA</td>
+                <td>FC</td>
+                <td>MELONA, 6630 - 47522 CESENA (FC)</td>
+                <td>MARCO</td>
+                <td>LUNEDEI</td>
+                <td>LNDSRA12H56C573O</td>
+                <td>3382329193</td>
+                <td>3382329193</td>
+                <td>s75m74@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108177</td>
+                <td>105170</td>
+                <td>25/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 14-15</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LUPPI</td>
+                <td>ALICE</td>
+                <td>LPPLCA15M41A944V</td>
+                <td>01/08/2015</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA G. FENOGLIO, 3 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>SARA</td>
+                <td>FERRARI</td>
+                <td>LPPLCA15M41A944V</td>
+                <td></td>
+                <td>3494429413</td>
+                <td>ferrarisara@hotmail.com</td>
+                <td>Team Diablo</td>
+                <td>108092</td>
+                <td>106488</td>
+                <td>27/08/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MAGNANI </td>
+                <td>FRANCESCO</td>
+                <td>03/01/2014</td>
+                <td>108027</td>
+                <td>104831</td>
+                <td>09/12/2025</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>LUPPI</td>
+                <td>CHRISTIAN</td>
+                <td>LPPCRS80C10G467K</td>
+                <td>10/03/1980</td>
+                <td>M</td>
+                <td>SAN GIOVANNI IN PERSICETO</td>
+                <td>BO</td>
+                <td>VIA CASTAGNOLO, 114 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>328 2753509</td>
+                <td>luppichristian@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>107119</td>
+                <td>100061</td>
+                <td>15/02/2027</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 45-54</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>COLOMBARI</td>
+                <td>SABRINA</td>
+                <td>10/08/1980</td>
+                <td>107120</td>
+                <td>100062</td>
+                <td>22/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MAGNANI </td>
+                <td>FRANCESCO</td>
+                <td>MGNFNC14A03A944N</td>
+                <td>03/01/2014</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA ZENERIGOLO , 5/N - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>FABRIZIO </td>
+                <td>MAGNANI </td>
+                <td>MGNFNC14A03A944N</td>
+                <td></td>
+                <td>3477114273</td>
+                <td>cristina.anteghini@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108027</td>
+                <td>104831</td>
+                <td>09/12/2025</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>LUPPI</td>
+                <td>ALICE</td>
+                <td>01/08/2015</td>
+                <td>108092</td>
+                <td>106488</td>
+                <td>27/08/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MAGNANI </td>
+                <td>STEFANO </td>
+                <td>MGNSFN14A03A944E</td>
+                <td>03/01/2014</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA ZENERIGOLO , 5/N - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>FABRIZIO </td>
+                <td>MAGNANI </td>
+                <td>MGNSFN14A03A944E</td>
+                <td></td>
+                <td>3477114273</td>
+                <td>cristina.anteghini@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108072</td>
+                <td>104832</td>
+                <td>09/12/2025</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>GUIDOCCI </td>
+                <td>EMMA</td>
+                <td>30/05/2015</td>
+                <td>108073</td>
+                <td>106151</td>
+                <td>09/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MANDORINI</td>
+                <td>ALESSANDRA</td>
+                <td>MNDLSN11H56A944Q</td>
+                <td>16/06/2011</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA BENTINI, 97 - 40128 BOLOGNA (BO)</td>
+                <td>CLAUDIO</td>
+                <td>MANDORINI</td>
+                <td>MNDLSN11H56A944Q</td>
+                <td></td>
+                <td>3893274700</td>
+                <td>grazianice@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>107399</td>
+                <td>104328</td>
+                <td>06/10/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 14-15</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>BEVILACQUA</td>
+                <td>EMANUEL</td>
+                <td>19/11/2012</td>
+                <td>105296</td>
+                <td>105475</td>
+                <td>03/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MANTOVANI</td>
+                <td>NOEMI</td>
+                <td>MNTNMO96H46F240M</td>
+                <td>06/06/1996</td>
+                <td>F</td>
+                <td>MIRANDOLA</td>
+                <td>MO</td>
+                <td>VIA LUIGI POLETTI, 7 - 41034 FINALE EMILIA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3454568867</td>
+                <td>noemi.mantovani1996@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>109537</td>
+                <td>106894</td>
+                <td>25/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 35-44</td>
+                <td>FABIO BERNARDINI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>PREVIDI</td>
+                <td>ENRICO</td>
+                <td>24/09/1988</td>
+                <td>109536</td>
+                <td>106888</td>
+                <td>12/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MARCHETTI</td>
+                <td>MICHELE</td>
+                <td>MRCMHL03H20C469M</td>
+                <td>20/06/2003</td>
+                <td>M</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA CIMABUE, 8 - 44042 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>349 4538357</td>
+                <td>michelemarchetti2003@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100212</td>
+                <td>100451</td>
+                <td>29/04/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>GIOVANNINI</td>
+                <td>SARA</td>
+                <td>06/04/2006</td>
+                <td>105847</td>
+                <td>102125</td>
+                <td>31/08/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A2</td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MARZOCCHI</td>
+                <td>ELIA</td>
+                <td>MRZLEI92S11A965G</td>
+                <td>11/11/1992</td>
+                <td>M</td>
+                <td>BONDENO</td>
+                <td>FE</td>
+                <td>VIA LAVINO, 374/1 - 40050 MONTE SAN PIETRO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3403143669</td>
+                <td>elia.marzocchi@ritmodanza.net</td>
+                <td>Team Diablo</td>
+                <td>102820</td>
+                <td>101460</td>
+                <td>02/10/2026</td>
+                <td>90,00</td>
+                <td>260,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MORETTI</td>
+                <td>ARIANNA</td>
+                <td>25/07/1999</td>
+                <td>100218</td>
+                <td>104392</td>
+                <td>05/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>MASTER</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MASCIA</td>
+                <td>AURORA</td>
+                <td>MSCRRA11E51I462F</td>
+                <td>11/05/2011</td>
+                <td>F</td>
+                <td>SASSUOLO</td>
+                <td>MO</td>
+                <td>BONTEMPELLI, 16 - 41043 FORMIGINE (MO)</td>
+                <td>SIMONA</td>
+                <td>BACCHI</td>
+                <td>MSCRRA11E51I462F</td>
+                <td></td>
+                <td>3534812190</td>
+                <td>allesimo21@libero.it</td>
+                <td>Ritmo Danza</td>
+                <td>103981</td>
+                <td>107591</td>
+                <td>22/10/2026</td>
+                <td>70,00</td>
+                <td>50,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>VACCARI</td>
+                <td>TOMMASO</td>
+                <td>18/04/2008</td>
+                <td>100226</td>
+                <td>102896</td>
+                <td>28/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MAZZONI</td>
+                <td>ANITA</td>
+                <td>MZZNTA13D53D548Y</td>
+                <td>13/04/2013</td>
+                <td>F</td>
+                <td>FERRARA</td>
+                <td>FE</td>
+                <td>VIA ROSSINI, 11 - 44047 TERRE DEL RENO (FE)</td>
+                <td>CHIARA</td>
+                <td>BARDASI</td>
+                <td>MZZNTA13D53D548Y</td>
+                <td>3453419360</td>
+                <td>3453419360</td>
+                <td>cbardasi@bancacentroemilia.it</td>
+                <td>Team Diablo</td>
+                <td>103257</td>
+                <td>102547</td>
+                <td>21/09/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>NATALINI</td>
+                <td>SAMUELE</td>
+                <td>31/08/2013</td>
+                <td>104825</td>
+                <td>105030</td>
+                <td>03/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B1</td>
+                <td>Danze Standard</td>
+                <td>B1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>METTA</td>
+                <td>PAOLA</td>
+                <td>MTTPLA65P55F257N</td>
+                <td>15/09/1965</td>
+                <td>F</td>
+                <td>MODENA</td>
+                <td>MO</td>
+                <td>ROCCHETTA, 47 B - 46024 MOGLIA (MN)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3387761573</td>
+                <td>paola.metta65@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109666</td>
+                <td>105433</td>
+                <td>27/08/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 61-64</td>
+                <td>FRANCESCO BEVILACQUA</td>
+                <td>ANDREA GIANNOTTI</td>
+                <td></td>
+                <td></td>
+                <td>GATTI</td>
+                <td>VALERIO</td>
+                <td>24/05/1961</td>
+                <td>109665</td>
+                <td>105432</td>
+                <td>27/08/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MEZZACAPO</td>
+                <td>SEBASTIANO</td>
+                <td>MZZSST14E12F839A</td>
+                <td>12/05/2014</td>
+                <td>M</td>
+                <td>NAPOLI</td>
+                <td>NA</td>
+                <td>LOMBARDI , 51 - 40128 BOLOGNA (BO)</td>
+                <td>GIUSEPPINA</td>
+                <td>VISCARDI</td>
+                <td>MZZSST14E12F839A</td>
+                <td></td>
+                <td>3284630922</td>
+                <td>giusiviscardi@hotmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109498</td>
+                <td>107349</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>LIN</td>
+                <td>JOY </td>
+                <td>02/04/2014</td>
+                <td></td>
+                <td>105282</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MEZZACAPO</td>
+                <td>SIMONE</td>
+                <td>MZZSMN17S27F839T</td>
+                <td>27/11/2017</td>
+                <td>M</td>
+                <td>NAPOLI</td>
+                <td>NA</td>
+                <td>LOMBARDI , 51 - 40128 BOLOGNA (BO)</td>
+                <td>GIUSEPPINA</td>
+                <td>VISCARDI </td>
+                <td>MZZSMN17S27F839T</td>
+                <td></td>
+                <td>3284630922</td>
+                <td>giusiviscardi@hotmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109499</td>
+                <td>107348</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MILLICO</td>
+                <td>ANNA</td>
+                <td>MLLNNA71A57B619P</td>
+                <td>17/01/1971</td>
+                <td>F</td>
+                <td>BRINDISI</td>
+                <td>BR</td>
+                <td>PETROSA, 78 - 48125 RAVENNA (RA)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3484892743</td>
+                <td></td>
+                <td>Ritmo Danza</td>
+                <td>109509</td>
+                <td>104503</td>
+                <td>17/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 55-60</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>PACIOLLA</td>
+                <td>SABINO</td>
+                <td>21/01/1969</td>
+                <td>109508</td>
+                <td>104502</td>
+                <td>25/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MODESTI</td>
+                <td>MATILDE</td>
+                <td>MDSMLD02H54C415H</td>
+                <td>14/06/2002</td>
+                <td>F</td>
+                <td>CECINA</td>
+                <td>LI</td>
+                <td>VIA DI CECINA, 4 - 57023 CECINA (LI)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3466437657</td>
+                <td>mati.modesti@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>101254</td>
+                <td>107230</td>
+                <td>19/06/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BENETTI </td>
+                <td>MARCO</td>
+                <td>15/09/2004</td>
+                <td>100197</td>
+                <td>100653</td>
+                <td>04/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MONTIERI</td>
+                <td>SIMONA</td>
+                <td>MNTSMN72C60E734C</td>
+                <td>20/03/1972</td>
+                <td>F</td>
+                <td>LUINO</td>
+                <td>VA</td>
+                <td>VIA XXV APRILE, 8 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 6871012</td>
+                <td>3384800339</td>
+                <td>simonamontieri@libero.it</td>
+                <td>Team Diablo</td>
+                <td>105316</td>
+                <td>102454</td>
+                <td>05/03/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 35-44</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>PIPITONE</td>
+                <td>ALESSIO</td>
+                <td>09/12/1994</td>
+                <td>105315</td>
+                <td>104383</td>
+                <td>11/03/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MORETTI</td>
+                <td>ARIANNA</td>
+                <td>MRTRNN99L65C573Z</td>
+                <td>25/07/1999</td>
+                <td>F</td>
+                <td>CESENA</td>
+                <td>FC</td>
+                <td>VIA DELLE STAFFETTE PARTIGIANE, 25 - 47521 CESENA (FC)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>347 3403649</td>
+                <td>pontecucco429@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100218</td>
+                <td>104392</td>
+                <td>05/10/2026</td>
+                <td>90,00</td>
+                <td>260,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MARZOCCHI</td>
+                <td>ELIA</td>
+                <td>11/11/1992</td>
+                <td>102820</td>
+                <td>101460</td>
+                <td>02/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>MASTER</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MUSAKU</td>
+                <td>WHITNEY</td>
+                <td>MSKWTN12M61C469V</td>
+                <td>21/08/2012</td>
+                <td>F</td>
+                <td>CENTO</td>
+                <td>FE</td>
+                <td>VIA SPALLANZANI, 10 - 44042 CENTO (FE)</td>
+                <td>SKERDIAN</td>
+                <td>MUSAKU </td>
+                <td>MSKWTN12M61C469V</td>
+                <td></td>
+                <td>3455796596</td>
+                <td>musakualda@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108098</td>
+                <td>103106</td>
+                <td>24/11/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td>BRIGANTI</td>
+                <td>MARCO</td>
+                <td>26/11/2012</td>
+                <td>108097</td>
+                <td>106202</td>
+                <td>03/12/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>MUSIANI</td>
+                <td>ALESSANDRA</td>
+                <td>MSNLSN63L67A944P</td>
+                <td>27/07/1963</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>MARCONI, 12/1 - 40052 BARICELLA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3355892707</td>
+                <td>alessandra@musianiresinaearte.it</td>
+                <td>Team Diablo</td>
+                <td>109477</td>
+                <td>106606</td>
+                <td>20/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 65-69</td>
+                <td>FRANCESCO BEVILACQUA</td>
+                <td>ANDREA GIANNOTTI</td>
+                <td></td>
+                <td></td>
+                <td>RESENTERRA</td>
+                <td>MAURIZIO</td>
+                <td>07/05/1954</td>
+                <td>102164</td>
+                <td>107485</td>
+                <td>13/10/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>NADALINI</td>
+                <td>FILIPPO</td>
+                <td>NDLFPP17P29A944N</td>
+                <td>29/09/2017</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>DEI BRASCHI, 3 - 40069 ZOLA PREDOSA (BO)</td>
+                <td>LARA</td>
+                <td>LAURENTI</td>
+                <td>NDLFPP17P29A944N</td>
+                <td></td>
+                <td>3358241379</td>
+                <td>laurenti_lara@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>108179</td>
+                <td>105837</td>
+                <td>28/11/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>VENTURINI</td>
+                <td>BEATRICE</td>
+                <td>31/08/2018</td>
+                <td>109500</td>
+                <td>105027</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>NASI</td>
+                <td>LETIZIA</td>
+                <td>NSALTZ09M47A944Q</td>
+                <td>07/08/2009</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA DELL'ASTRONOMIA, 21 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>CHIARA</td>
+                <td>RONCAGLI</td>
+                <td>NSALTZ09M47A944Q</td>
+                <td></td>
+                <td>3929032136</td>
+                <td>chiararoncagli@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108105</td>
+                <td>106162</td>
+                <td>28/08/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>BONADONNA</td>
+                <td>GIOVANNI</td>
+                <td>14/09/2007</td>
+                <td>100592</td>
+                <td>104397</td>
+                <td>23/05/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>NATALINI</td>
+                <td>SAMUELE</td>
+                <td>NTLSML13M31A944S</td>
+                <td>31/08/2013</td>
+                <td>M</td>
+                <td>VALSAMOGGIA</td>
+                <td>BO</td>
+                <td>MONTESSORI, 21 - 40053 VALSAMOGGIA (BO)</td>
+                <td>THOMAS</td>
+                <td>NATALINI</td>
+                <td>NTLSML13M31A944S</td>
+                <td></td>
+                <td>3357115150</td>
+                <td>thnata79@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>104825</td>
+                <td>105030</td>
+                <td>03/11/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MAZZONI</td>
+                <td>ANITA</td>
+                <td>13/04/2013</td>
+                <td>103257</td>
+                <td>102547</td>
+                <td>21/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B1</td>
+                <td>Danze Standard</td>
+                <td>B1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ONOFRIO</td>
+                <td>PAOLA</td>
+                <td>NFRPLA89R45D548O</td>
+                <td>05/10/1989</td>
+                <td>F</td>
+                <td>FERRARA</td>
+                <td>FE</td>
+                <td>VIA FORCOLE , 888F - 40014 CREVALCORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3402568929</td>
+                <td>paola.onofrio@libero.it</td>
+                <td>Team Diablo</td>
+                <td>106536</td>
+                <td>104120</td>
+                <td>15/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 35-44</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>DIANA</td>
+                <td>MASSIMILIANO</td>
+                <td>19/05/1988</td>
+                <td>106535</td>
+                <td>104119</td>
+                <td>15/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PACIOLLA</td>
+                <td>SABINO</td>
+                <td>PCLSBN69A21B619B</td>
+                <td>21/01/1969</td>
+                <td>M</td>
+                <td>BRINDISI</td>
+                <td>BR</td>
+                <td>PETROSA, 78 - 48125 RAVENNA (RA)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3466155854</td>
+                <td></td>
+                <td>paciollasabino.ps@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109508</td>
+                <td>104502</td>
+                <td>25/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 55-60</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>MILLICO</td>
+                <td>ANNA</td>
+                <td>17/01/1971</td>
+                <td>109509</td>
+                <td>104503</td>
+                <td>17/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PENTORIERI</td>
+                <td>IMMACOLATA</td>
+                <td>PNTMCL59R46F839Z</td>
+                <td>06/10/1959</td>
+                <td>F</td>
+                <td>NAPOLI</td>
+                <td>NA</td>
+                <td>CADUTI DEL LAVORO, 4 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Team Diablo</td>
+                <td>108023</td>
+                <td>105054</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 70-74</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>VATIERO</td>
+                <td>PAOLO</td>
+                <td>09/06/1955</td>
+                <td>108022</td>
+                <td>105053</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PERSICO</td>
+                <td>MATTEO</td>
+                <td>PRSMTT12L02I462M</td>
+                <td>02/07/2012</td>
+                <td>M</td>
+                <td>SASSUOLO</td>
+                <td>MO</td>
+                <td>FRATELLI CERVI , 59 - 41015 NONANTOLA (MO)</td>
+                <td>LIDIA</td>
+                <td>BACCO</td>
+                <td>PRSMTT12L02I462M</td>
+                <td></td>
+                <td>3334646492</td>
+                <td>persicomatteo2012@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>110312</td>
+                <td>107232</td>
+                <td>10/09/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 14-15</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>AFFRONTI</td>
+                <td>ALESSIA</td>
+                <td>29/12/2014</td>
+                <td>108025</td>
+                <td>103845</td>
+                <td>01/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PERSICO</td>
+                <td>MICHELE</td>
+                <td>PRSMHL16C12I462N</td>
+                <td>12/03/2016</td>
+                <td>M</td>
+                <td>SASSUOLO</td>
+                <td>MO</td>
+                <td>F.LLI CERVI , 59 - 41015 NONANTOLA (MO)</td>
+                <td>LIDIA</td>
+                <td>BACCO</td>
+                <td>PRSMHL16C12I462N</td>
+                <td></td>
+                <td>33346446492</td>
+                <td>doclid2000@yahoo.it</td>
+                <td>Team Diablo</td>
+                <td>109121</td>
+                <td>107033</td>
+                <td>09/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>ZUPPIROLI</td>
+                <td>AURORA</td>
+                <td>31/03/2016</td>
+                <td>109120</td>
+                <td>104067</td>
+                <td>09/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PIEROTTI </td>
+                <td>MASSIMILIANO </td>
+                <td>PRTMSM73H10A944N</td>
+                <td>10/06/1973</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA MARTIRI DI PIAZZA FONTANA , 34 - 40033 CASALECCHIO DI RENO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 573882</td>
+                <td>338 7483883</td>
+                <td>massi.cristina@alice.it</td>
+                <td>Team Diablo</td>
+                <td>100245</td>
+                <td>102997</td>
+                <td>21/07/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 45-54</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>DAVALLI O DALLAVALLE</td>
+                <td>CRISTINA </td>
+                <td>27/07/1976</td>
+                <td>100244</td>
+                <td>102998</td>
+                <td>21/07/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PIPITONE</td>
+                <td>ALESSIO</td>
+                <td>PPTLSS94T09A944L</td>
+                <td>09/12/1994</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIALE REPUBBLICA, 29 - 40019 SANT'AGATA BOLOGNESE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051956056</td>
+                <td>3457950773</td>
+                <td>alexthebest1994@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>105315</td>
+                <td>104383</td>
+                <td>11/03/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 35-44</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>MONTIERI</td>
+                <td>SIMONA</td>
+                <td>20/03/1972</td>
+                <td>105316</td>
+                <td>102454</td>
+                <td>05/03/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PREVIATI</td>
+                <td>ALESSANDRO</td>
+                <td>PRVLSN15E06A944Z</td>
+                <td>06/05/2015</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA BYRON , 13 - 40128 BOLOGNA (BO)</td>
+                <td>BARBARA</td>
+                <td>MARCIATORI</td>
+                <td>PRVLSN15E06A944Z</td>
+                <td>3282696879</td>
+                <td>3282696879</td>
+                <td>babimarcia74@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>106533</td>
+                <td>105495</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 10-11</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>DI PASQUALE</td>
+                <td>BEATRICE</td>
+                <td>08/08/2015</td>
+                <td>106534</td>
+                <td>105174</td>
+                <td>22/12/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PREVIDI</td>
+                <td>ENRICO</td>
+                <td>PRVNRC88P24F240F</td>
+                <td>24/09/1988</td>
+                <td>M</td>
+                <td>MIRANDOLA</td>
+                <td>MO</td>
+                <td>LUIGI POLETTI, 7 - 41035 FINALE EMILIA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3491772877</td>
+                <td>previdi.enrico@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109536</td>
+                <td>106888</td>
+                <td>12/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 35-44</td>
+                <td>FABIO BERNARDINI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>MANTOVANI</td>
+                <td>NOEMI</td>
+                <td>06/06/1996</td>
+                <td>109537</td>
+                <td>106894</td>
+                <td>25/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>PULITO</td>
+                <td>ANIA</td>
+                <td>PLTNAI14P53A944Z</td>
+                <td>13/09/2014</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>ACCATÃ , 9 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>KATARZYNA</td>
+                <td>PUK</td>
+                <td>PLTNAI14P53A944Z</td>
+                <td></td>
+                <td>3483327293</td>
+                <td>kapuk@libero.it</td>
+                <td>Team Diablo</td>
+                <td>105295</td>
+                <td>104454</td>
+                <td>21/11/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 12-13</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>RIGHI</td>
+                <td>FEDERICO</td>
+                <td>03/07/2013</td>
+                <td>105294</td>
+                <td>104197</td>
+                <td>13/01/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>RAMBALDI</td>
+                <td>SOFIA</td>
+                <td>RMBSFO11A58A785Z</td>
+                <td>18/01/2011</td>
+                <td>F</td>
+                <td>BENTIVOGLIO</td>
+                <td>BO</td>
+                <td>VIA CADUTI DI BENEDELLO, 12 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>SILVIA</td>
+                <td>GROSSI</td>
+                <td>RMBSFO11A58A785Z</td>
+                <td></td>
+                <td>3534318068</td>
+                <td>rosike79@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100231</td>
+                <td>102465</td>
+                <td>05/11/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>VINCENZI</td>
+                <td>MATTIA</td>
+                <td>06/02/2009</td>
+                <td>105305</td>
+                <td>105162</td>
+                <td>19/02/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>REINA</td>
+                <td>ALESSANDRO</td>
+                <td>RNELSN99D30A785P</td>
+                <td>30/04/1999</td>
+                <td>M</td>
+                <td>BENTIVOGLIO</td>
+                <td>BO</td>
+                <td>VIA RAVERA, 41 - 40013 CASTEL MAGGIORE (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 711363</td>
+                <td>348 3192066</td>
+                <td>alessandro.reina@ritmodanza.net</td>
+                <td>Team Diablo</td>
+                <td>100221</td>
+                <td>100335</td>
+                <td>27/10/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>ALBERGHINI</td>
+                <td>CATERINA</td>
+                <td>12/01/1999</td>
+                <td>101307</td>
+                <td>100341</td>
+                <td>27/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td>South American Showdance</td>
+                <td>A</td>
+                <td>Classic Showdance</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>RESENTERRA</td>
+                <td>MAURIZIO</td>
+                <td>RSNMRZ54E07C041L</td>
+                <td>07/05/1954</td>
+                <td>M</td>
+                <td>CASTAGNARO</td>
+                <td>VR</td>
+                <td>L. EINAUDI, 95 - 37043 CASTAGNARO (VR)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3495856060</td>
+                <td>mauriziosere54@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>102164</td>
+                <td>107485</td>
+                <td>13/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 65-69</td>
+                <td>FRANCESCO BEVILACQUA</td>
+                <td>ANDREA GIANNOTTI</td>
+                <td></td>
+                <td></td>
+                <td>MUSIANI</td>
+                <td>ALESSANDRA</td>
+                <td>27/07/1963</td>
+                <td>109477</td>
+                <td>106606</td>
+                <td>20/10/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>RIGHI</td>
+                <td>FEDERICO</td>
+                <td>RGHFRC13L03B819Y</td>
+                <td>03/07/2013</td>
+                <td>M</td>
+                <td>CARPI</td>
+                <td>MO</td>
+                <td>VIA VERRINI, 9 - 41012 CARPI (MO)</td>
+                <td>FABIO</td>
+                <td>RIGHI</td>
+                <td>RGHFRC13L03B819Y</td>
+                <td></td>
+                <td>3460822144</td>
+                <td>fabiorobby@alice.it</td>
+                <td>Team Diablo</td>
+                <td>105294</td>
+                <td>104197</td>
+                <td>13/01/2027</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 12-13</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>PULITO</td>
+                <td>ANIA</td>
+                <td>13/09/2014</td>
+                <td>105295</td>
+                <td>104454</td>
+                <td>21/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ROSATI</td>
+                <td>GIACOMO</td>
+                <td>RSTGCM16B11E730R</td>
+                <td>11/02/2016</td>
+                <td>M</td>
+                <td>LUGO</td>
+                <td>RA</td>
+                <td>LUNGA, 89/D - 48125 RAVENNA (RA)</td>
+                <td>ANGELO</td>
+                <td>ROSATI</td>
+                <td>RSTGCM16B11E730R</td>
+                <td>0544566006</td>
+                <td>3391439477</td>
+                <td>1angelorosati@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108182</td>
+                <td>106358</td>
+                <td>12/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>OMAR RAVAIOLI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>BATTISTINI</td>
+                <td>LINDA</td>
+                <td>13/07/2018</td>
+                <td>110132</td>
+                <td>107006</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ROSSI</td>
+                <td>RACHELE</td>
+                <td>RSSRHL09H48H199O</td>
+                <td>08/06/2009</td>
+                <td>F</td>
+                <td>RAVENNA</td>
+                <td>RA</td>
+                <td>TAGLIAMENTO, 50 - 48124 RAVENNA (RA)</td>
+                <td>PAOLA</td>
+                <td>VISCOVICIA</td>
+                <td>RSSRHL09H48H199O</td>
+                <td></td>
+                <td>3899910033</td>
+                <td>paolaviscoicy@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>109581</td>
+                <td>107569</td>
+                <td>20/03/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 16-18</td>
+                <td>OMAR RAVAIOLI</td>
+                <td>SERENA MONARI</td>
+                <td></td>
+                <td></td>
+                <td>CARNEVALE</td>
+                <td>GIACOMO</td>
+                <td>03/12/2010</td>
+                <td>100596</td>
+                <td>103722</td>
+                <td>08/12/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>RUSSO</td>
+                <td>ANTONIO</td>
+                <td>RSSNTN12B17I462W</td>
+                <td>17/02/2012</td>
+                <td>M</td>
+                <td>SASSUOLO</td>
+                <td>MO</td>
+                <td>VIA FANIN , 166 - 40014 CREVALCORE (BO)</td>
+                <td>NATALIYA</td>
+                <td>PATSEYEVA</td>
+                <td>RSSNTN12B17I462W</td>
+                <td></td>
+                <td>3925834777</td>
+                <td>n.patseyeva@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>103294</td>
+                <td>106989</td>
+                <td>30/10/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 12-13</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>ANSALONI</td>
+                <td>GIULIA</td>
+                <td>23/06/2013</td>
+                <td>109510</td>
+                <td>105570</td>
+                <td>24/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>SANFILIPPO</td>
+                <td>NOEMI</td>
+                <td>SNFNMO16B47A944O</td>
+                <td>07/02/2016</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>NENNI , 2 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>GAETANO NUCCIO</td>
+                <td>SANFILIPPO</td>
+                <td>SNFNMO16B47A944O</td>
+                <td></td>
+                <td>3288436851</td>
+                <td>fulvialombardo@yahoo.it</td>
+                <td>Ritmo Danza</td>
+                <td>109511</td>
+                <td>104564</td>
+                <td>03/02/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>SERENA MONARI</td>
+                <td>FABIO BERNARDINI</td>
+                <td></td>
+                <td></td>
+                <td>GIBERTI</td>
+                <td>MATHIAS</td>
+                <td>06/03/2016</td>
+                <td>106459</td>
+                <td>104978</td>
+                <td>25/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>SCAGLIARINI</td>
+                <td>SABRINA</td>
+                <td>SCGSRN57L43G467L</td>
+                <td>03/07/1957</td>
+                <td>F</td>
+                <td>SAN GIOVANNI IN PERSICETO</td>
+                <td>BO</td>
+                <td>P.ZZA 5 APRILE, 1 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>051 19989969</td>
+                <td></td>
+                <td>sabryska@libero.it</td>
+                <td>Team Diablo</td>
+                <td>105303</td>
+                <td>100694</td>
+                <td>29/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 70-74</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>GORETTI</td>
+                <td>EZIO</td>
+                <td>16/05/1949</td>
+                <td>105302</td>
+                <td>100693</td>
+                <td>29/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>SCIANGUETTA </td>
+                <td>ANGELICA </td>
+                <td>SCNNLC00P49F240T</td>
+                <td>09/09/2000</td>
+                <td>F</td>
+                <td>MIRANDOLA</td>
+                <td>MO</td>
+                <td>VIA CORREGGIO, 53 - 44041 CENTO (FE)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3472452968</td>
+                <td>angelicascianguetta@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>106458</td>
+                <td>105667</td>
+                <td>22/05/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 19-34</td>
+                <td>FABIO BERNARDINI</td>
+                <td>GAIA GARUTI</td>
+                <td></td>
+                <td></td>
+                <td>BELLINATO</td>
+                <td>MATTIA</td>
+                <td>14/11/1994</td>
+                <td>106457</td>
+                <td>105415</td>
+                <td>02/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B3</td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>SERAFINI</td>
+                <td>DANIELE</td>
+                <td>SRFDNL72D12F257K</td>
+                <td>12/04/1972</td>
+                <td>M</td>
+                <td>MODENA</td>
+                <td>MO</td>
+                <td>ROCCHETTA SANDRI, 5 - 41015 NONANTOLA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3338486036</td>
+                <td>daniele.serafini.72@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100241</td>
+                <td>104175</td>
+                <td>01/09/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 45-54</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>SILVESTRI</td>
+                <td>BARBARA</td>
+                <td>26/10/1973</td>
+                <td>100242</td>
+                <td>104174</td>
+                <td>01/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B1</td>
+                <td>Danze Standard</td>
+                <td>B1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>SGHINOLFI</td>
+                <td>TATIANA</td>
+                <td>SGHTTN69P68A944L</td>
+                <td>28/09/1969</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>V.TIZZANO, 12 - 40033 CASALECCHIO DI RENO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>347 1300114</td>
+                <td>tatiana6383@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>105301</td>
+                <td>100753</td>
+                <td>28/02/2026</td>
+                <td>40,00</td>
+                <td>30,00</td>
+                <td>cat: 55-60</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>DI GIACINTO</td>
+                <td>PIERO</td>
+                <td>22/07/1965</td>
+                <td>105300</td>
+                <td>100754</td>
+                <td>28/02/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>B3</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>SILVESTRI</td>
+                <td>BARBARA</td>
+                <td>SLVBBR73R66F257C</td>
+                <td>26/10/1973</td>
+                <td>F</td>
+                <td>MODENA</td>
+                <td>MO</td>
+                <td>VIA ROCCHETTA SANDRI, 5 - 41015 NONANTOLA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3396645982</td>
+                <td>daniele.serafini.72@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100242</td>
+                <td>104174</td>
+                <td>01/09/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 45-54</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>SERAFINI</td>
+                <td>DANIELE</td>
+                <td>12/04/1972</td>
+                <td>100241</td>
+                <td>104175</td>
+                <td>01/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B1</td>
+                <td>Danze Standard</td>
+                <td>B1</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B1</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>STALLONE</td>
+                <td>MARCELLO</td>
+                <td>STLMCL06S15G535B</td>
+                <td>15/11/2006</td>
+                <td>M</td>
+                <td>PIACENZA</td>
+                <td>PC</td>
+                <td>LUIGI GALLI, 24 - 29013 PIACENZA (PC)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3276660417</td>
+                <td>sylvestallone06@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108103</td>
+                <td>106711</td>
+                <td>10/10/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>FERRARI</td>
+                <td>REBECCA</td>
+                <td>05/09/2010</td>
+                <td>108102</td>
+                <td>103368</td>
+                <td>25/11/2026</td>
+                <td></td>
+                <td></td>
+                <td>Danze Standard</td>
+                <td>A2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>VACCARI</td>
+                <td>TOMMASO</td>
+                <td>VCCTMS08D18A944M</td>
+                <td>18/04/2008</td>
+                <td>M</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA A.COSTA, 26 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td>MARCO</td>
+                <td>VACCARI</td>
+                <td>VCCTMS08D18A944M</td>
+                <td></td>
+                <td>3386558029</td>
+                <td>vaccaritommaso007@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100226</td>
+                <td>102896</td>
+                <td>28/10/2026</td>
+                <td>50,00</td>
+                <td>70,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>MASCIA</td>
+                <td>AURORA</td>
+                <td>11/05/2011</td>
+                <td>103981</td>
+                <td>107591</td>
+                <td>22/10/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>A</td>
+                <td>Danze Standard</td>
+                <td>A</td>
+                <td>Combinata Standard-Latini</td>
+                <td>A</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>VALENTE</td>
+                <td>CHARLIZE</td>
+                <td>VLNCRL06D63A944T</td>
+                <td>23/04/2006</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA TASSINARA, 47B - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>0516871760</td>
+                <td>3473137966</td>
+                <td>charlizevalente06@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>100222</td>
+                <td>101128</td>
+                <td>03/10/2026</td>
+                <td>60,00</td>
+                <td>140,00</td>
+                <td>cat: 19-34</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>FIORASO</td>
+                <td>NICHOLAS</td>
+                <td>06/06/2002</td>
+                <td>101023</td>
+                <td>107235</td>
+                <td>01/02/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>AS</td>
+                <td>Danze Standard</td>
+                <td>AS</td>
+                <td>Combinata Standard-Latini</td>
+                <td>AS</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>VATIERO</td>
+                <td>PAOLO</td>
+                <td>VTRPLA55H09F839E</td>
+                <td>09/06/1955</td>
+                <td>M</td>
+                <td>NAPOLI</td>
+                <td>NA</td>
+                <td>CADUTI DEL LAVORO, 4 - 40017 SAN GIOVANNI IN PERSICETO (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3396019300</td>
+                <td>paolo.vatiero@libero.it</td>
+                <td>Team Diablo</td>
+                <td>108022</td>
+                <td>105053</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 70-74</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>PENTORIERI</td>
+                <td>IMMACOLATA</td>
+                <td>06/10/1959</td>
+                <td>108023</td>
+                <td>105054</td>
+                <td></td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>VENTURINI</td>
+                <td>BEATRICE</td>
+                <td>VNTBRC18M71A944L</td>
+                <td>31/08/2018</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA MALAGUTI, 1 - 40050 ARGELATO (BO)</td>
+                <td>FEDERICO</td>
+                <td>VENTURINI</td>
+                <td>VNTBRC18M71A944L</td>
+                <td></td>
+                <td>340 5208232</td>
+                <td>mikymic87@gmail.com</td>
+                <td>Ritmo Danza</td>
+                <td>109500</td>
+                <td>105027</td>
+                <td></td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>NADALINI</td>
+                <td>FILIPPO</td>
+                <td>29/09/2017</td>
+                <td>108179</td>
+                <td>105837</td>
+                <td>28/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>VINCENZI</td>
+                <td>MATTIA</td>
+                <td>VNCMTT09B06F257A</td>
+                <td>06/02/2009</td>
+                <td>M</td>
+                <td>MODENA</td>
+                <td>MO</td>
+                <td>PIETRO GANNONE, 72 - 41031 CAMPOSANTO (MO)</td>
+                <td>ANTONELLA</td>
+                <td>LUPPI</td>
+                <td>VNCMTT09B06F257A</td>
+                <td></td>
+                <td>3333457220</td>
+                <td>antoluppi73@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>105305</td>
+                <td>105162</td>
+                <td>19/02/2026</td>
+                <td>40,00</td>
+                <td>70,00</td>
+                <td>cat: 16-18</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>RAMBALDI</td>
+                <td>SOFIA</td>
+                <td>18/01/2011</td>
+                <td>100231</td>
+                <td>102465</td>
+                <td>05/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>B2</td>
+                <td>Danze Standard</td>
+                <td>B2</td>
+                <td>Combinata Standard-Latini</td>
+                <td>B2</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ZANIBONI</td>
+                <td>TOMAS</td>
+                <td>ZNBTMS83S02A965O</td>
+                <td>02/11/1983</td>
+                <td>M</td>
+                <td>BONDENO</td>
+                <td>FE</td>
+                <td>COSTITUZIONE, 12 - 41034 FINALE EMILIA (MO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3804101135</td>
+                <td></td>
+                <td>Team Diablo</td>
+                <td>106497</td>
+                <td>104114</td>
+                <td>26/01/2027</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 35-44</td>
+                <td>DAVIDE BUSI</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>GIGLI</td>
+                <td>ROSSELLA MARIA</td>
+                <td>24/05/1995</td>
+                <td>106498</td>
+                <td>104115</td>
+                <td>26/01/2027</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ZANNONI</td>
+                <td>DAVIDE</td>
+                <td>ZNNDVD65B23C980D</td>
+                <td>23/02/1965</td>
+                <td>M</td>
+                <td>COPPARO</td>
+                <td>FE</td>
+                <td>VIA DIECI SETTEMBRE 1943, 11 - 40011 ANZOLA DELL'EMILIA (BO)</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>3351348502</td>
+                <td>3351348502</td>
+                <td>davidezakzannoni@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>108185</td>
+                <td>106746</td>
+                <td>29/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 55-60</td>
+                <td>ALESSANDRO REINA</td>
+                <td>CATERINA ALBERGHINI </td>
+                <td></td>
+                <td></td>
+                <td>CANè</td>
+                <td>BARBARA</td>
+                <td>06/11/1970</td>
+                <td>108170</td>
+                <td>106745</td>
+                <td>12/11/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                        <tr>
+                <td>ZUPPIROLI</td>
+                <td>AURORA</td>
+                <td>ZPPRRA16C71A944O</td>
+                <td>31/03/2016</td>
+                <td>F</td>
+                <td>BOLOGNA</td>
+                <td>BO</td>
+                <td>VIA FUNO, 4/2 - 40050 ARGELATO (BO)</td>
+                <td>MELISSA</td>
+                <td>GAMBINI</td>
+                <td>ZPPRRA16C71A944O</td>
+                <td></td>
+                <td>333/4386007</td>
+                <td>melissagambini87@gmail.com</td>
+                <td>Team Diablo</td>
+                <td>109120</td>
+                <td>104067</td>
+                <td>09/09/2026</td>
+                <td>15,00</td>
+                <td>10,00</td>
+                <td>cat: 6-9</td>
+                <td>SIMONE CORVINI</td>
+                <td>MICHELA NATALI</td>
+                <td></td>
+                <td></td>
+                <td>PERSICO</td>
+                <td>MICHELE</td>
+                <td>12/03/2016</td>
+                <td>109121</td>
+                <td>107033</td>
+                <td>09/09/2026</td>
+                <td>Danze Latino Americane</td>
+                <td>D</td>
+                <td>Danze Standard</td>
+                <td>D</td>
+                <td>Combinata Standard-Latini</td>
+                <td>D</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+                    </table>
+            </body>
+</html>
