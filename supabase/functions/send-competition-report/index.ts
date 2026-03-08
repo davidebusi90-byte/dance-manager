@@ -6,7 +6,7 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
 
 serve(async (req) => {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -84,19 +84,64 @@ serve(async (req) => {
             if (!data.length) return `<p>Nessuna coppia in questa categoria.</p>`;
             const rows = data.map(item => {
                 const c = isE ? item.couples : item;
-                return `<tr><td style="border: 1px solid #ddd; padding: 8px;">${c.athlete1?.first_name} ${c.athlete1?.last_name} / ${c.athlete2?.first_name} ${c.athlete2?.last_name}</td><td style="border: 1px solid #ddd; padding: 8px;">${c.category} - ${c.class}</td></tr>`;
+                const couplesNames = `${c.athlete1?.first_name || ""} ${c.athlete1?.last_name || ""} / ${c.athlete2?.first_name || ""} ${c.athlete2?.last_name || ""}`;
+                return `<tr><td style="border: 1px solid #ddd; padding: 12px;">${couplesNames}</td><td style="border: 1px solid #ddd; padding: 12px;">${c.category} - ${c.class}</td></tr>`;
             }).join("");
-            return `<h2 style="color: #333; border-bottom: 2px solid #333; padding-bottom: 5px;">${title} (${data.length})</h2><table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;"><thead><tr><th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;">Coppia</th><th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2; text-align: left;">Categoria</th></tr></thead><tbody>${rows}</tbody></table>`;
+            return `<h2 style="color: #2c333d; border-bottom: 2px solid #3f4752; padding-bottom: 5px; margin-top: 30px;">${title} (${data.length})</h2><table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;"><thead><tr><th style="border: 1px solid #ddd; padding: 12px; background-color: #f8fafc; text-align: left; color: #4a5568;">Coppia</th><th style="border: 1px solid #ddd; padding: 12px; background-color: #f8fafc; text-align: left; color: #4a5568;">Categoria</th></tr></thead><tbody>${rows}</tbody></table>`;
         };
 
-        const html = `<h1>Report: ${competition.name}</h1><p>Data: ${new Date(competition.date).toLocaleDateString("it-IT")}</p>${genT("CONFERMATI & PAGATI", entries.filter(e => e.is_paid), true)}${genT("DA PAGARE", entries.filter(e => !e.is_paid && !isLate(e.created_at)), true)}${genT("IN RITARDO (MORA)", entries.filter(e => !e.is_paid && isLate(e.created_at)), true)}${genT("MANCANTI", missing, false)}`;
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #4a5568; margin: 0; padding: 0; background-color: #f7fafc; }
+              .container { max-width: 800px; margin: 30px auto; padding: 0; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+              .header { background-color: #2c333d; padding: 40px 20px; text-align: center; color: #ffffff; }
+              .logo-circle { width: 80px; height: 80px; background-color: #3f4752; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+              .header-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0; color: #ffffff; }
+              .header-subtitle { font-size: 14px; color: #cbd5e0; margin: 0; }
+              .content { padding: 40px; }
+              .footer { font-size: 12px; color: #a0aec0; text-align: center; padding: 30px; background-color: #edf2f7; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo-circle">
+                  <img src="https://rd-dance-manager.vercel.app/logo.png" alt="Dance Manager Logo" style="width: 50px; height: auto;">
+                </div>
+                <h1 class="header-title">Report Iscrizioni</h1>
+                <p class="header-subtitle">${competition.name} - ${new Date(competition.date).toLocaleDateString("it-IT")}</p>
+              </div>
+              <div class="content">
+                ${genT("CONFERMATI & PAGATI", entries.filter(e => e.is_paid), true)}
+                ${genT("DA PAGARE", entries.filter(e => !e.is_paid && !isLate(e.created_at)), true)}
+                ${genT("IN RITARDO (MORA)", entries.filter(e => !e.is_paid && isLate(e.created_at)), true)}
+                ${genT("MANCANTI", missing, false)}
+              </div>
+              <div class="footer">
+                <p>&copy; ${new Date().getFullYear()} Ritmo Danza - Dance Manager System</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
 
-        if (!RESEND_API_KEY) return new Response(JSON.stringify({ success: true, recipients: Array.from(emailSet) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-        const res = await fetch("https://api.resend.com/emails", {
+        const res = await fetch("https://api.brevo.com/v3/smtp/email", {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
-            body: JSON.stringify({ from: "Dance Manager <info@antigravity.it>", to: ["info@antigravity.it"], bcc: Array.from(emailSet), subject: `Report Iscrizioni: ${competition.name}`, html }),
+            headers: {
+                "Content-Type": "application/json",
+                "api-key": BREVO_API_KEY || ""
+            },
+            body: JSON.stringify({
+                sender: { name: "Dance Manager", email: "ufficiogare@ritmodanza.net" },
+                to: [{ email: "info@antigravity.it" }],
+                bcc: Array.from(emailSet).map(email => ({ email })),
+                subject: `Report Iscrizioni: ${competition.name}`,
+                htmlContent: html
+            }),
         });
 
         const resData = await res.json();

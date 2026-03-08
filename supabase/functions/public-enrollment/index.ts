@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-platform, x-supabase-client-runtime-version",
 };
 
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -108,67 +108,147 @@ serve(async (req) => {
 
     console.log(`Enrollment successful: couple=${body.couple_id}, count=${newEntries.length}, ip=${clientIp}`);
 
+    // Fetch system settings
+    const { data: settings } = await supabase
+      .from("system_settings")
+      .select("email_notifications_athletes, email_notifications_instructors")
+      .eq("id", "global")
+      .single();
+
+    const emailSettings = settings || { email_notifications_athletes: true, email_notifications_instructors: true };
+
     // Send email notification
     try {
-      const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-      if (RESEND_API_KEY) {
-        const emailSet = new Set<string>();
-        // @ts-ignore - Supabase type casting workaround
-        const c = couple as any;
+      const emailSet = new Set<string>();
+      // @ts-ignore - Supabase type casting workaround
+      const c = couple as any;
 
+      if (emailSettings.email_notifications_athletes) {
         if (c?.athlete1?.email) emailSet.add(c.athlete1.email);
         if (c?.athlete2?.email) emailSet.add(c.athlete2.email);
-        if (c?.instructor?.email) emailSet.add(c.instructor.email);
+      }
 
-        const responsabiliNames = [...(c?.athlete1?.responsabili || []), ...(c?.athlete2?.responsabili || [])].filter(Boolean);
-        if (responsabiliNames.length > 0) {
-          const { data: respProfiles } = await supabase.from("profiles").select("email").in("full_name", responsabiliNames);
-          (respProfiles || []).forEach((p: any) => { if (p.email) emailSet.add(p.email); });
+      if (emailSettings.email_notifications_instructors) {
+        if (c?.instructor?.email) emailSet.add(c.instructor.email);
+      }
+
+      const responsabiliNames = [...(c?.athlete1?.responsabili || []), ...(c?.athlete2?.responsabili || [])].filter(Boolean);
+      if (responsabiliNames.length > 0) {
+        const { data: respProfiles } = await supabase.from("profiles").select("email").in("full_name", responsabiliNames);
+        (respProfiles || []).forEach((p: any) => { if (p.email) emailSet.add(p.email); });
+      }
+
+      if (emailSet.size > 0) {
+        // Fetch event type names for the email
+        const allEventTypeIds = Array.from(new Set(newEntries.flatMap(e => e.event_type_ids || [])));
+        let eventTypeNamesMap: Record<string, string> = {};
+        if (allEventTypeIds.length > 0) {
+          const { data: etData } = await supabase.from("event_types").select("id, name").in("id", allEventTypeIds);
+          eventTypeNamesMap = Object.fromEntries((etData || []).map(et => [et.id, et.name]));
         }
 
-        if (emailSet.size > 0) {
-          const compNames = newEntries.map(e => {
-            const comp = competitions?.find((comp: any) => comp.id === e.competition_id);
-            return comp ? comp.name : "Competizione Sconosciuta";
-          });
+        const a1Name = `${c?.athlete1?.first_name || ""} ${c?.athlete1?.last_name || ""}`.trim();
+        const a2Name = `${c?.athlete2?.first_name || ""} ${c?.athlete2?.last_name || ""}`.trim();
+        const coupleName = `${a1Name} / ${a2Name}`;
 
-          const a1Name = `${c?.athlete1?.first_name || ""} ${c?.athlete1?.last_name || ""}`.trim();
-          const a2Name = `${c?.athlete2?.first_name || ""} ${c?.athlete2?.last_name || ""}`.trim();
-          const coupleName = `${a1Name} / ${a2Name}`;
-
-          const html = `
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-              <h2 style="color: #4f46e5;">Conferma Iscrizione Competizioni</h2>
-              <p>La coppia <strong>${coupleName}</strong> (Classe: ${c.class}) è stata iscritta con successo alle seguenti competizioni:</p>
-              <ul>
-                ${compNames.map(name => `<li><strong>${name}</strong></li>`).join("")}
-              </ul>
-              <p>Visualizza i dettagli e le scadenze di pagamento sulla piattaforma.</p>
-              <br/>
-              <p>Cordiali saluti,<br>Il team di <strong>Dance Manager</strong></p>
+        const competitionsHtml = newEntries.map(e => {
+          const comp = competitions?.find((comp: any) => comp.id === e.competition_id);
+          const compName = comp ? comp.name : "Competizione Sconosciuta";
+          const events = (e.event_type_ids || []).map(id => eventTypeNamesMap[id] || "Gara").join(", ");
+          return `
+            <div style="margin-bottom: 20px; padding: 15px; border-left: 4px solid #4f46e5; background-color: #f8faff; border-radius: 0 8px 8px 0;">
+              <h3 style="margin: 0 0 5px 0; color: #1e1b4b; font-size: 16px;">${compName}</h3>
+              <p style="margin: 0; color: #4338ca; font-size: 14px;"><strong>Gare:</strong> ${events || "Tutto il programma previsto"}</p>
+              ${e.disciplines?.length ? `<p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">Discipline: ${e.disciplines.join(", ")}</p>` : ""}
             </div>
           `;
+        }).join("");
 
-          const res = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${RESEND_API_KEY}` },
-            body: JSON.stringify({
-              from: "Dance Manager <ufficiogare@ritmodanza.net>",
-              to: ["info@antigravity.it"],
-              bcc: Array.from(emailSet),
-              subject: `Conferma Iscrizione: ${compNames.join(", ")}`,
-              html
-            }),
-          });
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #4a5568; margin: 0; padding: 0; background-color: #f7fafc; }
+              .container { max-width: 600px; margin: 30px auto; padding: 0; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+              .header { background-color: #2c333d; padding: 40px 20px; text-align: center; color: #ffffff; }
+              .logo-circle { width: 80px; height: 80px; background-color: #3f4752; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+              .header-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0; color: #ffffff; }
+              .header-subtitle { font-size: 14px; color: #cbd5e0; margin: 0; }
+              .header-subtitle a { color: #ffffff; text-decoration: underline; }
+              .content { padding: 40px; }
+              .welcome-text { font-size: 18px; color: #2d3748; margin-bottom: 25px; }
+              .comp-card { margin-bottom: 20px; padding: 20px; background-color: #fffaf0; border-left: 5px solid #fbd38d; border-radius: 8px; }
+              .comp-title { margin: 0 0 10px 0; color: #744210; font-size: 17px; font-weight: 600; }
+              .comp-details { margin: 0; color: #975a16; font-size: 14px; }
+              .notice-box { background-color: #fff5f5; border: 1px solid #feb2b2; padding: 20px; border-radius: 12px; margin: 30px 0; }
+              .notice-title { margin: 0 0 10px 0; color: #c53030; font-size: 16px; font-weight: 700; }
+              .notice-text { margin: 0; font-size: 14px; color: #9b2c2c; }
+              .blog-link { display: inline-block; margin-top: 20px; color: #5a67d8; text-decoration: none; font-weight: 600; font-size: 14px; }
+              .footer { font-size: 12px; color: #a0aec0; text-align: center; padding: 30px; background-color: #edf2f7; }
+              .highlight { color: #e53e3e; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo-circle">
+                  <img src="https://rd-dance-manager.vercel.app/logo.png" alt="Dance Manager Logo" style="width: 50px; height: auto;">
+                </div>
+                <h1 class="header-title">Iscrizione Gara</h1>
+                <p class="header-subtitle">
+                  Per qualsiasi anomalia contattare <a href="mailto:ufficiogare@ritmodanza.net">ufficiogare@ritmodanza.net</a>
+                </p>
+              </div>
+              
+              <div class="content">
+                <p class="welcome-text">Gentili <strong>${coupleName}</strong>,</p>
+                <p>La vostra iscrizione è stata registrata correttamente. Ecco il riepilogo delle attività:</p>
+                
+                ${competitionsHtml}
 
-          if (!res.ok) {
-            console.error("Failed to send email via Resend:", await res.text());
-          } else {
-            console.log(`Email notification sent to ${emailSet.size} recipients`);
-          }
+                <div class="notice-box">
+                  <p class="notice-title">Azione richiesta per la conferma</p>
+                  <p class="notice-text">
+                    L'iscrizione sarà considerata <span class="highlight">definitiva</span> solo dopo aver 
+                    effettuato il pagamento della quota <strong>in buchetta</strong> presso la segreteria.
+                  </p>
+                </div>
+
+                <a href="https://ritmodanza.net/index.php/category-blog" class="blog-link">Visita il nostro Blog →</a>
+              </div>
+              
+              <div class="footer">
+                <p>&copy; ${new Date().getFullYear()} Ritmo Danza - Dance Manager System</p>
+                <p>Messaggio automatico generato dal sistema di gestione.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+        const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": BREVO_API_KEY || ""
+          },
+          body: JSON.stringify({
+            sender: { name: "Dance Manager", email: "ufficiogare@ritmodanza.net" },
+            to: [{ email: "info@antigravity.it" }],
+            bcc: Array.from(emailSet).map(email => ({ email })),
+            subject: `Iscrizione Gare: ${coupleName}`,
+            htmlContent: html
+          }),
+        });
+
+        if (!res.ok) {
+          console.error("Failed to send email via Brevo:", await res.text());
+        } else {
+          console.log(`Email notification sent to ${emailSet.size} recipients`);
         }
-      } else {
-        console.warn("RESEND_API_KEY not found, skipping email notification");
       }
     } catch (emailErr) {
       console.error("Error sending enrollment email:", emailErr);

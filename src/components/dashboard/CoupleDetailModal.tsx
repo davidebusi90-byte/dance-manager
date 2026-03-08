@@ -121,10 +121,10 @@ export default function CoupleDetailModal({
                     {/* Category and Class */}
                     <div className="space-y-2">
                         <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Categoria e Classe</h3>
-                        <div className="flex items-center gap-2 bg-success/5 p-3 rounded-lg border border-success/10">
-                            <span className="font-bold text-success-foreground">{couple.category}</span>
-                            <span className="text-muted-foreground">/</span>
-                            <span className="font-bold text-success-foreground">Classe {couple.class}</span>
+                        <div className="flex items-center gap-2 bg-[#dcfce7] p-3 rounded-lg border border-[#bbf7d0]">
+                            <span className="font-bold text-[#166534]">{couple.category}</span>
+                            <span className="text-[#166534]/50">/</span>
+                            <span className="font-bold text-[#166534]">Classe {couple.class}</span>
                         </div>
                     </div>
 
@@ -198,7 +198,12 @@ export default function CoupleDetailModal({
                     {/* Payment Status */}
                     <div className="space-y-2">
                         <h3 className="font-semibold text-sm text-muted-foreground">Stato Pagamento</h3>
-                        <Badge variant="secondary" className={entry.is_paid ? "bg-success text-success-foreground" : "text-black"}>
+                        <Badge
+                            variant="secondary"
+                            className={`px-3 py-1 font-semibold ${entry.is_paid
+                                ? "bg-[#dcfce7] text-[#166534] border border-[#bbf7d0]"
+                                : "bg-[#ffedd5] text-[#9a3412] border border-[#fed7aa]"}`}
+                        >
                             {entry.is_paid ? "Pagato" : "Da Pagare"}
                         </Badge>
                     </div>

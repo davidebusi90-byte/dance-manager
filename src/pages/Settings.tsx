@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Lock, User, RefreshCw, Mail } from "lucide-react";
@@ -19,6 +20,11 @@ export default function Settings() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [testEmailTo, setTestEmailTo] = useState("");
   const [testingEmail, setTestingEmail] = useState(false);
+  const [emailSettings, setEmailSettings] = useState({
+    athletes: true,
+    instructors: true
+  });
+  const [updatingSettings, setUpdatingSettings] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -34,7 +40,23 @@ export default function Settings() {
       }
       setUserEmail(session.user.email ?? null);
     };
+    const fetchSettings = async () => {
+      const { data, error } = await (supabase
+        .from("system_settings" as any) as any)
+        .select("email_notifications_athletes, email_notifications_instructors")
+        .eq("id", "global")
+        .maybeSingle();
+
+      if (data) {
+        setEmailSettings({
+          athletes: (data as any).email_notifications_athletes,
+          instructors: (data as any).email_notifications_instructors
+        });
+      }
+    };
+
     checkAuth();
+    fetchSettings();
   }, [navigate]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -157,6 +179,38 @@ export default function Settings() {
     }
   };
 
+  const handleUpdateEmailSetting = async (key: "athletes" | "instructors", value: boolean) => {
+    setUpdatingSettings(true);
+    const newSettings = { ...emailSettings, [key]: value };
+    setEmailSettings(newSettings);
+
+    try {
+      const { error } = await (supabase
+        .from("system_settings" as any) as any)
+        .update({
+          [`email_notifications_${key}`]: value
+        })
+        .eq("id", "global");
+
+      if (error) throw error;
+
+      toast({
+        title: "Impostazioni aggiornate",
+        description: `Notifiche email ${key === "athletes" ? "atleti" : "istruttori"} ${value ? "attivate" : "disattivate"}.`
+      });
+    } catch (err: any) {
+      toast({
+        title: "Errore",
+        description: err.message || "Errore durante l'aggiornamento delle impostazioni",
+        variant: "destructive"
+      });
+      // Revert local state on error
+      setEmailSettings(emailSettings);
+    } finally {
+      setUpdatingSettings(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
@@ -247,8 +301,44 @@ export default function Settings() {
                   variant="outline"
                 >
                   <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                  Sincronizza Excel
                 </Button>
+              </CardContent>
+            </Card>
+
+            {/* Email Notifications Settings */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Notifiche Email
+                </CardTitle>
+                <CardDescription>Gestisci l'invio automatico delle email durante l'iscrizione</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="notify-athletes">Notifiche Atleti</Label>
+                    <p className="text-sm text-muted-foreground">Invia email di conferma agli atleti iscritti</p>
+                  </div>
+                  <Switch
+                    id="notify-athletes"
+                    checked={emailSettings.athletes}
+                    onCheckedChange={(checked) => handleUpdateEmailSetting("athletes", checked)}
+                    disabled={updatingSettings}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="notify-instructors">Notifiche Istruttori</Label>
+                    <p className="text-sm text-muted-foreground">Invia email di conferma all'istruttore della coppia</p>
+                  </div>
+                  <Switch
+                    id="notify-instructors"
+                    checked={emailSettings.instructors}
+                    onCheckedChange={(checked) => handleUpdateEmailSetting("instructors", checked)}
+                    disabled={updatingSettings}
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -281,9 +371,6 @@ export default function Settings() {
                   <Mail className="w-4 h-4" />
                   {testingEmail ? "Invio in corso..." : "Invia Email di Test"}
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Se ricevi l'email, il sistema funziona. Se appare un errore sulla chiave Resend, vai su Supabase Dashboard → Edge Functions → Secrets e aggiungi <code>RESEND_API_KEY</code>.
-                </p>
               </CardContent>
             </Card>
           </>

@@ -37,6 +37,15 @@ const CATEGORY_RULES: CategoryRule[] = [
   { label: "Senior 5", minAge: 75, maxAge: null, displayCode: "75/0" },
 ];
 
+// Age bounds for special/non-standard categories that exist in the DB but are not
+// part of the standard CategoryLabel type (e.g. competition-class categories).
+const SPECIAL_CATEGORY_BOUNDS: Record<string, { minAge: number; maxAge: number | null }> = {
+  under21: { minAge: 16, maxAge: 20 },
+  u21: { minAge: 16, maxAge: 20 },
+  under16: { minAge: 6, maxAge: 15 },
+  u16: { minAge: 6, maxAge: 15 },
+};
+
 export const ALLOWED_CLASSES_BY_CATEGORY: Record<string, string[]> = {
   "juvenile1": ["D", "C", "B3", "B2", "B1"],
   "juvenile2": ["D", "C", "B3", "B2", "B1", "A"],
@@ -97,7 +106,18 @@ export function expectedCategoryFromAge(age: number): CategoryLabel {
 export function getCategoryMinAge(categoryLabel: string): number {
   const norm = normalizeCategory(categoryLabel);
   const match = CATEGORY_RULES.find(r => normalizeCategoryLabel(r.label) === norm);
-  return match?.minAge ?? 0;
+  if (match) return match.minAge;
+  // Fallback: special categories not in CATEGORY_RULES
+  return SPECIAL_CATEGORY_BOUNDS[norm]?.minAge ?? 0;
+}
+
+export function getCategoryMaxAge(categoryLabel: string): number | null {
+  const norm = normalizeCategory(categoryLabel);
+  const match = CATEGORY_RULES.find(r => normalizeCategoryLabel(r.label) === norm);
+  if (match) return match.maxAge;
+  // Fallback: special categories not in CATEGORY_RULES
+  if (norm in SPECIAL_CATEGORY_BOUNDS) return SPECIAL_CATEGORY_BOUNDS[norm].maxAge;
+  return null; // unknown category → treat as unbounded (will fail max_age checks if set)
 }
 
 /**

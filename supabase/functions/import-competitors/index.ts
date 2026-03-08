@@ -24,6 +24,7 @@ type AthleteData = {
     partner_first_name?: string;
     partner_last_name?: string;
     disciplines?: string[];
+    qr_code?: string;
 };
 
 type Body = {
@@ -108,6 +109,7 @@ serve(async (req) => {
                     medical_certificate_expiry: athlete.medical_certificate_expiry || null,
                     responsabili: athlete.responsabili && athlete.responsabili.length > 0 ? athlete.responsabili : null,
                     notes: athlete.notes || null,
+                    qr_code: athlete.qr_code || null,
                 }, { onConflict: "code" });
 
             if (error) {
