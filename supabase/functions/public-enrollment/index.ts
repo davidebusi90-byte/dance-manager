@@ -173,7 +173,7 @@ serve(async (req) => {
               body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #4a5568; margin: 0; padding: 0; background-color: #f7fafc; }
               .container { max-width: 600px; margin: 30px auto; padding: 0; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
               .header { background-color: #2c333d; padding: 40px 20px; text-align: center; color: #ffffff; }
-              .logo-circle { width: 80px; height: 80px; background-color: #3f4752; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+              .logo-circle { width: 125px; height: 125px; background-color: #3f4752; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; }
               .header-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0; color: #ffffff; }
               .header-subtitle { font-size: 14px; color: #cbd5e0; margin: 0; }
               .header-subtitle a { color: #ffffff; text-decoration: underline; }
@@ -193,9 +193,20 @@ serve(async (req) => {
           <body>
             <div class="container">
               <div class="header">
-                <div class="logo-circle">
-                  <img src="https://rd-dance-manager.vercel.app/logo.png" alt="Dance Manager Logo" style="width: 50px; height: auto;">
-                </div>
+                
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0; padding: 0;">
+                  <tr>
+                    <td align="center" style="padding-bottom: 20px;">
+                      <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                        <tr>
+                          <td align="center" valign="middle" width="125" height="125" style="width: 125px; height: 125px; background-color: #3f4752; border-radius: 50%;">
+                            <img src="https://rd-dance-manager.vercel.app/logo-white.png" alt="Dance Manager Logo" width="100" style="display: block; width: 100px; height: auto; margin: 0 auto;">
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
                 <h1 class="header-title">Iscrizione Gara</h1>
                 <p class="header-subtitle">
                   Per qualsiasi anomalia contattare <a href="mailto:ufficiogare@ritmodanza.net">ufficiogare@ritmodanza.net</a>
