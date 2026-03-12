@@ -579,33 +579,57 @@ export default function AthleteEnrollment() {
 
         {/* Step 1: CID Input */}
         {step === "cid" && (
-          <Card className="bg-yellow-50/50 border-yellow-200">
+          <Card className={`${userRole === "admin" ? "bg-yellow-50/50 border-yellow-200" : "bg-card border-primary/20"}`}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-yellow-700" />
-                Inserisci Codice CID
+                <User className={`w-5 h-5 ${userRole === "admin" ? "text-yellow-700" : "text-primary"}`} />
+                {userRole === "admin" ? "Inserisci Codice CID" : "Accesso Iscrizioni"}
               </CardTitle>
               <CardDescription>
-                Inserisci il tuo codice identificativo atleta per accedere alle iscrizioni
+                {userRole === "admin" 
+                  ? "Inserisci manualmente il codice identificativo dell'atleta" 
+                  : "Per procedere è necessario scansionare il QR code personale dell'atleta."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  ref={cidInputRef}
-                  placeholder="Codice CID..."
-                  value={cidCode}
-                  onChange={(e) => setCidCode(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleCidLookup()}
-                  className="font-mono"
-                  autoFocus
-                />
-                <Button onClick={handleCidLookup} disabled={loading}>
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                </Button>
-              </div>
+              {loading && searchParams.get("code") ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                  <p className="text-sm font-medium animate-pulse">Riconoscimento atleta in corso...</p>
+                </div>
+              ) : userRole === "admin" ? (
+                <div className="flex gap-2">
+                  <Input
+                    ref={cidInputRef}
+                    placeholder="Codice CID..."
+                    value={cidCode}
+                    onChange={(e) => setCidCode(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCidLookup()}
+                    className="font-mono"
+                    autoFocus
+                  />
+                  <Button onClick={handleCidLookup} disabled={loading}>
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-primary/5 rounded-xl p-8 border border-primary/10 flex flex-col items-center text-center gap-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Search className="w-8 h-8 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="font-bold text-lg">In attesa di scansione</p>
+                    <p className="text-sm text-muted-foreground">
+                      Posiziona il QR code dell'atleta sotto il lettore per accedere automaticamente al modulo di iscrizione.
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-sm text-muted-foreground">
-                Il codice CID è il tuo identificativo presente nella tessera o nel foglio atleti.
+                {userRole === "admin" 
+                  ? "Questa funzione di inserimento manuale è riservata agli amministratori." 
+                  : "Il sistema riconoscerà l'atleta all'istante tramite il suo codice univoco."}
               </p>
             </CardContent>
           </Card>
