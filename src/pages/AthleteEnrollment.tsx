@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,50 @@ export default function AthleteEnrollment() {
   const [step, setStep] = useState<"cid" | "enrollment" | "success" | "couple">("cid");
   const { toast } = useToast();
   const { role: userRole } = useUserRole();
+  const [searchParams] = useSearchParams();
+
+  // Handle automatic lookup if code is in URL
+  useEffect(() => {
+    const codeFromUrl = searchParams.get("code");
+    if (codeFromUrl && step === "cid") {
+      setCidCode(codeFromUrl);
+      // We need to call the lookup function
+      // Since it's defined after, we'll use a small trick or just define it before
+      // But in React it's better to trigger it via an effect or a button ref
+      triggerAutoLookup(codeFromUrl);
+    }
+  }, [searchParams]);
+
+  const triggerAutoLookup = async (code: string) => {
+    setLoading(true);
+    try {
+      const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enrollment-data`;
+      const res = await fetch(`${baseUrl}?action=search-athletes&q=${encodeURIComponent(code)}`, {
+        headers: {
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+        },
+      });
+      const result = await res.json();
+      if (result.error) {
+        toast({ title: result.error, variant: "destructive" });
+        return;
+      }
+
+      const found = (result.data || []).find(
+        (a: Athlete) => a.code.toLowerCase() === code.toLowerCase()
+      );
+
+      if (found) {
+        setAthlete(found);
+        await fetchCouples(found.id);
+        setStep("enrollment");
+      }
+    } catch (err) {
+      console.error("Auto-lookup error:", err);
+    }
+    setLoading(false);
+  };
 
   // Lookup athlete by CID code
   const handleCidLookup = async () => {
