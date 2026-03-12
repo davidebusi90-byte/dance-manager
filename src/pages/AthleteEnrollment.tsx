@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check, ShieldCheck } from "lucide-react";
+import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check, ShieldCheck, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getBestClass } from "@/lib/class-utils";
 import { getCategoryMinAge } from "@/lib/category-validation";
@@ -72,6 +72,7 @@ export default function AthleteEnrollment() {
   const { role: userRole } = useUserRole();
   const [searchParams] = useSearchParams();
   const cidInputRef = useRef<HTMLInputElement>(null);
+  const [searchResults, setSearchResults] = useState<Athlete[]>([]);
 
   // Auto-focus the CID input when the step is "cid"
   useEffect(() => {
@@ -126,6 +127,13 @@ export default function AthleteEnrollment() {
     setLoading(false);
   };
 
+  const handleSelectAthlete = async (found: Athlete) => {
+    setAthlete(found);
+    await fetchCouples(found.id);
+    setStep("enrollment");
+    setSearchResults([]);
+  };
+
   // Lookup athlete by CID code
   const handleCidLookup = async () => {
     const trimmed = cidCode.trim();
@@ -149,23 +157,42 @@ export default function AthleteEnrollment() {
         return;
       }
 
-      // Find exact CID match
-      const found = (result.data || []).find(
-        (a: Athlete) => a.code.toLowerCase() === trimmed.toLowerCase()
-      );
+      // Use a more robust check for admin capabilities
+      const isPrivileged = userRole === "admin" || userRole === "supervisor" || userRole === "instructor";
+      const hasResults = result.data && result.data.length > 0;
+      
+      if (isPrivileged) {
+        const foundExact = result.data.find((a: Athlete) => a.code.toLowerCase() === trimmed.toLowerCase());
+        
+        if (foundExact) {
+          handleSelectAthlete(foundExact);
+        } else if (result.data.length === 1) {
+          handleSelectAthlete(result.data[0]);
+        } else if (result.data.length > 1) {
+          setSearchResults(result.data);
+        } else {
+          toast({
+            title: "Atleta non trovato",
+            description: "Nessun risultato trovato per '" + trimmed + "'. Verifica il nome o il CID.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Public user: must match CID exactly
+        const found = (result.data || []).find(
+          (a: Athlete) => a.code.toLowerCase() === trimmed.toLowerCase()
+        );
 
-      if (!found) {
-        toast({
-          title: "Codice CID non trovato",
-          description: "Verifica il codice inserito e riprova.",
-          variant: "destructive",
-        });
-        return;
+        if (found) {
+          handleSelectAthlete(found);
+        } else {
+          toast({
+            title: "Codice CID non trovato",
+            description: "Verifica il codice inserito e riprova.",
+            variant: "destructive",
+          });
+        }
       }
-
-      setAthlete(found);
-      await fetchCouples(found.id);
-      setStep("enrollment");
     } catch (err) {
       console.error("CID lookup error:", err);
       toast({ title: "Errore nella ricerca", variant: "destructive" });
@@ -601,9 +628,12 @@ export default function AthleteEnrollment() {
                 <div className="flex gap-2">
                   <Input
                     ref={cidInputRef}
-                    placeholder="Codice CID..."
+                    placeholder="Nome, Cognome o CID..."
                     value={cidCode}
-                    onChange={(e) => setCidCode(e.target.value)}
+                    onChange={(e) => {
+                      setCidCode(e.target.value);
+                      if (searchResults.length > 0) setSearchResults([]);
+                    }}
                     onKeyDown={(e) => e.key === "Enter" && handleCidLookup()}
                     className="font-mono"
                     autoFocus
@@ -623,6 +653,31 @@ export default function AthleteEnrollment() {
                       Posiziona il QR code dell'atleta sotto il lettore per accedere automaticamente al modulo di iscrizione.
                     </p>
                   </div>
+                </div>
+              )}
+
+              {userRole === "admin" && searchResults.length > 0 && (
+                <div className="mt-4 border rounded-lg overflow-hidden divide-y bg-white text-black shadow-lg">
+                  <div className="bg-muted/50 px-4 py-2 text-xs font-bold uppercase text-muted-foreground">
+                    Risultati Trovati ({searchResults.length})
+                  </div>
+                  {searchResults.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => handleSelectAthlete(a)}
+                      className="w-full text-left px-4 py-3 hover:bg-primary/5 transition-colors flex justify-between items-center group"
+                    >
+                      <div>
+                        <p className="font-bold text-primary group-hover:text-primary-foreground transition-colors">
+                          {a.first_name} {a.last_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          CID: {a.code} | {a.category} - {a.class}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </button>
+                  ))}
                 </div>
               )}
               
