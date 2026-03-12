@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,6 +71,17 @@ export default function AthleteEnrollment() {
   const { toast } = useToast();
   const { role: userRole } = useUserRole();
   const [searchParams] = useSearchParams();
+  const cidInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the CID input when the step is "cid"
+  useEffect(() => {
+    if (step === "cid") {
+      const timer = setTimeout(() => {
+        cidInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
 
   // Handle automatic lookup if code is in URL
   useEffect(() => {
@@ -581,11 +592,13 @@ export default function AthleteEnrollment() {
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Input
+                  ref={cidInputRef}
                   placeholder="Codice CID..."
                   value={cidCode}
                   onChange={(e) => setCidCode(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCidLookup()}
                   className="font-mono"
+                  autoFocus
                 />
                 <Button onClick={handleCidLookup} disabled={loading}>
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
