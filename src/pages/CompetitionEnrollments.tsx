@@ -186,9 +186,12 @@ export default function CompetitionEnrollments() {
 
   const toggleSyllabusEvents = (competitionId: string, discipline: string) => {
     const events = getEventsForDiscipline(discipline);
-    const syllabusNames = events.filter(p =>
-      p.classes.every(cls => ["B", "B1", "B2", "B3", "C", "D"].includes(cls))
-    ).map(p => p.name);
+    const syllabusNames = events.filter(p => {
+      const nameLower = p.name.toLowerCase();
+      const isSyllabusClass = p.classes.every(cls => ["B", "B1", "B2", "B3", "C", "D"].includes(cls));
+      const isNotSpecial = !nameLower.includes("over") && !nameLower.includes("under");
+      return isSyllabusClass && isNotSpecial;
+    }).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, syllabusNames);
   };
 
