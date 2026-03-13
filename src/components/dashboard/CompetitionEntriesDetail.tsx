@@ -622,7 +622,7 @@ export default function CompetitionEntriesDetail({
               {competition.name}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {formatDate(competition.date)} • Scadenza: {formatDate(competition.registration_deadline)}
+              {formatDate(competition.date)} • Scadenza: {formatDate(competition.late_fee_deadline || competition.registration_deadline)}
             </p>
           </div>
           <div className="flex items-center gap-2 print:hidden">
