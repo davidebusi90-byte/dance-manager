@@ -269,21 +269,15 @@ export default function CompetitionEnrollments() {
   const toggleSyllabusEvents = (competitionId: string, discipline: string) => {
     const events = getEventsForDiscipline(discipline);
     const names = events.filter(p => {
-      const nameLower = p.name.toLowerCase();
       const isSyllabusClass = p.classes.every(cls => ["B", "B1", "B2", "B3", "C", "D"].includes(cls));
-      const isNotSpecial = !nameLower.includes("over") && !nameLower.includes("under");
-      return isSyllabusClass && isNotSpecial;
+      return isSyllabusClass;
     }).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);
   };
 
   const toggleAllEvents = (competitionId: string, discipline: string) => {
     const events = getEventsForDiscipline(discipline);
-    // Anche per Championship/Star Cup escludiamo Over/Under per le selezioni rapide
-    const names = events.filter(p => {
-      const nameLower = p.name.toLowerCase();
-      return !nameLower.includes("over") && !nameLower.includes("under");
-    }).map(p => p.name);
+    const names = events.map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);
   };
 
