@@ -270,8 +270,10 @@ export default function CompetitionEnrollments() {
     const events = getEventsForDiscipline(discipline);
     const names = events.filter(p => {
       const nameLower = p.name.toLowerCase();
-      // Escludiamo over/under ma prendiamo tutto il resto (Juvenile, Junior, Youth, Adult, Senior)
-      return !nameLower.includes("over") && !nameLower.includes("under");
+      // Escludiamo over/under e Open Classe A
+      const isNotSpecial = !nameLower.includes("over") && !nameLower.includes("under");
+      const isNotOpenA = !nameLower.includes("open classe a");
+      return isNotSpecial && isNotOpenA;
     }).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);
   };
