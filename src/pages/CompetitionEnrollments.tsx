@@ -87,6 +87,7 @@ export default function CompetitionEnrollments() {
   const [saving, setSaving] = useState(false);
   const [pendingEventChanges, setPendingEventChanges] = useState<Map<string, boolean>>(new Map());
   const [selectedCompetitionForEvents, setSelectedCompetitionForEvents] = useState<string | null>(null);
+  const [competitionClasses, setCompetitionClasses] = useState<Map<string, Set<string>>>(new Map());
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
@@ -102,6 +103,33 @@ export default function CompetitionEnrollments() {
     };
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    // Sync competitionClasses state with eventTypes
+    setCompetitionClasses(prev => {
+      const newMap = new Map(prev);
+      
+      // Group events by competition to see what classes are actually in use
+      const compClassMap = new Map<string, Set<string>>();
+      eventTypes.forEach(et => {
+        if (!compClassMap.has(et.competition_id)) compClassMap.set(et.competition_id, new Set());
+        const set = compClassMap.get(et.competition_id)!;
+        et.allowed_classes?.forEach(cls => {
+          if (["B1", "B2", "B3"].includes(cls)) set.add("B");
+          else if (["A1", "A2"].includes(cls)) set.add("A");
+          else set.add(cls);
+        });
+      });
+
+      // Update competitionClasses for competitions that HAVE events.
+      // Competitions WITHOUT events will keep their current set in competitionClasses (local override)
+      compClassMap.forEach((set, compId) => {
+        newMap.set(compId, set);
+      });
+      
+      return newMap;
+    });
+  }, [eventTypes]);
 
   const fetchData = async (isRefetch = false) => {
     if (!isRefetch) setLoading(true);
@@ -430,15 +458,8 @@ export default function CompetitionEnrollments() {
               const compEvents = getCompetitionEventTypes(competition.id);
               const isExpanded = selectedCompetitionForEvents === competition.id;
 
-              // Derive currently "active" classes for this competition from all its events
-              const activeClasses = new Set<string>();
-              compEvents.forEach(e => {
-                e.allowed_classes?.forEach(cls => {
-                  if (["B1", "B2", "B3"].includes(cls)) activeClasses.add("B");
-                  else if (["A1", "A2"].includes(cls)) activeClasses.add("A");
-                  else activeClasses.add(cls);
-                });
-              });
+              // Current selected classes for this competition (stays even if no races)
+              const activeClasses = competitionClasses.get(competition.id) || new Set<string>();
 
               const toggleGlobalClass = (targetClass: string) => {
                 if (!isAdmin) return;
@@ -450,35 +471,17 @@ export default function CompetitionEnrollments() {
 
                 const isAdding = !activeClasses.has(targetClass);
 
-                setPendingEventChanges(prev => {
+                // Update local competition classes state immediately
+                setCompetitionClasses(prev => {
                   const next = new Map(prev);
-                  
-                  // Update all currently active events of this competition
-                  compEvents.forEach(e => {
-                    const key = makeEventKey(competition.id, e.event_name);
-                    const currentAllowed = new Set(e.allowed_classes || []);
-                    
-                    if (isAdding) classGroup.forEach(c => currentAllowed.add(c));
-                    else classGroup.forEach(c => currentAllowed.delete(c));
-
-                    // Since our pending change system currently only tracks boolean (active/inactive)
-                    // we need to expand it or handle updates. 
-                    // To keep it simple and consistent with the user's "indicating races" logic:
-                    // we will store the NEW set of classes in a special way if needed, 
-                    // but wait: for now let's just update the local state if we want immediate effect.
-                  });
-
-                  // Actually, the user wants to "indicate classes" and "indicate races".
-                  // Let's change the pending changes to store object states if we want to be precise.
-                  // BUT, the existing system is insert/delete based on presets.
-                  
-                  // NEW LOGIC: When a class is toggled, update the allowed_classes of all eventTypes in memory
-                  // and mark them for update in DB.
+                  const currentCompSet = new Set(next.get(competition.id) || []);
+                  if (isAdding) currentCompSet.add(targetClass);
+                  else currentCompSet.delete(targetClass);
+                  next.set(competition.id, currentCompSet);
                   return next;
                 });
 
-                // REFINED APPROACH: Since the user wants a simple global class selection:
-                // We'll update the state of the events in-place for this competition
+                // Update all currently active events of this competition in the eventTypes state
                 const updatedEventTypes = eventTypes.map(e => {
                   if (e.competition_id !== competition.id) return e;
                   const currentAllowed = new Set(e.allowed_classes || []);
@@ -515,22 +518,27 @@ export default function CompetitionEnrollments() {
 
                           {isAdmin && (
                             <div className="flex flex-wrap items-center gap-1.5 bg-muted/30 p-2 rounded-xl border border-border/50">
-                              <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 px-1">Visibile a:</span>
+                              <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 px-1">Coppie:</span>
                               {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
                                 <Button
                                   key={cls}
                                   variant={activeClasses.has(cls) ? "default" : "outline"}
                                   size="sm"
                                   className={`
-                                    h-8 px-3 text-xs font-bold transition-all
+                                    h-7 px-2.5 text-[10px] font-bold transition-all border
                                     ${activeClasses.has(cls) 
-                                      ? (cls === "D" ? "bg-slate-600 hover:bg-slate-700" : 
-                                         cls === "C" ? "bg-blue-600 hover:bg-blue-700" :
-                                         cls === "B" ? "bg-purple-600 hover:bg-purple-700" :
-                                         cls === "A" ? "bg-green-600 hover:bg-green-700" :
-                                         cls === "AS" ? "bg-amber-600 hover:bg-amber-700" :
-                                         "bg-red-600 hover:bg-red-700")
-                                      : "text-muted-foreground border-dashed"
+                                      ? (cls === "D" ? "bg-slate-600 border-slate-700 text-white" : 
+                                         cls === "C" ? "bg-blue-600 border-blue-700 text-white" :
+                                         cls === "B" ? "bg-purple-600 border-purple-700 text-white" :
+                                         cls === "A" ? "bg-green-600 border-green-700 text-white" :
+                                         cls === "AS" ? "bg-amber-600 border-amber-700 text-white" :
+                                         "bg-red-600 border-red-700 text-white")
+                                      : (cls === "D" ? "border-slate-200 text-slate-500 hover:bg-slate-50" : 
+                                         cls === "C" ? "border-blue-200 text-blue-500 hover:bg-blue-50" :
+                                         cls === "B" ? "border-purple-200 text-purple-500 hover:bg-purple-50" :
+                                         cls === "A" ? "border-green-200 text-green-500 hover:bg-green-50" :
+                                         cls === "AS" ? "border-amber-200 text-amber-500 hover:bg-amber-50" :
+                                         "border-red-200 text-red-500 hover:bg-red-50")
                                     }
                                   `}
                                   onClick={(e) => { e.stopPropagation(); toggleGlobalClass(cls); }}
