@@ -92,15 +92,18 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     const nameNorm = et.event_name.toLowerCase();
     const c = couple.class.toUpperCase();
 
-    // REGOLA CLASSE D - SPECIFICHE UTENTE 13/03/2026
+    // REGOLA CLASSE C e D - SPECIFICHE UTENTE 13/03/2026
+    if (c === "D" || c === "C") {
+        // 1. C Open e B Open SEMPRE ammessi (anche se la classe della coppia è inferiore)
+        if (nameNorm.includes("c open") || nameNorm.includes("b open")) return true;
+    }
+
+    // Regole specifiche aggiuntive SOLO per Classe D
     if (c === "D") {
         const nameUpper = et.event_name.toUpperCase();
         
         // 0. Blocco PREVENTIVO Classi Alte (A, AS, MASTER) - Priorità assoluta
         if (nameUpper.includes("CLASSE A") || nameUpper.includes(" A1") || nameUpper.includes(" A2") || nameUpper.includes(" AS") || nameUpper.includes("MASTER")) return false;
-
-        // 1. C Open e B Open SEMPRE ammessi a prescindere dall'età
-        if (nameNorm.includes("c open") || nameNorm.includes("b open")) return true;
 
         // 2. Blocco Totale: NON possono vedere Adult, Youth, Under 21
         if (nameNorm.includes("adult") || nameNorm.includes("youth") || nameNorm.includes("under 21")) return false;
