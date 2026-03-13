@@ -269,15 +269,19 @@ export default function CompetitionEnrollments() {
   const toggleSyllabusEvents = (competitionId: string, discipline: string) => {
     const events = getEventsForDiscipline(discipline);
     const names = events.filter(p => {
-      const isSyllabusClass = p.classes.every(cls => ["B", "B1", "B2", "B3", "C", "D"].includes(cls));
-      return isSyllabusClass;
+      const nameLower = p.name.toLowerCase();
+      // Escludiamo over/under ma prendiamo tutto il resto (Juvenile, Junior, Youth, Adult, Senior)
+      return !nameLower.includes("over") && !nameLower.includes("under");
     }).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);
   };
 
   const toggleAllEvents = (competitionId: string, discipline: string) => {
     const events = getEventsForDiscipline(discipline);
-    const names = events.map(p => p.name);
+    const names = events.filter(p => {
+      const nameLower = p.name.toLowerCase();
+      return !nameLower.includes("over") && !nameLower.includes("under");
+    }).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);
   };
 
