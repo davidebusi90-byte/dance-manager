@@ -45,7 +45,7 @@ serve(async (req) => {
       const sanitized = query.replace(/[^a-zA-ZÀ-ÿ0-9\s'-]/g, "").substring(0, 50);
       if (!sanitized) return new Response(JSON.stringify({ data: [] }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
       const pattern = `%${sanitized}%`;
-      const { data, error } = await supabase.from("athletes").select("id, code, first_name, last_name, category, class").or(`first_name.ilike.${pattern},last_name.ilike.${pattern},code.ilike.${pattern}`).limit(20);
+      const { data, error } = await supabase.from("athletes").select("id, code, first_name, last_name, category, class, qr_code").or(`first_name.ilike.${pattern},last_name.ilike.${pattern},code.ilike.${pattern},qr_code.ilike.${pattern}`).limit(20);
       if (error) return new Response(JSON.stringify({ error: "Search error" }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
       return new Response(JSON.stringify({ data }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }

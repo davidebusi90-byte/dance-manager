@@ -12,6 +12,10 @@ import { getBestClass } from "@/lib/class-utils";
 import { getCategoryMinAge } from "@/lib/category-validation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUserRole } from "@/hooks/use-user-role";
+import { 
+  isEventAllowedForCouple, 
+  getEffectClassForCouple as getEffectiveClass 
+} from "@/lib/enrollment-utils";
 
 
 interface Athlete {
@@ -257,48 +261,6 @@ export default function AthleteEnrollment() {
     await fetchCompetitionsAndEntries(couple.id);
   };
 
-  const getEffectiveClass = (couple: Couple, eventName: string) => {
-    if (!couple.discipline_info) return couple.class;
-    const eventNameNorm = eventName.toLowerCase();
-
-    if (eventNameNorm.includes("latino") || eventNameNorm.includes("latini"))
-      return couple.discipline_info["latino"] || couple.class;
-    if (eventNameNorm.includes("standard"))
-      return couple.discipline_info["standard"] || couple.class;
-    if (eventNameNorm.includes("combinata")) {
-      const combClass = couple.discipline_info["combinata"] || couple.class;
-      const latClass = couple.discipline_info["latino"];
-      const stdClass = couple.discipline_info["standard"];
-
-      let resolvedClass = combClass;
-      if (latClass) resolvedClass = getBestClass(resolvedClass, latClass);
-      if (stdClass) resolvedClass = getBestClass(resolvedClass, stdClass);
-      return resolvedClass;
-    }
-
-    // Handle specific Adult classes A1/A2
-    if (eventNameNorm.includes("a1")) return couple.discipline_info["a1"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class;
-    if (eventNameNorm.includes("a2")) return couple.discipline_info["a2"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class;
-    if (eventNameNorm.includes("master")) return couple.discipline_info["master"] || couple.class;
-    if (eventNameNorm.includes("south american"))
-      return couple.discipline_info["show_dance_sa"] || couple.class;
-    if (eventNameNorm.includes("classic showdance"))
-      return couple.discipline_info["show_dance_classic"] || couple.class;
-    if (eventNameNorm.includes("show dance") || eventNameNorm.includes("showdance"))
-      return couple.discipline_info["show_dance"] || couple.class;
-
-    return couple.class;
-  };
-
-  const isEventAllowedByAge = (et: EventType, category: string) => {
-    const coupleMinAge = getCategoryMinAge(category);
-    // If event has min_age, couple's category min_age must be >= event.min_age
-    if (et.min_age !== null && coupleMinAge < et.min_age) return false;
-    // If event has max_age, couple's category min_age must be <= event.max_age
-    if (et.max_age !== null && coupleMinAge > et.max_age) return false;
-    return true;
-  };
-
   /* 
     STRICT ENROLLMENT LOGIC:
     - If a competition has NO event types configured, it is NOT allowed.
@@ -312,45 +274,7 @@ export default function AthleteEnrollment() {
     // (verrà filtrata meglio a livello di singoli eventi, ma questo aiuta a nascondere comp intere)
     const isClasseD = couple.class.toUpperCase() === "D";
 
-    const hasAllowedEvent = compEvents.some(et => {
-      // Regola base Classe D: non può mai vedere classi A
-      if (isClasseD && (et.event_name.toUpperCase().includes("CLASSE A") || et.event_name.toUpperCase().includes(" A1") || et.event_name.toUpperCase().includes(" A2") || et.event_name.toUpperCase().includes(" AS"))) {
-        return false;
-      }
-
-      const effectiveClass = getEffectiveClass(couple, et.event_name);
-
-      // Controllo Disciplina
-      if (!isEventMatchingCoupleDiscipline(et.event_name, couple.disciplines)) return false;
-
-      // Controllo Età
-      if (!isEventAllowedByAge(et, couple.category)) return false;
-
-      // Regole Speciali Classe D per visibilità e iscrizione
-      if (isClasseD) {
-        const eventNameNorm = et.event_name.toLowerCase();
-
-        // 1. D può ballare C Open, B Open
-        if (eventNameNorm.includes("c open") || eventNameNorm.includes("b open")) return true;
-      }
-
-      // Regola Universale: Open Classe A solo per 16+ anni
-      if (et.event_name.toUpperCase().includes("OPEN CLASSE A")) {
-        const coupleMinAge = getCategoryMinAge(couple.category);
-        if (coupleMinAge < 16) return false;
-      }
-
-      // Regola Universale Under 16 per Classi D, C, B, A
-      if (et.event_name.toLowerCase().includes("under 16")) {
-        const c = couple.class.toUpperCase();
-        if (["D", "C", "B", "B1", "B2", "B3", "A", "A1", "A2"].includes(c)) return true;
-      }
-
-      // Controllo Classe standard
-      if (!et.allowed_classes.includes(effectiveClass)) return false;
-
-      return true;
-    });
+    const hasAllowedEvent = compEvents.some(et => isEventAllowedForCouple(et, couple));
 
     return hasAllowedEvent;
   };
@@ -941,36 +865,7 @@ export default function AthleteEnrollment() {
                                       <div className="grid gap-2">
                                         {sortEventTypes(eventTypes)
                                           .filter(et => et.competition_id === competition.id)
-                                          .filter(et => isEventMatchingCoupleDiscipline(et.event_name, selectedCouple.disciplines))
-                                          .filter(et => isEventAllowedByAge(et, selectedCouple.category))
-                                          .filter(et => {
-                                            // 1. Controllo Idoneità (Età e Classe)
-                                            const effectiveClass = getEffectiveClass(selectedCouple, et.event_name);
-                                            let isRaceAllowed = et.allowed_classes.includes(effectiveClass);
-                                            const eventNameNorm = et.event_name.toLowerCase();
-                                            const c = selectedCouple.class.toUpperCase();
-
-                                            // Regola Universale Under 16 (D-A)
-                                            if (eventNameNorm.includes("under 16") && ["D", "C", "B", "B1", "B2", "B3", "A", "A1", "A2"].includes(c)) {
-                                              isRaceAllowed = true;
-                                            } else if (c === "D") {
-                                              const coupleMinAge = getCategoryMinAge(selectedCouple.category);
-                                              if (eventNameNorm.includes("c open") || eventNameNorm.includes("b open") || eventNameNorm.includes("under 16")) isRaceAllowed = true;
-                                              else if (coupleMinAge >= 35 && (eventNameNorm.includes("over") || eventNameNorm.includes("adult open"))) isRaceAllowed = true;
-                                              else if (coupleMinAge >= 16 && coupleMinAge <= 18 && (eventNameNorm.includes("youth open") || eventNameNorm.includes("adult open"))) isRaceAllowed = true;
-                                              else if (coupleMinAge >= 19 && coupleMinAge <= 34 && eventNameNorm.includes("adult open")) isRaceAllowed = true;
-                                              else if (coupleMinAge >= 19 && coupleMinAge <= 20 && eventNameNorm.includes("under 21")) isRaceAllowed = true;
-                                            }
-
-                                            if (!isRaceAllowed) return false;
-
-                                            // 2. Filtro aggiuntivo visibilità Classe D (A, A1, A2, AS)
-                                            if (c === "D") {
-                                              const name = et.event_name.toUpperCase();
-                                              if (name.includes("CLASSE A") || name.includes(" A1") || name.includes(" A2") || name.includes(" AS")) return false;
-                                            }
-                                            return true;
-                                          })
+                                          .filter(et => isEventAllowedForCouple(et, selectedCouple))
                                           .map(et => {
                                             const isRaceSelected = (selectedRaces[competition.id] || []).includes(et.id);
 

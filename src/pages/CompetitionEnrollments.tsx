@@ -7,9 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Trophy, Settings, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
-import CompetitionsImport from "@/components/CompetitionsImport";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
-import * as XLSX from "xlsx";
 
 interface Competition {
   id: string;
@@ -108,16 +106,21 @@ export default function CompetitionEnrollments() {
   const fetchData = async (isRefetch = false) => {
     if (!isRefetch) setLoading(true);
     try {
-      const [competitionsRes, eventTypesRes] = await Promise.all([
-        supabase.from("competitions").select("id, name, date, end_date, is_deleted").eq("is_deleted", false).order("date", { ascending: true }) as unknown,
-        supabase.from("competition_event_types").select("*"),
-      ]);
+      const competitionsRes = await supabase
+        .from("competitions")
+        .select("id, name, date, end_date, is_deleted")
+        .eq("is_deleted", false)
+        .order("date", { ascending: true });
+
+      const eventTypesRes = await supabase
+        .from("competition_event_types")
+        .select("*");
 
       if (competitionsRes.data) {
         // Extra safety: deduplicate by name and date in case duplicates already exist in DB
         const unique = new Map();
-        (competitionsRes.data as unknown[]).forEach(c => {
-          const key = `${c.name.toLowerCase()}-${c.date}`;
+        (competitionsRes.data as any[]).forEach(c => {
+          const key = `${c.name?.toLowerCase() || ""}-${c.date}`;
           if (!unique.has(key)) unique.set(key, c);
         });
         setCompetitions(Array.from(unique.values()));
@@ -245,47 +248,9 @@ export default function CompetitionEnrollments() {
     }
   };
 
-  const exportCompetitionsToExcel = async () => {
-    try {
-      const { data: allCompetitions, error } = await supabase
-        .from("competitions")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (error) throw error;
-
-      const exportData = allCompetitions.map(comp => ({
-        "Nome": comp.name,
-        "Data": comp.date,
-        "Data Fine": comp.end_date || "",
-        "Luogo": comp.location || "",
-        "Scadenza": comp.registration_deadline || "",
-        "Data Aumento Quota": comp.late_fee_deadline || "",
-        "Descrizione": comp.description || "",
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Competizioni");
-      XLSX.writeFile(wb, "Competizioni_Aggiornate.xlsx");
-
-      toast({
-        title: "Excel generato",
-        description: "Il file delle competizioni è stato aggiornato e scaricato."
-      });
-    } catch (error) {
-      console.error("Error exporting competitions:", error);
-      toast({
-        title: "Errore export",
-        description: "Impossibile generare il file Excel",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleCompetitionAdded = async () => {
     await fetchData(true);
-    await exportCompetitionsToExcel();
   };
 
   const getCompetitionEventTypes = (competitionId: string) => {
@@ -324,7 +289,6 @@ export default function CompetitionEnrollments() {
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && <AddCompetitionDialog onSuccess={handleCompetitionAdded} />}
-            {isAdmin && <CompetitionsImport onImportComplete={() => fetchData(true)} />}
             {isAdmin && pendingEventChanges.size > 0 && (
               <Button onClick={saveAllChanges} disabled={saving} className="gap-2">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -347,7 +311,7 @@ export default function CompetitionEnrollments() {
             <CardContent className="py-12 text-center">
               <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Nessuna competizione</h3>
-              <p className="text-muted-foreground">Importa le competizioni dalla dashboard per configurare i tipi di gara.</p>
+              <p className="text-muted-foreground">Inizia aggiungendo una nuova competizione tramite il pulsante "+" in alto.</p>
             </CardContent>
           </Card>
         ) : (

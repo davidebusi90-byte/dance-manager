@@ -98,7 +98,7 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         // NOTA: Non facciamo return true immediato per permettere il check di età standard più in basso
     }
 
-    // Regola speciale Classe D: può accedere a gare open/senior/under21 fuori dalla propria categoria.
+    // Regola speciale Classe D: può accedere a gare open/senior fuori dalla propria categoria.
     // Usiamo getCategoryMinAge come proxy dell'età della coppia (è l'età minima della categoria assegnata).
     // NOTA: questa regola viene valutata PRIMA del controllo età standard, perché le categorie
     // assegnate al DB potrebbero non corrispondere perfettamente all'età reale.

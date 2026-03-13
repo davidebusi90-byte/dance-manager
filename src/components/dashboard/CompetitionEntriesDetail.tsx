@@ -489,9 +489,10 @@ export default function CompetitionEntriesDetail({
       <tr
         key={entry.id}
         className={`${isLate && showLateFlag ? "bg-warning/10" : ""} ${role === "admin" ? "cursor-pointer hover:bg-muted/50" : ""} transition-colors print:break-inside-avoid break-inside-avoid`}
+        style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
         onClick={() => role === "admin" && setSelectedEntry(entry)}
       >
-        <td className="font-medium py-3 px-2 align-middle">
+        <td className="font-medium py-3 px-2 align-middle print:w-[35%] w-[35%]">
           <div className="flex items-center gap-2">
             <div className="flex flex-col items-center flex-1 min-w-0">
               <span className="whitespace-nowrap overflow-hidden text-ellipsis text-[11px] lg:text-sm">{athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}</span>
@@ -504,13 +505,13 @@ export default function CompetitionEntriesDetail({
             </div>
           </div>
         </td>
-        <td className="text-center">
+        <td className="text-center print:w-[15%] w-[15%]">
           <div className="flex flex-col items-center">
-            <span className="text-sm">{couple.category}</span>
+            <span className="text-sm font-bold">{couple.category}</span>
             <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</span>
           </div>
         </td>
-        <td className="max-w-[300px] print:max-w-none hidden md:table-cell print:table-cell">
+        <td className="max-w-[300px] print:max-w-none hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">
           <div className="flex flex-col gap-0.5">
             {entryEventNames.map(name => (
               <div key={`enrolled-${name}`} className="text-[11px] py-0.5 px-2 bg-[#dcfce7] text-[#166534] rounded-md whitespace-nowrap border border-[#bbf7d0]">
@@ -527,10 +528,10 @@ export default function CompetitionEntriesDetail({
             ) : null}
           </div>
         </td>
-        <td className="print:table-cell hidden lg:table-cell">
+        <td className="print:table-cell hidden lg:table-cell print:w-[15%] w-[15%]">
           <div className="flex flex-col gap-1 py-1">
             {getCombinedResponsabili(entry).map((resp, idx) => (
-              <span key={idx} className="text-[11px] leading-tight text-muted-foreground border-l-2 border-accent/20 pl-2 whitespace-nowrap">
+              <span key={idx} className="text-[10px] leading-tight text-muted-foreground border-l-2 border-accent/20 pl-2 whitespace-nowrap font-medium">
                 {resp}
               </span>
             )) || <span className="text-muted-foreground">-</span>}
@@ -740,13 +741,13 @@ export default function CompetitionEntriesDetail({
 
                   {/* Table */}
                   <div className="overflow-x-auto print:overflow-visible">
-                    <table className="data-table">
-                      <thead>
+                    <table className="data-table w-full border-collapse">
+                      <thead className="print:table-header-group">
                         <tr>
-                          <th>Atleti</th>
-                          <th className="text-center">Categoria / Classe</th>
-                          <th className="hidden md:table-cell print:table-cell">Gare Selezionate</th>
-                          <th className="hidden lg:table-cell print:table-cell">Responsabili</th>
+                          <th className="print:w-[35%] w-[35%]">Atleti</th>
+                          <th className="text-center print:w-[15%] w-[15%]">Categoria/Classe</th>
+                          <th className="hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">Gare</th>
+                          <th className="hidden lg:table-cell print:table-cell print:w-[15%] w-[15%]">Responsabili</th>
                           <th className="print:hidden text-center">Stato</th>
                           <th className="print:hidden w-10"></th>
                         </tr>
@@ -762,13 +763,13 @@ export default function CompetitionEntriesDetail({
 
                 <TabsContent value="non-iscritti" className="space-y-4">
                   <div className="overflow-x-auto">
-                    <table className="data-table">
-                      <thead>
+                    <table className="data-table w-full border-collapse">
+                      <thead className="print:table-header-group">
                         <tr>
-                          <th>Atleti</th>
-                          <th className="text-center">Categoria / Classe</th>
-                          <th>Gare Selezionabili</th>
-                          <th>Responsabili</th>
+                          <th className="print:w-[35%] w-[35%]">Atleti</th>
+                          <th className="text-center print:w-[15%] w-[15%]">Categoria/Classe</th>
+                          <th className="print:w-[35%] w-[35%]">Gare Selezionabili</th>
+                          <th className="print:w-[15%] w-[15%]">Responsabili</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -830,12 +831,12 @@ export default function CompetitionEntriesDetail({
                 <div>
                   <h3 className="text-lg font-bold mb-4 border-b pb-2">Elenco Iscritti ({filteredEntries.length})</h3>
                   <div className="overflow-x-auto print:overflow-visible">
-                    <table className="data-table w-full table-fixed border-collapse">
-                      <thead className="text-[10px]">
+                    <table className="data-table w-full border-collapse">
+                      <thead className="print:table-header-group text-[10px]">
                         <tr>
-                          <th className="w-[40%] text-left p-2">Atleti</th>
+                          <th className="w-[35%] text-left p-2">Atleti</th>
                           <th className="w-[15%] text-center p-2">Cat. / Classe</th>
-                          <th className="w-[30%] text-left p-2">Gare Selezionate</th>
+                          <th className="w-[35%] text-left p-2">Gare Selezionate</th>
                           <th className="w-[15%] text-left p-2">Responsabili</th>
                         </tr>
                       </thead>
@@ -849,58 +850,62 @@ export default function CompetitionEntriesDetail({
                 </div>
 
                 {filteredNotRegisteredCouples.length > 0 && (
-                  <div className="pt-8 print:break-before-page">
+                  <div className="pt-8 print:break-before-page" style={{ breakBefore: 'page' }}>
                     <h3 className="text-lg font-bold mb-4 border-b pb-2">Elenco Potenziali Coppie Non Iscritte ({filteredNotRegisteredCouples.length})</h3>
                     <div className="overflow-x-auto print:overflow-visible">
-                      <table className="data-table w-full table-fixed border-collapse">
-                        <thead className="text-[10px]">
-                          <tr>
-                            <th className="w-[40%] text-left p-2">Atleti</th>
-                            <th className="w-[15%] text-center p-2">Cat. / Classe</th>
-                            <th className="w-[30%] text-left p-2">Gare Selezionabili</th>
-                            <th className="w-[15%] text-left p-2">Responsabili</th>
-                          </tr>
-                        </thead>
+                    <table className="data-table w-full border-collapse">
+                      <thead className="print:table-header-group text-[10px]">
+                        <tr>
+                          <th className="w-[35%] text-left p-2 border">Atleti</th>
+                          <th className="w-[15%] text-center p-2 border">Cat. / Classe</th>
+                          <th className="w-[35%] text-left p-2 border">Gare Selezionabili</th>
+                          <th className="w-[15%] text-left p-2 border">Responsabili</th>
+                        </tr>
+                      </thead>
                         <tbody>
                           {filteredNotRegisteredCouples.map(couple => {
                             const a1 = athletes.find(a => a.id === couple.athlete1_id);
                             const a2 = athletes.find(a => a.id === couple.athlete2_id);
                             return (
-                              <tr key={couple.id} className="print:break-inside-avoid break-inside-avoid">
-                                <td className="font-medium py-2">
-                                  <div className="flex items-center gap-3">
-                                    <div className="flex flex-col items-center flex-1">
-                                      <span className="whitespace-nowrap">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</span>
-                                      <span className="text-[10px] text-muted-foreground font-normal">({a1?.code || "-"})</span>
+                              <tr 
+                                key={couple.id} 
+                                className="print:break-inside-avoid break-inside-avoid"
+                                style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
+                              >
+                                <td className="font-medium py-2 border px-2 print:w-[35%] w-[35%]">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex flex-col items-center flex-1 min-w-0">
+                                      <span className="whitespace-nowrap overflow-hidden text-ellipsis text-[10px] font-bold">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</span>
+                                      <span className="text-[9px] text-muted-foreground font-normal">({a1?.code || "-"})</span>
                                     </div>
-                                    <span className="text-muted-foreground shrink-0 font-normal">&</span>
-                                    <div className="flex flex-col items-center flex-1">
-                                      <span className="whitespace-nowrap">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</span>
-                                      <span className="text-[10px] text-muted-foreground font-normal">({a2?.code || "-"})</span>
+                                    <span className="text-muted-foreground shrink-0 font-normal text-[9px]">&</span>
+                                    <div className="flex flex-col items-center flex-1 min-w-0">
+                                      <span className="whitespace-nowrap overflow-hidden text-ellipsis text-[10px] font-bold">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</span>
+                                      <span className="text-[9px] text-muted-foreground font-normal">({a2?.code || "-"})</span>
                                     </div>
                                   </div>
                                 </td>
-                                <td className="text-center">
+                                <td className="text-center border px-2 print:w-[15%] w-[15%]">
                                   <div className="flex flex-col items-center">
-                                    <div className="text-sm">{couple.category}</div>
+                                    <div className="text-sm font-bold">{couple.category}</div>
                                     <div className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</div>
                                   </div>
                                 </td>
-                                <td>
+                                <td className="border px-2 print:w-[35%] w-[35%]">
                                   <div className="flex flex-wrap gap-1 py-1">
                                     {eventTypes
                                       .filter(et => isEventAllowedForCouple(et, couple))
                                       .map(et => (
-                                        <div key={et.id} className="text-[10px] py-1 px-3 bg-[#f3f4f6] text-black border border-slate-200 rounded-full whitespace-nowrap">
+                                        <div key={et.id} className="text-[9px] py-0.5 px-2 bg-[#f3f4f6] text-black border border-slate-200 rounded-md whitespace-nowrap">
                                           {et.event_name}
                                         </div>
                                       ))}
                                   </div>
                                 </td>
-                                <td className="text-xs">
-                                  <div className="flex flex-col gap-0.5">
+                                <td className="text-xs border px-2 print:w-[15%] w-[15%]">
+                                  <div className="flex flex-col gap-1">
                                     {couple.responsabili?.map((resp, idx) => (
-                                      <span key={idx} className="whitespace-nowrap">{resp}</span>
+                                      <span key={idx} className="whitespace-nowrap font-medium text-[10px] text-muted-foreground border-l-2 border-accent/20 pl-2">{resp}</span>
                                     )) || <span>-</span>}
                                   </div>
                                 </td>

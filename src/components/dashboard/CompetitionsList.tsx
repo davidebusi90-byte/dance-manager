@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, X, Calendar, MapPin, ChevronRight, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CompetitionsImport from "@/components/CompetitionsImport";
 import CompetitionEntriesDetail from "./CompetitionEntriesDetail";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -356,7 +355,6 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
           Competizioni ({activeCompetitions.length})
         </CardTitle>
         <div className="flex items-center gap-2">
-          {role === "admin" && <CompetitionsImport onImportComplete={onRefresh} />}
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
@@ -368,7 +366,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
             <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Nessuna competizione registrata</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Importa le competizioni usando il pulsante "Importa Competizioni"
+              Le competizioni possono essere aggiunte dalla pagina di configurazione gare.
             </p>
           </div>
         ) : (
