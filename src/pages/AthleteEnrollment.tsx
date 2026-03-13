@@ -44,6 +44,7 @@ interface Competition {
   end_date: string | null;
   location: string | null;
   registration_deadline: string | null;
+  late_fee_deadline: string | null;
 }
 
 
@@ -326,8 +327,19 @@ export default function AthleteEnrollment() {
   };
 
   const isDeadlinePassed = (competition: Competition) => {
-    if (!competition.registration_deadline) return false;
-    return new Date() > new Date(competition.registration_deadline);
+    const deadline = competition.late_fee_deadline || competition.registration_deadline;
+    if (!deadline) return false;
+    
+    // Set both dates to the beginning of the day for accurate comparison if needed, 
+    // but here we just compare the Date objects or strings.
+    // The user wants to allow enrollment UNTIL (and including) the deadline day.
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+    
+    // If it's the same day, we consider it NOT passed (open until end of day)
+    deadlineDate.setHours(23, 59, 59, 999);
+    
+    return now > deadlineDate;
   };
 
   const toggleExpansion = (competitionId: string) => {

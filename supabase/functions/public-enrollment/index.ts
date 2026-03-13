@@ -83,10 +83,13 @@ serve(async (req) => {
 
     const competitionIds = requestEntries.map(e => e.competition_id);
     const today = new Date().toISOString().split("T")[0];
-    const { data: competitions, error: compError } = await supabase.from("competitions").select("id, name, registration_deadline").in("id", competitionIds);
+    const { data: competitions, error: compError } = await supabase.from("competitions").select("id, name, registration_deadline, late_fee_deadline").in("id", competitionIds);
     if (compError || !competitions || competitions.length === 0) return new Response(JSON.stringify({ error: "Competizioni non trovate" }), { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } });
 
-    const closed = competitions.filter(c => c.registration_deadline && c.registration_deadline < today);
+    const closed = competitions.filter(c => {
+      const deadline = c.late_fee_deadline || c.registration_deadline;
+      return deadline && deadline < today;
+    });
     if (closed.length > 0) return new Response(JSON.stringify({ error: `Iscrizioni chiuse per: ${closed.map(c => c.name).join(", ")}` }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
 
     const { data: existing } = await supabase.from("competition_entries").select("competition_id").eq("couple_id", body.couple_id).neq("status", "cancelled").in("competition_id", competitionIds);

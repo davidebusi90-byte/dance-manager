@@ -71,9 +71,12 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
     return new Date(date).toLocaleDateString("it-IT");
   };
 
-  const isDeadlinePassed = (deadline: string | null) => {
+  const isDeadlinePassed = (registration: string | null, lateFee: string | null) => {
+    const deadline = lateFee || registration;
     if (!deadline) return false;
-    return new Date(deadline) < new Date();
+    const deadlineDate = new Date(deadline);
+    deadlineDate.setHours(23, 59, 59, 999);
+    return new Date() > deadlineDate;
   };
 
   const handleCompetitionClick = (competition: Competition) => {
@@ -205,7 +208,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
               <h3 className="font-bold text-lg leading-tight">{competition.name}</h3>
             </div>
             <div className="flex items-center gap-2 ml-2">
-              {!isCompletedSection && competition.registration_deadline && (
+              {!isCompletedSection && (competition.registration_deadline || competition.late_fee_deadline) && (
                 <span className={`status-badge ${deadlinePassed ? "status-badge-error" : "status-badge-success"} text-xs px-2 py-1`}>
                   {deadlinePassed ? "Scaduta" : "Aperta"}
                 </span>
@@ -251,7 +254,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
           </div>
 
           <div className="text-xs text-muted-foreground pt-2 border-t mt-2">
-            Scadenza: {formatDate(competition.registration_deadline)}
+            Scadenza: {formatDate(competition.late_fee_deadline || competition.registration_deadline)}
           </div>
         </div>
       );
@@ -302,12 +305,12 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
           <td className="px-4 py-3 text-center">{formatDate(competition.registration_deadline)}</td>
           <td className="px-4 py-3 text-center">{formatDate(competition.late_fee_deadline)}</td>
           <td>
-            {!isCompletedSection && competition.registration_deadline && (
+            {!isCompletedSection && (competition.registration_deadline || competition.late_fee_deadline) && (
               <span className={`status-badge ${deadlinePassed ? "status-badge-error" : "status-badge-success"}`}>
                 {deadlinePassed ? "Scaduta" : "Aperta"}
               </span>
             )}
-            {!isCompletedSection && !competition.registration_deadline && (
+            {!isCompletedSection && !competition.registration_deadline && !competition.late_fee_deadline && (
               <span className="status-badge status-badge-warning">Da definire</span>
             )}
             {isCompletedSection && (
