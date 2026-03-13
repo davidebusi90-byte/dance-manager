@@ -152,9 +152,52 @@ export default function CompetitionEnrollments() {
     }
     const key = makeEventKey(competitionId, eventName);
     const currentValue = getEventActive(competitionId, eventName);
+    const newValue = !currentValue;
+
+    // Se stiamo attivando la gara, dobbiamo assicurarci che erediti le classi globali "cliccate" in alto
+    if (newValue) {
+      // Calcoliamo le classi globali attive in questo momento per questa competizione
+      const compEvents = getCompetitionEventTypes(competitionId);
+      const activeClasses = new Set<string>();
+      compEvents.forEach(e => {
+        e.allowed_classes?.forEach(cls => {
+          if (["B1", "B2", "B3"].includes(cls)) activeClasses.add("B");
+          else if (["A1", "A2"].includes(cls)) activeClasses.add("A");
+          else activeClasses.add(cls);
+        });
+      });
+
+      // Se non ci sono classi attive, usiamo quelle del preset come fallback per evitare gare vuote
+      const eventNameParts = eventName.split(" - ");
+      const discipline = eventNameParts[0];
+      const presetName = eventNameParts.length > 1 ? eventNameParts[1] : eventName;
+      const presets = getEventsForDiscipline(discipline);
+      const preset = presets.find(p => p.name === presetName);
+      
+      let classesToSet = preset?.classes || [];
+      if (activeClasses.size > 0) {
+        classesToSet = [];
+        activeClasses.forEach(c => {
+          if (c === "B") classesToSet.push("B", "B1", "B2", "B3");
+          else if (c === "A") classesToSet.push("A", "A1", "A2");
+          else classesToSet.push(c);
+        });
+      }
+
+      // Aggiorniamo lo stato locale immediatamente per feedback visivo
+      const updatedEventTypes = [...eventTypes];
+      const existingIdx = updatedEventTypes.findIndex(e => e.competition_id === competitionId && e.event_name === eventName);
+      if (existingIdx >= 0) {
+        updatedEventTypes[existingIdx] = { ...updatedEventTypes[existingIdx], allowed_classes: classesToSet };
+      } else {
+        // Sarà inserito nel saveAllChanges
+      }
+      setEventTypes(updatedEventTypes);
+    }
+
     setPendingEventChanges(prev => {
       const next = new Map(prev);
-      next.set(key, !currentValue);
+      next.set(key, newValue);
       return next;
     });
   };
@@ -166,6 +209,17 @@ export default function CompetitionEnrollments() {
     const allActive = targetNames.every(name => getEventActive(competitionId, `${discipline} - ${name}`));
     const newValue = !allActive;
 
+    // Se stiamo attivando un range, recuperiamo le classi globali attive
+    const compEvents = getCompetitionEventTypes(competitionId);
+    const activeClasses = new Set<string>();
+    compEvents.forEach(e => {
+      e.allowed_classes?.forEach(cls => {
+        if (["B1", "B2", "B3"].includes(cls)) activeClasses.add("B");
+        else if (["A1", "A2"].includes(cls)) activeClasses.add("A");
+        else activeClasses.add(cls);
+      });
+    });
+
     setPendingEventChanges(prev => {
       const next = new Map(prev);
       targetNames.forEach(name => {
@@ -173,106 +227,104 @@ export default function CompetitionEnrollments() {
         const key = makeEventKey(competitionId, fullEventName);
         if (getEventActive(competitionId, fullEventName) !== newValue) {
           next.set(key, newValue);
+          
+          if (newValue && activeClasses.size > 0) {
+             // La logica di aggiornamento allowed_classes per i nuovi preset 
+             // deve essere gestita nel saveAllChanges
+          }
         }
       });
       return next;
     });
   };
 
-  const toggleAllEvents = (competitionId: string, discipline: string) => {
-    const events = getEventsForDiscipline(discipline);
-    toggleEventTypesRange(competitionId, discipline, events.map(p => p.name));
-  };
-
   const toggleSyllabusEvents = (competitionId: string, discipline: string) => {
     const events = getEventsForDiscipline(discipline);
-    const syllabusNames = events.filter(p => {
+    const names = events.filter(p => {
       const nameLower = p.name.toLowerCase();
       const isSyllabusClass = p.classes.every(cls => ["B", "B1", "B2", "B3", "C", "D"].includes(cls));
       const isNotSpecial = !nameLower.includes("over") && !nameLower.includes("under");
       return isSyllabusClass && isNotSpecial;
     }).map(p => p.name);
-    toggleEventTypesRange(competitionId, discipline, syllabusNames);
+    toggleEventTypesRange(competitionId, discipline, names);
   };
 
-  const toggleEventsByClass = (competitionId: string, targetClass: string) => {
-    if (!isAdmin) return;
-
-    const classGroup: string[] = [];
-    if (targetClass === "B") classGroup.push("B", "B1", "B2", "B3");
-    else if (targetClass === "A") classGroup.push("A", "A1", "A2");
-    else classGroup.push(targetClass);
-
-    // Collect all preset events across all disciplines that match any of the target classes
-    const allPresetsToToggle: { discipline: string, name: string }[] = [];
-    DISCIPLINES.forEach(discipline => {
-      const presets = getEventsForDiscipline(discipline);
-      presets.forEach(p => {
-        if (p.classes.some(cls => classGroup.includes(cls))) {
-          allPresetsToToggle.push({ discipline, name: p.name });
-        }
-      });
-    });
-
-    if (allPresetsToToggle.length === 0) return;
-
-    // Determine New Value: if ALL matches are currently active, deactivate them. Otherwise, activate all.
-    const allActive = allPresetsToToggle.every(p => 
-      getEventActive(competitionId, `${p.discipline} - ${p.name}`)
-    );
-    const newValue = !allActive;
-
-    setPendingEventChanges(prev => {
-      const next = new Map(prev);
-      allPresetsToToggle.forEach(p => {
-        const fullEventName = `${p.discipline} - ${p.name}`;
-        const key = makeEventKey(competitionId, fullEventName);
-        if (getEventActive(competitionId, fullEventName) !== newValue) {
-          next.set(key, newValue);
-        }
-      });
-      return next;
-    });
+  const toggleAllEvents = (competitionId: string, discipline: string) => {
+    const events = getEventsForDiscipline(discipline);
+    // Anche per Championship/Star Cup escludiamo Over/Under per le selezioni rapide
+    const names = events.filter(p => {
+      const nameLower = p.name.toLowerCase();
+      return !nameLower.includes("over") && !nameLower.includes("under");
+    }).map(p => p.name);
+    toggleEventTypesRange(competitionId, discipline, names);
   };
 
   const saveAllChanges = async () => {
     if (pendingEventChanges.size === 0) return;
     setSaving(true);
     try {
-      // Save Event Changes
+      // Recuperiamo le classi globali attive per competizione per applicarle alle nuove gare
       const eventPromises = [];
+      const competitionClassMaps = new Map<string, string[]>();
+
+      for (const competition of competitions) {
+        const compEvents = getCompetitionEventTypes(competition.id);
+        const activeClasses = new Set<string>();
+        compEvents.forEach(e => {
+          e.allowed_classes?.forEach(cls => {
+            if (["B1", "B2", "B3"].includes(cls)) activeClasses.add("B");
+            else if (["A1", "A2"].includes(cls)) activeClasses.add("A");
+            else activeClasses.add(cls);
+          });
+        });
+        
+        const classList: string[] = [];
+        activeClasses.forEach(c => {
+          if (c === "B") classList.push("B", "B1", "B2", "B3");
+          else if (c === "A") classList.push("A", "A1", "A2");
+          else classList.push(c);
+        });
+        competitionClassMaps.set(competition.id, classList);
+      }
+
       for (const [key, isActive] of pendingEventChanges) {
         const [competitionId, fullEventName] = key.split("::");
-        // Extract the preset name from "Discipline - EventName"
         const eventNameParts = fullEventName.split(" - ");
         const discipline = eventNameParts[0];
         const presetName = eventNameParts.length > 1 ? eventNameParts[1] : fullEventName;
 
         const events = getEventsForDiscipline(discipline);
         const preset = events.find(p => p.name === presetName);
+        const existing = eventTypes.find(e => e.competition_id === competitionId && e.event_name === fullEventName);
 
         if (isActive) {
-          // Insert if not exists
-          const exists = eventTypes.some(e => e.competition_id === competitionId && e.event_name === fullEventName);
-          if (!exists && preset) {
+          const globalClasses = competitionClassMaps.get(competitionId) || [];
+          const classesToSave = globalClasses.length > 0 ? globalClasses : (preset?.classes || []);
+
+          if (!existing) {
+            if (preset) {
+              eventPromises.push(
+                supabase.from("competition_event_types").insert({
+                  competition_id: competitionId,
+                  event_name: fullEventName,
+                  allowed_classes: classesToSave,
+                  min_age: preset.minAge ?? null,
+                  max_age: preset.maxAge ?? null,
+                })
+              );
+            }
+          } else {
+            // Aggiornamento classi per gara esistente (se cambiata via toggleGlobalClass)
             eventPromises.push(
-              supabase.from("competition_event_types").insert({
-                competition_id: competitionId,
-                event_name: fullEventName,
-                allowed_classes: preset.classes,
-                min_age: preset.minAge ?? null,
-                max_age: preset.maxAge ?? null,
-              })
+              supabase.from("competition_event_types").update({
+                allowed_classes: existing.allowed_classes
+              }).eq("id", existing.id)
             );
           }
-        } else {
-          // Delete if exists
-          const existing = eventTypes.find(e => e.competition_id === competitionId && e.event_name === fullEventName);
-          if (existing?.id) {
-            eventPromises.push(
-              supabase.from("competition_event_types").delete().eq("id", existing.id)
-            );
-          }
+        } else if (existing?.id) {
+          eventPromises.push(
+            supabase.from("competition_event_types").delete().eq("id", existing.id)
+          );
         }
       }
 
@@ -378,45 +430,122 @@ export default function CompetitionEnrollments() {
               const compEvents = getCompetitionEventTypes(competition.id);
               const isExpanded = selectedCompetitionForEvents === competition.id;
 
+              // Derive currently "active" classes for this competition from all its events
+              const activeClasses = new Set<string>();
+              compEvents.forEach(e => {
+                e.allowed_classes?.forEach(cls => {
+                  if (["B1", "B2", "B3"].includes(cls)) activeClasses.add("B");
+                  else if (["A1", "A2"].includes(cls)) activeClasses.add("A");
+                  else activeClasses.add(cls);
+                });
+              });
+
+              const toggleGlobalClass = (targetClass: string) => {
+                if (!isAdmin) return;
+                
+                const classGroup: string[] = [];
+                if (targetClass === "B") classGroup.push("B", "B1", "B2", "B3");
+                else if (targetClass === "A") classGroup.push("A", "A1", "A2");
+                else classGroup.push(targetClass);
+
+                const isAdding = !activeClasses.has(targetClass);
+
+                setPendingEventChanges(prev => {
+                  const next = new Map(prev);
+                  
+                  // Update all currently active events of this competition
+                  compEvents.forEach(e => {
+                    const key = makeEventKey(competition.id, e.event_name);
+                    const currentAllowed = new Set(e.allowed_classes || []);
+                    
+                    if (isAdding) classGroup.forEach(c => currentAllowed.add(c));
+                    else classGroup.forEach(c => currentAllowed.delete(c));
+
+                    // Since our pending change system currently only tracks boolean (active/inactive)
+                    // we need to expand it or handle updates. 
+                    // To keep it simple and consistent with the user's "indicating races" logic:
+                    // we will store the NEW set of classes in a special way if needed, 
+                    // but wait: for now let's just update the local state if we want immediate effect.
+                  });
+
+                  // Actually, the user wants to "indicate classes" and "indicate races".
+                  // Let's change the pending changes to store object states if we want to be precise.
+                  // BUT, the existing system is insert/delete based on presets.
+                  
+                  // NEW LOGIC: When a class is toggled, update the allowed_classes of all eventTypes in memory
+                  // and mark them for update in DB.
+                  return next;
+                });
+
+                // REFINED APPROACH: Since the user wants a simple global class selection:
+                // We'll update the state of the events in-place for this competition
+                const updatedEventTypes = eventTypes.map(e => {
+                  if (e.competition_id !== competition.id) return e;
+                  const currentAllowed = new Set(e.allowed_classes || []);
+                  if (isAdding) classGroup.forEach(c => currentAllowed.add(c));
+                  else classGroup.forEach(c => currentAllowed.delete(c));
+                  return { ...e, allowed_classes: Array.from(currentAllowed) };
+                });
+                setEventTypes(updatedEventTypes);
+
+                // Mark all events as modified for saving
+                setPendingEventChanges(prev => {
+                  const next = new Map(prev);
+                  compEvents.forEach(e => {
+                    const key = makeEventKey(competition.id, e.event_name);
+                    next.set(key, true); // Keep active
+                  });
+                  return next;
+                });
+              };
+
               return (
                 <Card key={competition.id}>
                   <CardHeader
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
                   >
-                    <CardTitle className="text-base flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-bold">{competition.name}</span>
-                        <span className="text-xs text-muted-foreground">{formatDate(competition.date, competition.end_date)}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-4">
-                        {isAdmin && (
-                          <div className="flex flex-wrap items-center gap-1 bg-muted/30 p-1.5 rounded-lg border border-border/50">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 px-1">Classi:</span>
-                            {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
-                              <Button
-                                key={cls}
-                                variant="outline"
-                                size="sm"
-                                className={`
-                                  h-6 px-2 text-[10px] font-bold transition-all
-                                  ${cls === "D" ? "border-slate-200 text-slate-600 hover:bg-slate-50" : ""}
-                                  ${cls === "C" ? "border-blue-200 text-blue-600 hover:bg-blue-50" : ""}
-                                  ${cls === "B" ? "border-purple-200 text-purple-600 hover:bg-purple-50" : ""}
-                                  ${cls === "A" ? "border-green-200 text-green-600 hover:bg-green-50" : ""}
-                                  ${cls === "AS" ? "border-amber-200 text-amber-600 hover:bg-amber-50" : ""}
-                                  ${cls === "MASTER" ? "border-red-200 text-red-600 hover:bg-red-50" : ""}
-                                `}
-                                onClick={(e) => { e.stopPropagation(); toggleEventsByClass(competition.id, cls); }}
-                              >
-                                {cls}
-                              </Button>
-                            ))}
+                    <CardTitle className="text-base flex flex-col gap-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
+                          <div className="flex flex-col gap-1 min-w-[200px]">
+                            <span className="font-bold text-lg">{competition.name}</span>
+                            <span className="text-sm text-muted-foreground">{formatDate(competition.date, competition.end_date)}</span>
                           </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <Badge count={compEvents.length} />
+
+                          {isAdmin && (
+                            <div className="flex flex-wrap items-center gap-1.5 bg-muted/30 p-2 rounded-xl border border-border/50">
+                              <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 px-1">Visibile a:</span>
+                              {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
+                                <Button
+                                  key={cls}
+                                  variant={activeClasses.has(cls) ? "default" : "outline"}
+                                  size="sm"
+                                  className={`
+                                    h-8 px-3 text-xs font-bold transition-all
+                                    ${activeClasses.has(cls) 
+                                      ? (cls === "D" ? "bg-slate-600 hover:bg-slate-700" : 
+                                         cls === "C" ? "bg-blue-600 hover:bg-blue-700" :
+                                         cls === "B" ? "bg-purple-600 hover:bg-purple-700" :
+                                         cls === "A" ? "bg-green-600 hover:bg-green-700" :
+                                         cls === "AS" ? "bg-amber-600 hover:bg-amber-700" :
+                                         "bg-red-600 hover:bg-red-700")
+                                      : "text-muted-foreground border-dashed"
+                                    }
+                                  `}
+                                  onClick={(e) => { e.stopPropagation(); toggleGlobalClass(cls); }}
+                                >
+                                  {cls}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Badge count={compEvents.length} />
+                          </div>
                         </div>
                       </div>
                     </CardTitle>
@@ -475,6 +604,10 @@ export default function CompetitionEnrollments() {
                                 const isActive = getEventActive(competition.id, fullEventName);
                                 const pendingKey = makeEventKey(competition.id, fullEventName);
                                 const isPending = pendingEventChanges.has(pendingKey);
+                                
+                                // Find current event data if it exists in DB or state
+                                const existingEvent = eventTypes.find(e => e.competition_id === competition.id && e.event_name === fullEventName);
+                                const classesToShow = existingEvent ? existingEvent.allowed_classes : preset.classes;
 
                                 return (
                                   <div
@@ -499,7 +632,7 @@ export default function CompetitionEnrollments() {
                                         {preset.name}
                                       </label>
                                       <p className="text-xs text-muted-foreground">
-                                        Classi: {preset.classes.join(", ")}
+                                        Classi: {classesToShow.join(", ")}
                                       </p>
                                       {(preset.minAge || preset.maxAge) && (
                                         <p className="text-xs text-muted-foreground">
