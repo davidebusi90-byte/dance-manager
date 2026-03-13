@@ -517,35 +517,87 @@ export default function CompetitionEnrollments() {
                           </div>
 
                           {isAdmin && (
-                            <div className="flex flex-wrap items-center gap-1.5 bg-muted/30 p-2 rounded-xl border border-border/50">
-                              <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 px-1">Coppie:</span>
-                              {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
+                            <div className="flex flex-wrap items-center gap-3 bg-muted/30 p-1.5 rounded-2xl border border-border/50 shadow-sm">
+                              <div className="flex items-center gap-1 border-r border-border/50 pr-3">
+                                <span className="text-[9px] uppercase font-black text-muted-foreground/60 mr-1 px-1 tracking-wider">Classi:</span>
+                                {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
+                                  <Button
+                                    key={cls}
+                                    variant={activeClasses.has(cls) ? "default" : "outline"}
+                                    size="sm"
+                                    className={`
+                                      h-7 px-2.5 text-[10px] font-bold transition-all rounded-lg border shadow-sm
+                                      ${activeClasses.has(cls) 
+                                        ? (cls === "D" ? "bg-slate-600 border-slate-700 text-white shadow-slate-200" : 
+                                           cls === "C" ? "bg-blue-600 border-blue-700 text-white shadow-blue-200" :
+                                           cls === "B" ? "bg-purple-600 border-purple-700 text-white shadow-purple-200" :
+                                           cls === "A" ? "bg-green-600 border-green-700 text-white shadow-green-200" :
+                                           cls === "AS" ? "bg-amber-600 border-amber-700 text-white shadow-amber-200" :
+                                           "bg-red-600 border-red-700 text-white shadow-red-200")
+                                        : (cls === "D" ? "border-slate-200 text-slate-500 hover:bg-slate-50" : 
+                                           cls === "C" ? "border-blue-200 text-blue-500 hover:bg-blue-50" :
+                                           cls === "B" ? "border-purple-200 text-purple-500 hover:bg-purple-50" :
+                                           cls === "A" ? "border-green-200 text-green-500 hover:bg-green-50" :
+                                           cls === "AS" ? "border-amber-200 text-amber-500 hover:bg-amber-50" :
+                                           "border-red-200 text-red-500 hover:bg-red-50")
+                                      }
+                                    `}
+                                    onClick={(e) => { e.stopPropagation(); toggleGlobalClass(cls); }}
+                                  >
+                                    {cls}
+                                  </Button>
+                                ))}
+                              </div>
+                              
+                              <div className="flex items-center gap-1.5 overflow-x-auto">
                                 <Button
-                                  key={cls}
-                                  variant={activeClasses.has(cls) ? "default" : "outline"}
+                                  variant="ghost"
                                   size="sm"
-                                  className={`
-                                    h-7 px-2.5 text-[10px] font-bold transition-all border
-                                    ${activeClasses.has(cls) 
-                                      ? (cls === "D" ? "bg-slate-600 border-slate-700 text-white" : 
-                                         cls === "C" ? "bg-blue-600 border-blue-700 text-white" :
-                                         cls === "B" ? "bg-purple-600 border-purple-700 text-white" :
-                                         cls === "A" ? "bg-green-600 border-green-700 text-white" :
-                                         cls === "AS" ? "bg-amber-600 border-amber-700 text-white" :
-                                         "bg-red-600 border-red-700 text-white")
-                                      : (cls === "D" ? "border-slate-200 text-slate-500 hover:bg-slate-50" : 
-                                         cls === "C" ? "border-blue-200 text-blue-500 hover:bg-blue-50" :
-                                         cls === "B" ? "border-purple-200 text-purple-500 hover:bg-purple-50" :
-                                         cls === "A" ? "border-green-200 text-green-500 hover:bg-green-50" :
-                                         cls === "AS" ? "border-amber-200 text-amber-500 hover:bg-amber-50" :
-                                         "border-red-200 text-red-500 hover:bg-red-50")
-                                    }
-                                  `}
-                                  onClick={(e) => { e.stopPropagation(); toggleGlobalClass(cls); }}
+                                  className="h-7 px-3 text-[10px] font-bold bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] border border-[#cbd5e1]/50 rounded-full transition-all"
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    DISCIPLINES.forEach(d => toggleAllEvents(competition.id, d)); 
+                                  }}
                                 >
-                                  {cls}
+                                  Championship
                                 </Button>
-                              ))}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-3 text-[10px] font-bold bg-[#faf5ff] hover:bg-[#f3e8ff] text-[#9333ea] border border-[#e9d5ff]/50 rounded-full transition-all"
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    // Star Cup: Solo Standard e Latino
+                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleAllEvents(competition.id, d)); 
+                                  }}
+                                >
+                                  Star Cup
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-3 text-[10px] font-bold bg-[#eff6ff] hover:bg-[#dbeafe] text-[#2563eb] border border-[#bfdbfe]/50 rounded-full transition-all"
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    // Syllabus: Solo Standard e Latino
+                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleSyllabusEvents(competition.id, d)); 
+                                  }}
+                                >
+                                  Syllabus
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 px-3 text-[10px] font-bold bg-[#f0fdf4] hover:bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0]/50 rounded-full transition-all"
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    // Gara di Ballo: Solo Standard e Latino
+                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleSyllabusEvents(competition.id, d)); 
+                                  }}
+                                >
+                                  Gara di Ballo
+                                </Button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -565,46 +617,6 @@ export default function CompetitionEnrollments() {
                           <div key={discipline} className="space-y-4">
                             <div className="flex items-center justify-between border-b pb-2">
                               <h3 className="font-semibold">{discipline}</h3>
-                              {isAdmin && (
-                                <div className="flex flex-col gap-1">
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 w-full"
-                                      onClick={(e) => { e.stopPropagation(); toggleAllEvents(competition.id, discipline); }}
-                                    >
-                                      Championship
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-[10px] bg-purple-50 hover:bg-purple-100 text-purple-600 w-full"
-                                      onClick={(e) => { e.stopPropagation(); toggleAllEvents(competition.id, discipline); }}
-                                    >
-                                      Star Cup
-                                    </Button>
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-[10px] bg-blue-50 hover:bg-blue-100 text-blue-600 w-full"
-                                      onClick={(e) => { e.stopPropagation(); toggleSyllabusEvents(competition.id, discipline); }}
-                                    >
-                                      Syllabus
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 px-2 text-[10px] bg-green-50 hover:bg-green-100 text-green-600 w-full"
-                                      onClick={(e) => { e.stopPropagation(); toggleSyllabusEvents(competition.id, discipline); }}
-                                    >
-                                      Gara di Ballo
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                             <div className="space-y-2">
                               {getEventsForDiscipline(discipline).map(preset => {
