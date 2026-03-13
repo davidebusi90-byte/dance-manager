@@ -8,12 +8,17 @@ import { ArrowLeft, Trophy, Settings, Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
+import EditCompetitionDialog from "@/components/EditCompetitionDialog";
 
 interface Competition {
   id: string;
   name: string;
   date: string;
   end_date?: string | null;
+  location?: string | null;
+  registration_deadline?: string | null;
+  late_fee_deadline?: string | null;
+  description?: string | null;
 }
 
 interface EventType {
@@ -136,7 +141,7 @@ export default function CompetitionEnrollments() {
     try {
       const competitionsRes = await supabase
         .from("competitions")
-        .select("id, name, date, end_date, is_deleted")
+        .select("*")
         .eq("is_deleted", false)
         .order("date", { ascending: true });
 
@@ -512,7 +517,15 @@ export default function CompetitionEnrollments() {
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
                           <div className="flex flex-col gap-1 min-w-[200px]">
-                            <span className="font-bold text-lg">{competition.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-lg">{competition.name}</span>
+                              {isAdmin && (
+                                <EditCompetitionDialog 
+                                  competition={competition} 
+                                  onSuccess={() => fetchData(true)} 
+                                />
+                              )}
+                            </div>
                             <span className="text-sm text-muted-foreground">{formatDate(competition.date, competition.end_date)}</span>
                           </div>
 
