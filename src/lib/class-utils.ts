@@ -11,7 +11,7 @@ export const CLASS_RANK: Record<string, number> = {
     "B1": 5,
     "B2": 6,
     "B3": 7,
-    "B": 8, // Classe B generica, solitamente meno importante di B1/B2 se presenti
+    "B": 5, // Allineato a B1 come da specifica utente
     "C": 9,
     "D": 12,
 };

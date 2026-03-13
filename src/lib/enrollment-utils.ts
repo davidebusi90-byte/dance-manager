@@ -2,13 +2,18 @@ import { getBestClass } from "./class-utils";
 import { getCategoryMinAge, getCategoryMaxAge } from "./category-validation";
 
 export const getEffectClassForCouple = (couple: any, eventName: string) => {
-    if (!couple.discipline_info) return couple.class;
+    const rawClass = couple.discipline_info ? (couple.class || "D") : couple.class;
+    
+    // Normalizzazione B -> B1 come da specifica utente
+    const normalize = (c: string) => c?.trim().toUpperCase() === "B" ? "B1" : c;
+
+    if (!couple.discipline_info) return normalize(couple.class);
     const eventNameNorm = eventName.toLowerCase();
 
     if (eventNameNorm.includes("latino") || eventNameNorm.includes("latini"))
-        return couple.discipline_info["latino"] || couple.class;
+        return normalize(couple.discipline_info["latino"] || couple.class);
     if (eventNameNorm.includes("standard"))
-        return couple.discipline_info["standard"] || couple.class;
+        return normalize(couple.discipline_info["standard"] || couple.class);
     if (eventNameNorm.includes("combinata")) {
         const combClass = couple.discipline_info["combinata"] || couple.class;
         const latClass = couple.discipline_info["latino"];
@@ -17,21 +22,21 @@ export const getEffectClassForCouple = (couple: any, eventName: string) => {
         let resolvedClass = combClass;
         if (latClass) resolvedClass = getBestClass(resolvedClass, latClass);
         if (stdClass) resolvedClass = getBestClass(resolvedClass, stdClass);
-        return resolvedClass;
+        return normalize(resolvedClass);
     }
 
     // Handle specific Adult classes A1/A2
-    if (eventNameNorm.includes("a1")) return couple.discipline_info["a1"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class;
-    if (eventNameNorm.includes("a2")) return couple.discipline_info["a2"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class;
-    if (eventNameNorm.includes("master")) return couple.discipline_info["master"] || couple.class;
+    if (eventNameNorm.includes("a1")) return normalize(couple.discipline_info["a1"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class);
+    if (eventNameNorm.includes("a2")) return normalize(couple.discipline_info["a2"] || couple.discipline_info["latino"] || couple.discipline_info["standard"] || couple.class);
+    if (eventNameNorm.includes("master")) return normalize(couple.discipline_info["master"] || couple.class);
     if (eventNameNorm.includes("south american"))
-        return couple.discipline_info["show_dance_sa"] || couple.class;
+        return normalize(couple.discipline_info["show_dance_sa"] || couple.class);
     if (eventNameNorm.includes("classic showdance"))
-        return couple.discipline_info["show_dance_classic"] || couple.class;
+        return normalize(couple.discipline_info["show_dance_classic"] || couple.class);
     if (eventNameNorm.includes("show dance") || eventNameNorm.includes("showdance"))
-        return couple.discipline_info["show_dance"] || couple.class;
+        return normalize(couple.discipline_info["show_dance"] || couple.class);
 
-    return couple.class;
+    return normalize(couple.class);
 };
 
 export const isEventAllowedByAge = (et: any, category: string) => {
@@ -39,12 +44,8 @@ export const isEventAllowedByAge = (et: any, category: string) => {
     const coupleMaxAge = getCategoryMaxAge(category); // null means no upper bound (e.g. Senior 5, Adult)
 
     // If the event has a maximum age limit, the couple's category must fully fit within it.
-    // A couple in "Adult" (19/34) must NOT see Under 21 (maxAge=20), because their category
-    // has athletes up to 34. We check that the category's max age doesn't exceed the event's max age.
     if (et.max_age !== null) {
-        // If category has no upper bound (e.g. Adult fallback, Senior 5), they are too old.
         if (coupleMaxAge === null) return false;
-        // If category's upper bound exceeds the event's max age, they are too old.
         if (coupleMaxAge > et.max_age) return false;
     }
 
@@ -72,7 +73,6 @@ export const isEventMatchingCoupleDiscipline = (eventName: string, coupleDiscipl
 
     const normalizedCoupleDisciplines = coupleDisciplines.map(d => d.toLowerCase());
 
-    // Supporto per nuovi nomi completi richiesti
     const isLatino = normalizedCoupleDisciplines.includes("latino") || normalizedCoupleDisciplines.includes("danze latino americane");
     const isStandard = normalizedCoupleDisciplines.includes("standard") || normalizedCoupleDisciplines.includes("danze standard");
     const isCombinata = normalizedCoupleDisciplines.includes("combinata");
@@ -89,33 +89,34 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
 
     const effectiveClass = getEffectClassForCouple(couple, et.event_name);
     let isRaceAllowed = (et.allowed_classes || []).includes(effectiveClass);
-    const eventNameNorm = et.event_name.toLowerCase();
+    const nameNorm = et.event_name.toLowerCase();
     const c = couple.class.toUpperCase();
 
-    // Regola Universale Under 16 (D-A): classi D-A possono sempre gareggiare Under 16
-    if (eventNameNorm.includes("under 16") && ["D", "C", "B", "B1", "B2", "B3", "A", "A1", "A2"].includes(c)) {
-        isRaceAllowed = true;
-        // NOTA: Non facciamo return true immediato per permettere il check di età standard più in basso
-    }
-
-    // Regola speciale Classe D: può accedere a gare open/senior fuori dalla propria categoria.
-    // Usiamo getCategoryMinAge come proxy dell'età della coppia (è l'età minima della categoria assegnata).
-    // NOTA: questa regola viene valutata PRIMA del controllo età standard, perché le categorie
-    // assegnate al DB potrebbero non corrispondere perfettamente all'età reale.
+    // REGOLA CLASSE D - SPECIFICHE UTENTE 13/03/2026
     if (c === "D") {
-        const coupleMinAge = getCategoryMinAge(couple.category);
-        let classD_override = false;
-        if (eventNameNorm.includes("c open") || eventNameNorm.includes("b open") || eventNameNorm.includes("under 16")) classD_override = true;
-        else if (coupleMinAge >= 35 && (eventNameNorm.includes("over") || eventNameNorm.includes("adult open"))) classD_override = true;
-        else if (coupleMinAge >= 16 && coupleMinAge <= 18 && (eventNameNorm.includes("youth open") || eventNameNorm.includes("adult open"))) classD_override = true;
-        else if (coupleMinAge >= 19 && coupleMinAge <= 34 && eventNameNorm.includes("adult open")) classD_override = true;
+        const nameUpper = et.event_name.toUpperCase();
+        
+        // 0. Blocco PREVENTIVO Classi Alte (A, AS, MASTER) - Priorità assoluta
+        if (nameUpper.includes("CLASSE A") || nameUpper.includes(" A1") || nameUpper.includes(" A2") || nameUpper.includes(" AS") || nameUpper.includes("MASTER")) return false;
 
-        if (classD_override) {
-            // Classe D override: non applichiamo il check di età standard, ma verifichiamo
-            // che non sia una gara di classe A/AS
-            const name = et.event_name.toUpperCase();
-            if (name.includes("CLASSE A") || name.includes(" A1") || name.includes(" A2") || name.includes(" AS")) return false;
-            return true;
+        // 1. C Open e B Open SEMPRE ammessi a prescindere dall'età
+        if (nameNorm.includes("c open") || nameNorm.includes("b open")) return true;
+
+        // 2. Blocco Totale: NON possono vedere Adult, Youth, Under 21
+        if (nameNorm.includes("adult") || nameNorm.includes("youth") || nameNorm.includes("under 21")) return false;
+
+        // 3. Under 16: SOLO per le coppie fino alla 14/15 compresa
+        if (nameNorm.includes("under 16")) {
+            const coupleMaxAge = getCategoryMaxAge(couple.category);
+            if (coupleMaxAge !== null && coupleMaxAge <= 15) return true; // 14/15 ha maxAge 15
+            return false;
+        }
+
+        // 4. Senior 35+: Possono vedere le "Over" a partire dalla Over 35
+        // Nota: Qui non facciamo return true immediato per permettere al controllo età di bloccare es. Over 65 per un Senior 1
+        const coupleMinAge = getCategoryMinAge(couple.category);
+        if (coupleMinAge >= 35 && nameNorm.includes("over")) {
+            isRaceAllowed = true;
         }
     }
 
@@ -123,12 +124,6 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     if (!isEventAllowedByAge(et, couple.category)) return false;
 
     if (!isRaceAllowed) return false;
-
-    // Filtro aggiuntivo visibilità Classe D (A, A1, A2, AS)
-    if (c === "D") {
-        const name = et.event_name.toUpperCase();
-        if (name.includes("CLASSE A") || name.includes(" A1") || name.includes(" A2") || name.includes(" AS")) return false;
-    }
 
     return true;
 };

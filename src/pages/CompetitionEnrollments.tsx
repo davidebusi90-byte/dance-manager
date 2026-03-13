@@ -36,14 +36,14 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
   { name: "Junior 2 (14/15)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 14, maxAge: 15 },
 
   // Youth
-  { name: "Youth (16/18)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 16, maxAge: 18 },
+  { name: "Youth (16/18)", classes: ["C", "B1", "B2", "B3", "A", "AS"], minAge: 16, maxAge: 18 },
 
   // Under 16 & Under 21 (Special)
-  { name: "Under 16", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS"], maxAge: 15 },
+  { name: "Under 16", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS"], maxAge: 15 },
   { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
 
   // Adult
-  { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
+  { name: "Adult (19/34)", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
 
   // Senior 1 & 2
   { name: "Senior 1 (35/44)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35, maxAge: 44 },
@@ -67,7 +67,7 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
 
 // Specific event types for Combinata
 const COMBINATA_EVENTS: { name: string; classes: string[]; minAge?: number; maxAge?: number }[] = [
-  { name: "Combinata 10 Balli", classes: ["MASTER", "AS", "A", "A1", "A2", "B", "B1", "B2", "B3"] },
+  { name: "Combinata 10 Balli", classes: ["MASTER", "AS", "A", "A1", "A2", "B1", "B2", "B3"] },
   { name: "Combinata 8 Balli", classes: ["C", "D"] },
   { name: "Classic Show Dance", classes: ["MASTER", "AS", "A"] },
   { name: "South America Showdance", classes: ["MASTER", "AS", "A"] },
@@ -190,6 +190,46 @@ export default function CompetitionEnrollments() {
       p.classes.every(cls => ["B", "B1", "B2", "B3", "C", "D"].includes(cls))
     ).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, syllabusNames);
+  };
+
+  const toggleEventsByClass = (competitionId: string, targetClass: string) => {
+    if (!isAdmin) return;
+
+    const classGroup: string[] = [];
+    if (targetClass === "B") classGroup.push("B", "B1", "B2", "B3");
+    else if (targetClass === "A") classGroup.push("A", "A1", "A2");
+    else classGroup.push(targetClass);
+
+    // Collect all preset events across all disciplines that match any of the target classes
+    const allPresetsToToggle: { discipline: string, name: string }[] = [];
+    DISCIPLINES.forEach(discipline => {
+      const presets = getEventsForDiscipline(discipline);
+      presets.forEach(p => {
+        if (p.classes.some(cls => classGroup.includes(cls))) {
+          allPresetsToToggle.push({ discipline, name: p.name });
+        }
+      });
+    });
+
+    if (allPresetsToToggle.length === 0) return;
+
+    // Determine New Value: if ALL matches are currently active, deactivate them. Otherwise, activate all.
+    const allActive = allPresetsToToggle.every(p => 
+      getEventActive(competitionId, `${p.discipline} - ${p.name}`)
+    );
+    const newValue = !allActive;
+
+    setPendingEventChanges(prev => {
+      const next = new Map(prev);
+      allPresetsToToggle.forEach(p => {
+        const fullEventName = `${p.discipline} - ${p.name}`;
+        const key = makeEventKey(competitionId, fullEventName);
+        if (getEventActive(competitionId, fullEventName) !== newValue) {
+          next.set(key, newValue);
+        }
+      });
+      return next;
+    });
   };
 
   const saveAllChanges = async () => {
@@ -341,9 +381,37 @@ export default function CompetitionEnrollments() {
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                     onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
                   >
-                    <CardTitle className="text-base flex items-center justify-between">
-                      <span>{competition.name} - {formatDate(competition.date, competition.end_date)}</span>
+                    <CardTitle className="text-base flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-bold">{competition.name}</span>
+                        <span className="text-xs text-muted-foreground">{formatDate(competition.date, competition.end_date)}</span>
+                      </div>
+                      
                       <div className="flex items-center gap-4">
+                        {isAdmin && (
+                          <div className="flex flex-wrap items-center gap-1 bg-muted/30 p-1.5 rounded-lg border border-border/50">
+                            <span className="text-[10px] uppercase font-bold text-muted-foreground mr-1 px-1">Classi:</span>
+                            {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
+                              <Button
+                                key={cls}
+                                variant="outline"
+                                size="sm"
+                                className={`
+                                  h-6 px-2 text-[10px] font-bold transition-all
+                                  ${cls === "D" ? "border-slate-200 text-slate-600 hover:bg-slate-50" : ""}
+                                  ${cls === "C" ? "border-blue-200 text-blue-600 hover:bg-blue-50" : ""}
+                                  ${cls === "B" ? "border-purple-200 text-purple-600 hover:bg-purple-50" : ""}
+                                  ${cls === "A" ? "border-green-200 text-green-600 hover:bg-green-50" : ""}
+                                  ${cls === "AS" ? "border-amber-200 text-amber-600 hover:bg-amber-50" : ""}
+                                  ${cls === "MASTER" ? "border-red-200 text-red-600 hover:bg-red-50" : ""}
+                                `}
+                                onClick={(e) => { e.stopPropagation(); toggleEventsByClass(competition.id, cls); }}
+                              >
+                                {cls}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           <Badge count={compEvents.length} />
                         </div>
