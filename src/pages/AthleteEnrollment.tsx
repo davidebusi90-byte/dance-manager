@@ -176,12 +176,31 @@ export default function AthleteEnrollment() {
           handleSelectAthlete(result.data[0]);
         } else if (result.data.length > 1) {
           const ref = new Date();
-          const sortedResults = [...result.data].sort((a: Athlete, b: Athlete) => {
-            const ageA = a.birth_date ? getSportsAge(a.birth_date, ref) : 100;
-            const ageB = b.birth_date ? getSportsAge(b.birth_date, ref) : 100;
-            return ageA - ageB;
+          
+          // Deduplicate by name+surname, prioritizing numeric codes
+          const uniqueMap = new Map<string, Athlete>();
+          result.data.forEach((a: Athlete) => {
+            const key = `${a.first_name.toLowerCase()}_${a.last_name.toLowerCase()}`;
+            const existing = uniqueMap.get(key);
+            const isNumeric = /^\d+$/.test(a.code);
+            
+            if (!existing || (isNumeric && !/^\d+$/.test(existing.code))) {
+              uniqueMap.set(key, a);
+            }
           });
-          setSearchResults(sortedResults);
+
+          const deduplicated = Array.from(uniqueMap.values());
+          
+          if (deduplicated.length === 1) {
+            handleSelectAthlete(deduplicated[0]);
+          } else {
+            const sortedResults = deduplicated.sort((a: Athlete, b: Athlete) => {
+              const ageA = a.birth_date ? getSportsAge(a.birth_date, ref) : 100;
+              const ageB = b.birth_date ? getSportsAge(b.birth_date, ref) : 100;
+              return ageA - ageB;
+            });
+            setSearchResults(sortedResults);
+          }
         } else {
           toast({
             title: "Atleta non trovato",
