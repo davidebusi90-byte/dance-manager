@@ -326,6 +326,9 @@ export default function CompetitionEntriesDetail({
       }
       return false;
     }
+    const hasAllowedEvent = eventTypes.some(et => isEventAllowedForCouple(et, couple));
+    if (!hasAllowedEvent) return false;
+
     return true;
   }).sort(sortCouplesByAge);
 
