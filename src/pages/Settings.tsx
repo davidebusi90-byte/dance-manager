@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Lock, User, RefreshCw, Mail } from "lucide-react";
-import { importCompetitors, importCompetitions } from "@/lib/import-utils";
+import { ArrowLeft, Lock, User, Mail } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
 
@@ -104,54 +103,6 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
-  };
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      // Import Athletes
-      try {
-        const resp = await fetch("/files/Competitori_ok.xls");
-        if (resp.ok) {
-          const blob = await resp.arrayBuffer();
-          const result = await importCompetitors(blob);
-          if (result.success) {
-            toast({ title: "Import Atleti", description: `Processati: ${result.count}` });
-          } else {
-            console.error("Import atleti failed:", result.message);
-            toast({ title: "Errore Import Atleti", description: result.message || "Errore sconosciuto", variant: "destructive" });
-          }
-        }
-      } catch (e) {
-        console.error("Auto-import athletes error", e);
-      }
-
-      // Import Competitions
-      try {
-        const resp = await fetch(`/files/Competizioni.xlsx?t=${new Date().getTime()}`);
-        if (resp.ok) {
-          const blob = await resp.arrayBuffer();
-          const result = await importCompetitions(blob);
-          if (result.success) {
-            toast({ title: "Import Competizioni", description: `Nuove: ${result.created}, Aggiornate: ${result.updated}` });
-          } else {
-            console.error("Auto-import competitions failed:", result.message);
-            toast({ title: "Errore Import Competizioni", description: result.message || "Errore sconosciuto", variant: "destructive" });
-          }
-        }
-      } catch (e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
-        console.error("Auto-import competitions error", e);
-        toast({ title: "Errore Import Competizioni", description: e.message || "Errore di rete", variant: "destructive" });
-      }
-    } catch (globalError) {
-      console.error("Global auto-import error", globalError);
-    }
-
-    await refresh();
-    setRefreshing(false);
-    toast({
-      title: "Sistema aggiornato",
-      description: "Dati ricaricati e sincronizzati con i file Excel locali.",
-    });
   };
 
   const handleTestEmail = async () => {
@@ -285,25 +236,6 @@ export default function Settings() {
         {/* Excel Sync - Admin Only */}
         {role === "admin" && (
           <>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <RefreshCw className="w-5 h-5" />
-                  Sincronizzazione
-                </CardTitle>
-                <CardDescription>Sincronizza i dati con i file Excel locali</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="w-full gap-2 bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400"
-                  variant="outline"
-                >
-                  <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                </Button>
-              </CardContent>
-            </Card>
 
             {/* Email Notifications Settings */}
             <Card className="mt-6">
