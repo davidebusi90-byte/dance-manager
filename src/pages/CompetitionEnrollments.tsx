@@ -420,10 +420,10 @@ export default function CompetitionEnrollments() {
             </div>
             <h1 className="text-xl font-display font-bold">Iscrizioni Gara</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
             {isAdmin && <AddCompetitionDialog onSuccess={handleCompetitionAdded} />}
             {isAdmin && pendingEventChanges.size > 0 && (
-              <Button onClick={saveAllChanges} disabled={saving} className="gap-2">
+              <Button onClick={saveAllChanges} disabled={saving} className="gap-2 w-full sm:w-auto">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Salva ({pendingEventChanges.size})
               </Button>
