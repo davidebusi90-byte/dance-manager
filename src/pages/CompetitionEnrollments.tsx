@@ -48,15 +48,20 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
   { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
 
   // Adult
-  { name: "Adult (19/34)", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
+  { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
 
   // Senior 1 & 2
   { name: "Senior 1 (35/44)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35, maxAge: 44 },
   { name: "Senior 2 (45/54)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 45, maxAge: 54 },
 
-  // Senior 3, 4, 5
-  { name: "Senior 3 (55/64)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55, maxAge: 64 },
-  { name: "Senior 4 (65/74)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65, maxAge: 74 },
+  // Senior 3a, 3b
+  { name: "Senior 3a (55/60)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55, maxAge: 60 },
+  { name: "Senior 3b (61/64)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 61, maxAge: 64 },
+
+  // Senior 4a, 4b
+  { name: "Senior 4a (65/69)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65, maxAge: 69 },
+  { name: "Senior 4b (70/74)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 70, maxAge: 74 },
+  
   { name: "Senior 5 (75+)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 75 },
 
   // Over Specifics

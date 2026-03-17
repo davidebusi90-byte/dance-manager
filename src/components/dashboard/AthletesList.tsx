@@ -101,11 +101,12 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
 
       return {
         pair: orderedPair,
-        sortKey: Math.min(age1, age2)
+        sortKey: Math.min(age1, age2),
+        secondarySortKey: Math.max(age1, age2)
       };
-    }).filter((x): x is { pair: Athlete[], sortKey: number } => x !== null);
+    }).filter((x): x is { pair: Athlete[], sortKey: number, secondarySortKey: number } => x !== null);
 
-    coupledPairs.sort((a, b) => a.sortKey - b.sortKey);
+    coupledPairs.sort((a, b) => a.sortKey !== b.sortKey ? a.sortKey - b.sortKey : a.secondarySortKey - b.secondarySortKey);
     const sortedCoupledAthletes = coupledPairs.flatMap(cp => cp.pair);
 
     const singleAthletes = uniqueAthletes.filter(a => !athleteIdsInCouples.has(a.id));

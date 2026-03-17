@@ -94,8 +94,12 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
 
     // REGOLA CLASSE C e D - SPECIFICHE UTENTE 13/03/2026
     if (c === "D" || c === "C") {
-        // 1. C Open e B Open SEMPRE ammessi (anche se la classe della coppia è inferiore)
-        if (nameNorm.includes("c open") || nameNorm.includes("b open")) return true;
+        const lowerName = et.event_name.toLowerCase();
+        // Controllo flessibile per Open C e Open B
+        const isOpenB = lowerName.includes("open") && lowerName.includes("b");
+        const isOpenC = lowerName.includes("open") && lowerName.includes("c");
+
+        if (isOpenB || isOpenC) return true;
     }
 
     // Regole specifiche aggiuntive SOLO per Classe D
@@ -105,8 +109,12 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         // 0. Blocco PREVENTIVO Classi Alte (A, AS, MASTER) - Priorità assoluta
         if (nameUpper.includes("CLASSE A") || nameUpper.includes(" A1") || nameUpper.includes(" A2") || nameUpper.includes(" AS") || nameUpper.includes("MASTER")) return false;
 
-        // 2. Blocco Totale: NON possono vedere Adult, Youth, Under 21
-        if (nameNorm.includes("adult") || nameNorm.includes("youth") || nameNorm.includes("under 21")) return false;
+        // 2. Blocco Under 21: MAI per Classe D (richiesta utente 17/03/2026)
+        if (nameNorm.includes("under 21")) return false;
+
+        // 3. Blocco selettivo Adult/Youth: Solo se non è una gara Classe D (o Open C/B)
+        const isDRace = nameNorm.includes(" classe d") || (et.allowed_classes || []).includes("D");
+        if (!isDRace && (nameNorm.includes("adult") || nameNorm.includes("youth"))) return false;
 
         // 3. Under 16: SOLO per le coppie fino alla 14/15 compresa
         if (nameNorm.includes("under 16")) {

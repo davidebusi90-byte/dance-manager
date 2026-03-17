@@ -93,7 +93,7 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
         const age2 = ath2?.birth_date ? getSportsAge(ath2.birth_date, referenceDate) : null;
         if (age1 === null && age2 === null) return null;
         const validAges = [age1, age2].filter((age): age is number => age !== null);
-        return { primary: Math.max(...validAges), secondary: Math.min(...validAges) };
+        return { primary: Math.min(...validAges), secondary: Math.max(...validAges) };
       };
 
       const ageA = getAgeInfo(a.athlete1_id, a.athlete2_id);

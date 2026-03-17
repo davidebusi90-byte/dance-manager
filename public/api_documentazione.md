@@ -31,14 +31,14 @@ Il sistema utilizza la logica **Upsert** basata sulla chiave primaria `code`: se
       "last_name": "Rossi",
       "birth_date": "1990-05-15",
       "gender": "M",
-      "email": "mario.rossi@example.com",
-      "phone": "+393331234567",
       "category": "Over 16",
       "class": "A",
-      "medical_certificate_expiry": "2024-12-31",
-      "notes": "Allergia alla polvere",
-      "responsabili": ["Giuseppe Verdi", "Anna Bianchi"],
-      "qr_code": "https://api.qrserver.com/v1/create-qr-code/?data=CSEN-12345"
+      "resp1": "Giuseppe Verdi",
+      "partner_code": "CSEN-54321",
+      "disc1": "Danze Latino Americane",
+      "class1": "A",
+      "disc2": "Danze Standard",
+      "class2": "B1"
     }
   ]
 }
@@ -46,24 +46,42 @@ Il sistema utilizza la logica **Upsert** basata sulla chiave primaria `code`: se
 
 ### Dettaglio dei Campi:
 
-| Campo | Tipo | Obbligatorietà | Descrizione |
+| Campo | Tipo | Obbligo | Descrizione |
 |---|---|---|---|
-| `code` | `string` | **Obbligatorio** | Codice univoco dell'atleta (Es. matricola). Usato come chiave di Upsert. |
-| `first_name` | `string` | **Obbligatorio** | Nome dell'atleta. |
-| `last_name` | `string` | **Obbligatorio** | Cognome dell'atleta. |
-| `category` | `string` | **Obbligatorio** | Categoria di appartenenza (Es. "Under 15"). |
-| `class` | `string` | **Obbligatorio** | Classe di competenza (Es. "A", "B", "C"). |
-| `birth_date` | `string` (YYYY-MM-DD) | Opzionale | Data di nascita formattata secondo standard ISO. |
-| `gender` | `string` | Opzionale | Sesso (Es. "M", "F", "ND"). |
-| `email` | `string` | Opzionale | Indirizzo email dell'atleta. |
-| `phone` | `string` | Opzionale | Numero di telefono. |
-| `medical_certificate_expiry`| `string` (YYYY-MM-DD)| Opzionale | Data di scadenza del certificato medico. |
-| `responsabili` | `array of strings` | Opzionale | Lista dei nomi dei maestri/insegnanti responsabili della coppia. Es: `["Nome Cognome"]`. |
-| `notes` | `string` | Opzionale | Qualsiasi tipologia di nota accessoria. |
-| `qr_code` | `string` | Opzionale | Stringa con URL o valenze personalizzate per il codice QR univoco dell'atleta. |
+| `code` | `string` | **Sì** | Codice univoco dell'atleta (CID). |
+| `first_name` | `string` | **Sì** | Nome dell'atleta. |
+| `last_name` | `string` | **Sì** | Cognome dell'atleta. |
+| `category` | `string` | **Sì** | Categoria di appartenenza (Es. "19/34"). |
+| `birth_date` | `string` | No | Data di nascita (formato YYYY-MM-DD). |
+| `gender` | `string` | No | Sesso ("M", "F"). |
+| `email` | `string` | No | Indirizzo email. |
+| `resp1` | `string` | No | Nome insegnante/responsabile 1. |
+| `resp2` | `string` | No | Nome insegnante/responsabile 2. |
+| `resp3` | `string` | No | Nome insegnante/responsabile 3. |
+| `resp4` | `string` | No | Nome insegnante/responsabile 4. |
+| `qr_code` | `string` | No | URL o valore per il codice QR dell'atleta. |
+| `partner_code` | `string` | No | CID del partner per la creazione automatica della coppia. |
+| `disc1` | `string` | No | Nome disciplina alternativa 1. |
+| `Disc2` | `string` | No | Nome disciplina alternativa 2. |
+| `Disc3` | `string` | No | Nome disciplina alternativa 3. |
+| `Disc4` | `string` | No | Nome disciplina alternativa 4. |
+| `Disc5` | `string` | No | Nome disciplina alternativa 5. |
+| `Disc6` | `string` | No | Nome disciplina alternativa 6. |
+| `class1` | `string` | No | Classe specifica per disciplina 1. |
+| `class2` | `string` | No | Classe specifica per disciplina 2. |
+| `class3` | `string` | No | Classe specifica per disciplina 3. |
+| `class4` | `string` | No | Classe specifica per disciplina 4. |
+| `class5` | `string` | No | Classe specifica per disciplina 5. |
+| `class6` | `string` | No | Classe specifica per disciplina 6. |
 
-### Campi Ignorati (Non elaborati dal DB):
-Benché l'interfaccia possa storicamente tollerare nel payload chiavi come `partner_first_name`, `partner_last_name`, e `disciplines`, queste chiavi vengono scartate durante la fase di salvataggio. Non è necessario provvedere al loro invio.
+### Note Tecniche:
+- **Calcolo Classe**: Il sistema calcolerà automaticamente la classe generale dell'atleta e della coppia derivandola dalla migliore tra le classi specificate (`class1-6`). Se non viene fornita alcuna classe, il sistema imposterà il valore predefinito "D".
+- **Case Sensitivity**: L'API accetta i nomi dei campi sia in minuscolo che con l'iniziale maiuscola (es. `Disc2` o `disc2`) per massima compatibilità.
+
+### Note sull'Integrazione Coppie:
+Inviando `partner_code` e i campi delle discipline (`disc1`, `class1`, etc.), il sistema creerà o aggiornerà automaticamente la **Coppia** associata. 
+**Importante**: Ogni disciplina può avere la propria classe specifica (es. Classe C per `disc1` e Classe B2 per `disc2`). Il sistema gestirà correttamente i requisiti di iscrizione per ogni singola gara in base a queste informazioni.
+
 
 ## 4. Risposte (HTTP Status Codes)
 

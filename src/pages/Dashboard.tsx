@@ -13,6 +13,7 @@ import CompetitionsList from "@/components/dashboard/CompetitionsList";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { toast } from "sonner";
 
 type ActiveView = "none" | "athletes" | "couples" | "competitions";
 
@@ -40,6 +41,36 @@ export default function Dashboard() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Listen for real-time sync notifications
+  useEffect(() => {
+    const channel = supabase
+      .channel('sync-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sync_logs',
+        },
+        (payload) => {
+          const newLog = payload.new;
+          if (newLog.status === 'success' || newLog.status === 'warning') {
+            toast.success("Sincronizzazione API", {
+              description: newLog.message,
+              duration: 5000,
+            });
+            // Auto-refresh dashboard data
+            refresh();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refresh]);
 
 
   const handleLogout = async () => {

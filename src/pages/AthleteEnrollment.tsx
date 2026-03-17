@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp, Check, ShieldCheck, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getBestClass } from "@/lib/class-utils";
-import { getCategoryMinAge } from "@/lib/category-validation";
+import { getCategoryMinAge, getSportsAge } from "@/lib/category-validation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUserRole } from "@/hooks/use-user-role";
 import { 
@@ -25,6 +25,7 @@ interface Athlete {
   last_name: string;
   category: string;
   class: string;
+  birth_date?: string | null;
 }
 
 interface Couple {
@@ -174,7 +175,13 @@ export default function AthleteEnrollment() {
         } else if (result.data.length === 1) {
           handleSelectAthlete(result.data[0]);
         } else if (result.data.length > 1) {
-          setSearchResults(result.data);
+          const ref = new Date();
+          const sortedResults = [...result.data].sort((a: Athlete, b: Athlete) => {
+            const ageA = a.birth_date ? getSportsAge(a.birth_date, ref) : 100;
+            const ageB = b.birth_date ? getSportsAge(b.birth_date, ref) : 100;
+            return ageA - ageB;
+          });
+          setSearchResults(sortedResults);
         } else {
           toast({
             title: "Atleta non trovato",
@@ -219,7 +226,19 @@ export default function AthleteEnrollment() {
         toast({ title: result.error, variant: "destructive" });
       } else {
         const couplesData = (result.data as Couple[]) || [];
-        setCouples(couplesData);
+        const ref = new Date();
+        const sortedCouples = [...couplesData].sort((a, b) => {
+          const ageA1 = a.athlete1?.birth_date ? getSportsAge(a.athlete1.birth_date, ref) : 100;
+          const ageA2 = a.athlete2?.birth_date ? getSportsAge(a.athlete2.birth_date, ref) : 100;
+          const ageB1 = b.athlete1?.birth_date ? getSportsAge(b.athlete1.birth_date, ref) : 100;
+          const ageB2 = b.athlete2?.birth_date ? getSportsAge(b.athlete2.birth_date, ref) : 100;
+          
+          const minA = Math.min(ageA1, ageA2);
+          const minB = Math.min(ageB1, ageB2);
+          if (minA !== minB) return minA - minB;
+          return Math.max(ageA1, ageA2) - Math.max(ageB1, ageB2);
+        });
+        setCouples(sortedCouples);
 
         // Auto-select if only one active couple
         if (couplesData.length === 1) {

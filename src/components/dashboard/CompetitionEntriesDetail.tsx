@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { isInstructorResponsibleForCoupleByResponsabili } from "@/lib/instructor-utils";
+import { getSportsAge } from "@/lib/category-validation";
 import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
 import { extractTextFromPdf, extractCidsFromText } from "@/lib/pdf-utils";
 import CoupleDetailModal from "./CoupleDetailModal";
@@ -277,10 +278,37 @@ export default function CompetitionEntriesDetail({
   // Not Paid + Late -> Iscritte in ritardo (Mora)
   // Not Paid + Regular -> Confermati ma non pagati
   // Not Paid + Regular -> Confermati ma non pagati
-  const activeEntries = filteredEntries.filter(e => e.status === "registered" || e.status === "confirmed" || e.status === "pending");
+  const sortEntriesByAge = (e1: CompetitionEntry, e2: CompetitionEntry) => {
+    const ref = new Date();
+    const getAge = (a?: Athlete) => (a?.birth_date ? getSportsAge(a.birth_date, ref) : 100);
+    const min1 = Math.min(getAge(e1.couples.athlete1), getAge(e1.couples.athlete2));
+    const min2 = Math.min(getAge(e2.couples.athlete1), getAge(e2.couples.athlete2));
+    if (min1 !== min2) return min1 - min2;
+    const max1 = Math.max(getAge(e1.couples.athlete1), getAge(e1.couples.athlete2));
+    const max2 = Math.max(getAge(e2.couples.athlete1), getAge(e2.couples.athlete2));
+    return max1 - max2;
+  };
+
+  const activeEntries = filteredEntries.filter(e => e.status === "registered" || e.status === "confirmed" || e.status === "pending").sort(sortEntriesByAge);
   const paidEntries = activeEntries.filter(e => e.is_paid);
   const lateUnpaidEntries = activeEntries.filter(e => !e.is_paid && isLateEntry(e.created_at));
   const regularUnpaidEntries = activeEntries.filter(e => !e.is_paid && !isLateEntry(e.created_at));
+
+  const sortCouplesByAge = (c1: any, c2: any) => {
+    const ref = new Date();
+    const getAge = (birthDate?: string | null) => (birthDate ? getSportsAge(birthDate, ref) : 100);
+    const a1_c1 = athletes.find(a => a.id === c1.athlete1_id);
+    const a2_c1 = athletes.find(a => a.id === c1.athlete2_id);
+    const a1_c2 = athletes.find(a => a.id === c2.athlete1_id);
+    const a2_c2 = athletes.find(a => a.id === c2.athlete2_id);
+    
+    const min1 = Math.min(getAge(a1_c1?.birth_date), getAge(a2_c1?.birth_date));
+    const min2 = Math.min(getAge(a1_c2?.birth_date), getAge(a2_c2?.birth_date));
+    if (min1 !== min2) return min1 - min2;
+    const max1 = Math.max(getAge(a1_c1?.birth_date), getAge(a2_c1?.birth_date));
+    const max2 = Math.max(getAge(a1_c2?.birth_date), getAge(a2_c2?.birth_date));
+    return max1 - max2;
+  };
 
   const notRegisteredCouples = allCouples.filter(couple => {
     // Check if couple is already registered for this competition
@@ -299,7 +327,7 @@ export default function CompetitionEntriesDetail({
       return false;
     }
     return true;
-  });
+  }).sort(sortCouplesByAge);
 
   const filteredNotRegisteredCouples = notRegisteredCouples.filter(couple => {
     if (role !== "admin" || selectedInstructorId === "all") return true;
