@@ -21,7 +21,7 @@ type CategoryRule = {
 };
 
 // Based on the provided business rules.
-const CATEGORY_RULES: CategoryRule[] = [
+export const CATEGORY_RULES: CategoryRule[] = [
   { label: "Juvenile 1", minAge: 6, maxAge: 9, displayCode: "6/9" },
   { label: "Juvenile 2", minAge: 10, maxAge: 11, displayCode: "10/11" },
   { label: "Junior 1", minAge: 12, maxAge: 13, displayCode: "12/13" },

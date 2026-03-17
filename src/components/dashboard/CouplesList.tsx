@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { validateCoupleCategory, getSportsAge } from "@/lib/category-validation";
+import { validateCoupleCategory, getSportsAge, CATEGORY_RULES, normalizeCategory } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
 import { useMemo, useState } from "react";
 
@@ -43,6 +43,15 @@ interface CouplesListProps {
   profiles: Profile[];
   onClose: () => void;
 }
+
+const getCategoryLabel = (category: string) => {
+  const norm = normalizeCategory(category);
+  const rule = CATEGORY_RULES.find(r => 
+    r.displayCode.replace("/", "") === norm || 
+    r.label.toLowerCase().replace(/\s+/g, "") === norm
+  );
+  return rule ? rule.label : null;
+};
 
 export default function CouplesList({ couples, athletes, profiles, onClose }: CouplesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -170,11 +179,16 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                         )}
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      <div className="col-span-3 bg-success/5 p-2 rounded-lg border border-success/10 mb-1">
-                        <p className="text-[10px] uppercase font-bold text-success/70 tracking-tight">Categoria Selezionata</p>
-                        <p className="font-bold text-success/90">{couple.category}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="flex-1 min-w-[120px] flex items-center gap-2 bg-success/5 px-3 py-2 rounded-lg border border-success/10">
+                        <p className="text-[10px] uppercase font-bold text-success/70 tracking-tight shrink-0">Categoria:</p>
+                        <p className="font-bold text-success/90">
+                          {couple.category}
+                          {getCategoryLabel(couple.category) && ` (${getCategoryLabel(couple.category)})`}
+                        </p>
                       </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mb-4">
                       <div className="text-center p-1.5 bg-muted/30 rounded-lg border border-border/50">
                         <span className="block text-[8px] font-black text-muted-foreground uppercase mb-0.5">Latino</span>
                         <span className="font-mono text-xs font-bold">{getClassForDiscipline(couple, "latino")}</span>
@@ -189,7 +203,7 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight mb-1">Responsabili Uniti</p>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-tight mb-1">Responsabili</p>
                       <div className="flex flex-wrap gap-1 text-[11px]">
                         {resps.length ? resps.map((name, idx) => (
                           <span key={idx} className={registeredProfileNames.has(name.toLowerCase().trim()) ? "font-bold text-primary" : "text-muted-foreground/70"}>
