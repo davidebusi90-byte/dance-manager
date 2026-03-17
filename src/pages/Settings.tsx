@@ -15,7 +15,6 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [testEmailTo, setTestEmailTo] = useState("");
   const [testingEmail, setTestingEmail] = useState(false);
@@ -233,7 +232,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Excel Sync - Admin Only */}
         {role === "admin" && (
           <>
 
