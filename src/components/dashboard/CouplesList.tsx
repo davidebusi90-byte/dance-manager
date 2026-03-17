@@ -190,7 +190,7 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-4">
                       <div className="text-center p-1.5 bg-muted/30 rounded-lg border border-border/50">
-                        <span className="block text-[8px] font-black text-muted-foreground uppercase mb-0.5">Latino</span>
+                        <span className="block text-[8px] font-black text-muted-foreground uppercase mb-0.5">Latini</span>
                         <span className="font-mono text-xs font-bold">{getClassForDiscipline(couple, "latino")}</span>
                       </div>
                       <div className="text-center p-1.5 bg-muted/30 rounded-lg border border-border/50">
