@@ -11,31 +11,7 @@ import { validateCoupleCategory, getSportsAge, CATEGORY_RULES, normalizeCategory
 import { getBestClass } from "@/lib/class-utils";
 import { useMemo, useState } from "react";
 
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  birth_date: string | null;
-  responsabili: string[] | null;
-  gender?: string | null;
-}
-
-interface Couple {
-  id: string;
-  category: string;
-  class: string;
-  disciplines: string[];
-  athlete1_id: string;
-  athlete2_id: string;
-  discipline_info?: Record<string, string> | null;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-}
+import { Athlete, Couple, Profile } from "@/types/dashboard";
 
 interface CouplesListProps {
   couples: Couple[];
@@ -58,20 +34,39 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
   const athleteMap = useMemo(() => new Map(athletes.map(a => [a.id, a])), [athletes]);
 
   const getClassForDiscipline = (couple: Couple, key: string) => {
-    if (couple.discipline_info && couple.discipline_info[key]) return couple.discipline_info[key];
-    const mappedKey = key === "show_dance_sa" || key === "show_dance_classic" ? "show_dance" : key;
+    const a1 = athleteMap.get(couple.athlete1_id);
+    const a2 = athleteMap.get(couple.athlete2_id);
+    
+    // Get class for this discipline from both athletes
+    const class1 = a1 && 'discipline_info' in a1 ? (a1 as any).discipline_info?.[key] : null;
+    const class2 = a2 && 'discipline_info' in a2 ? (a2 as any).discipline_info?.[key] : null;
+    
+    // Fallback to couple record if athlete info is missing
+    const coupleClass = couple.discipline_info && couple.discipline_info[key] 
+      ? couple.discipline_info[key] 
+      : (couple.disciplines?.includes(key === "show_dance_sa" || key === "show_dance_classic" ? "show_dance" : key) ? couple.class : "-");
 
-    if (key === "combinata" && couple.disciplines?.includes("combinata")) {
-      const combClass = (couple.discipline_info && couple.discipline_info[key]) || couple.class || "D";
-      const latClass = couple.discipline_info?.["latino"];
-      const stdClass = couple.discipline_info?.["standard"];
-      let resolvedClass = combClass;
-      if (latClass) resolvedClass = getBestClass(resolvedClass, latClass);
-      if (stdClass) resolvedClass = getBestClass(resolvedClass, stdClass);
-      return resolvedClass;
+    // special handling for combinata
+    if (key === "combinata") {
+      let resolved = class1 || class2 || coupleClass || "D";
+      if (class1) resolved = getBestClass(resolved, class1);
+      if (class2) resolved = getBestClass(resolved, class2);
+      return resolved === "-" ? "D" : resolved;
     }
 
-    return couple.disciplines?.includes(mappedKey) ? (couple.class || "-") : "-";
+    // Pick best class between athlete 1, athlete 2, and the couple record
+    let finalClass = coupleClass;
+    if (class1 && class1 !== "-") finalClass = finalClass === "-" ? class1 : getBestClass(finalClass, class1);
+    if (class2 && class2 !== "-") finalClass = finalClass === "-" ? class2 : getBestClass(finalClass, class2);
+    
+    // LAST RESORT FALLBACK: If we still don't have a class for this discipline, 
+    // but the athletes have a general 'class' saved, use that.
+    if (finalClass === "-") {
+      if (a1 && (a1 as any).class && (a1 as any).class !== "D") finalClass = (a1 as any).class;
+      if (a2 && (a2 as any).class && (a2 as any).class !== "D") finalClass = finalClass === "-" ? (a2 as any).class : getBestClass(finalClass, (a2 as any).class);
+    }
+    
+    return finalClass || "-";
   };
 
   const registeredProfileNames = useMemo(() =>

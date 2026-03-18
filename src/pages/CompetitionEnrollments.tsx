@@ -10,16 +10,7 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
 import EditCompetitionDialog from "@/components/EditCompetitionDialog";
 
-interface Competition {
-  id: string;
-  name: string;
-  date: string;
-  end_date?: string | null;
-  location?: string | null;
-  registration_deadline?: string | null;
-  late_fee_deadline?: string | null;
-  description?: string | null;
-}
+import { Competition } from "@/types/dashboard";
 
 interface EventType {
   id?: string;
@@ -144,15 +135,16 @@ export default function CompetitionEnrollments() {
   const fetchData = async (isRefetch = false) => {
     if (!isRefetch) setLoading(true);
     try {
-      const competitionsRes = await supabase
-        .from("competitions")
-        .select("*")
-        .eq("is_deleted", false)
-        .order("date", { ascending: true });
-
-      const eventTypesRes = await supabase
-        .from("competition_event_types")
-        .select("*");
+      const [competitionsRes, eventTypesRes] = await Promise.all([
+        (supabase
+          .from("competitions")
+          .select("*")
+          .eq("is_deleted", false)
+          .order("date", { ascending: true }) as any),
+        (supabase
+          .from("competition_event_types")
+          .select("*") as any)
+      ]);
 
       if (competitionsRes.data) {
         // Extra safety: deduplicate by name and date in case duplicates already exist in DB

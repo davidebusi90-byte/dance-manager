@@ -14,6 +14,7 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { toast } from "sonner";
+import { Athlete, Couple, Profile } from "@/types/dashboard";
 
 type ActiveView = "none" | "athletes" | "couples" | "competitions";
 
@@ -317,6 +318,7 @@ export default function Dashboard() {
         {activeView === "athletes" && (
           <AthletesList
             athletes={athletes}
+            allAthletes={allAthletes}
             couples={couples}
             profiles={profiles}
             onClose={() => setActiveView("none")}

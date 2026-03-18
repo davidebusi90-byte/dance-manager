@@ -131,11 +131,20 @@ serve(async (req) => {
 
             // Collect disciplines first to derive class if missing
             const disciplinesForAthlete: { discipline: string; class: string }[] = [];
+            const disciplineInfo: Record<string, string> = {};
             for (let i = 1; i <= 6; i++) {
                 const disc = (athlete as any)[`disc${i}`] || (athlete as any)[`Disc${i}`];
                 const cls = (athlete as any)[`class${i}`] || (athlete as any)[`Class${i}`];
                 if (disc && cls) {
                     disciplinesForAthlete.push({ discipline: disc, class: cls });
+                    
+                    const discName = disc.toLowerCase();
+                    let key = discName;
+                    if (discName.includes("latino")) key = "latino";
+                    else if (discName.includes("standard")) key = "standard";
+                    else if (discName.includes("combinata")) key = "combinata";
+                    
+                    disciplineInfo[key] = disciplineInfo[key] ? getBestClass(disciplineInfo[key], cls.toUpperCase()) : cls.toUpperCase();
                 }
             }
 
@@ -161,6 +170,7 @@ serve(async (req) => {
                     phone: athlete.phone || null,
                     category: athlete.category,
                     class: derivedClass.toUpperCase(),
+                    discipline_info: disciplineInfo,
                     medical_certificate_expiry: athlete.medical_certificate_expiry || null,
                     responsabili: responsabili.length > 0 ? responsabili : null,
                     notes: athlete.notes || null,

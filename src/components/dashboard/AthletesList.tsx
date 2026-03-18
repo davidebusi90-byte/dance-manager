@@ -9,41 +9,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
 import { validateCategoryMatch, formatCategoryDisplay, getSportsAge } from "@/lib/category-validation";
+import AthleteDetailModal from "./AthleteDetailModal";
 
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  category: string;
-  class: string;
-  birth_date: string | null;
-  medical_certificate_expiry: string | null;
-  instructor_id: string | null;
-  responsabili?: string[];
-  gender?: string | null;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-}
-
-interface Couple {
-  athlete1_id: string;
-  athlete2_id: string;
-}
+import { Athlete, Couple, Profile } from "@/types/dashboard";
 
 interface AthletesListProps {
   athletes: Athlete[];
+  allAthletes: Athlete[];
   couples: Couple[];
   profiles: Profile[];
   onClose: () => void;
 }
 
-export default function AthletesList({ athletes, couples, profiles, onClose }: AthletesListProps) {
+export default function AthletesList({ athletes, allAthletes, couples, profiles, onClose }: AthletesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
@@ -192,7 +172,11 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
                 }
 
                 return (
-                  <div key={athlete.id} className={`p-4 rounded-xl border border-border/50 shadow-sm transition-all hover:shadow-md ${cardBg}`}>
+                  <div 
+                    key={athlete.id} 
+                    onClick={() => setSelectedAthlete(athlete)}
+                    className={`p-4 rounded-xl border border-border/50 shadow-sm transition-all hover:shadow-md cursor-pointer active:scale-[0.98] ${cardBg}`}
+                  >
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-bold text-lg text-primary/90">{athlete.first_name} {athlete.last_name}</p>
@@ -272,7 +256,11 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
                     }
 
                     return (
-                      <tr key={athlete.id} className={`${rowBg} transition-colors duration-200`}>
+                      <tr 
+                        key={athlete.id} 
+                        onClick={() => setSelectedAthlete(athlete)}
+                        className={`${rowBg} transition-colors duration-200 cursor-pointer group`}
+                      >
                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{athlete.code}</td>
                         <td className="px-4 py-3 font-semibold text-primary/80">{athlete.first_name} {athlete.last_name}</td>
                         <td className="px-4 py-3">
@@ -326,6 +314,12 @@ export default function AthletesList({ athletes, couples, profiles, onClose }: A
           </div>
         )}
       </CardContent>
+      <AthleteDetailModal 
+        athlete={selectedAthlete} 
+        allAthletes={allAthletes}
+        couples={couples}
+        onClose={() => setSelectedAthlete(null)} 
+      />
     </Card>
   );
 }

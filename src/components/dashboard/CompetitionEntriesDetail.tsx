@@ -20,6 +20,7 @@ import { isInstructorResponsibleForCoupleByResponsabili } from "@/lib/instructor
 import { getSportsAge } from "@/lib/category-validation";
 import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
 import { extractTextFromPdf, extractCidsFromText } from "@/lib/pdf-utils";
+import { getBestClass } from "@/lib/class-utils";
 import CoupleDetailModal from "./CoupleDetailModal";
 import {
   Dialog,
@@ -40,14 +41,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
-interface Competition {
-  id: string;
-  name: string;
-  date: string;
-  registration_deadline: string | null;
-  late_fee_deadline: string | null;
-}
+import { Athlete, Couple, Profile, Competition } from "@/types/dashboard";
 
 interface EventType {
   id: string;
@@ -57,48 +59,20 @@ interface EventType {
   max_age: number | null;
 }
 
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  gender?: string | null;
-  instructor_id?: string | null;
-  responsabili?: string[] | null;
-  birth_date?: string | null;
-}
-
-
 interface CompetitionEntry {
   id: string;
   couple_id: string;
   status: string;
   created_at: string;
   is_paid: boolean;
-  couples: {
-    id: string;
-    category: string;
-    class: string;
-    disciplines?: string[];
-    responsabili?: string[];
-    athlete1_id: string;
-    athlete2_id: string;
-    athlete1?: Athlete;
-    athlete2?: Athlete;
-  };
+  couples: Couple;
   event_type_ids: string[];
-}
-
-interface Profile {
-  id: string;
-  user_id?: string;
-  full_name: string;
 }
 
 interface CompetitionEntriesDetailProps {
   competition: Competition;
   athletes: Athlete[];
-  allCouples: any[];
+  allCouples: Couple[];
   profiles: Profile[];
   onClose: () => void;
 }
@@ -160,7 +134,8 @@ export default function CompetitionEntriesDetail({
               gender,
               instructor_id,
               responsabili,
-              birth_date
+              birth_date,
+              discipline_info
             ),
             athlete2:athletes!couples_athlete2_id_fkey (
               id,
@@ -170,7 +145,8 @@ export default function CompetitionEntriesDetail({
               gender,
               instructor_id,
               responsabili,
-              birth_date
+              birth_date,
+              discipline_info
             )
           )
         `)
@@ -373,10 +349,27 @@ export default function CompetitionEntriesDetail({
         const c = e.couples;
         const a1 = getAthlete(e, 1);
         const a2 = getAthlete(e, 2);
+        
+        // Derive best class for the couple from athletes
+        const disciplines = ["latino", "standard", "combinata"];
+        let bestClass = c.class;
+        disciplines.forEach(d => {
+          const class1 = a1?.discipline_info?.[d];
+          const class2 = a2?.discipline_info?.[d];
+          if (class1) bestClass = getBestClass(bestClass, class1);
+          if (class2) bestClass = getBestClass(bestClass, class2);
+        });
+
+        // Last resort fallback for report
+        if (bestClass === "D") {
+          if (a1?.class && a1.class !== "D") bestClass = a1.class;
+          if (a2?.class && a2.class !== "D") bestClass = bestClass === "D" ? a2.class : getBestClass(bestClass, a2.class);
+        }
+
         return {
           "Stato": statusLabel,
           "Categoria": c.category,
-          "Classe": c.class,
+          "Classe": bestClass,
           "Cavaliere": a1 ? `${a1.first_name} ${a1.last_name}` : "-",
           "Dama": a2 ? `${a2.first_name} ${a2.last_name}` : "-",
           "Codice Cav.": a1?.code || "-",
@@ -506,6 +499,22 @@ export default function CompetitionEntriesDetail({
     const athlete2 = getAthlete(entry, 2);
     const isLate = isLateEntry(entry.created_at);
 
+    // Derive best class from athletes
+    const disciplines = ["latino", "standard", "combinata"];
+    let bestClass = couple.class;
+    disciplines.forEach(d => {
+      const class1 = athlete1?.discipline_info?.[d];
+      const class2 = athlete2?.discipline_info?.[d];
+      if (class1) bestClass = getBestClass(bestClass, class1);
+      if (class2) bestClass = getBestClass(bestClass, class2);
+    });
+
+    // Last resort fallback for table row
+    if (bestClass === "D") {
+      if (athlete1?.class && athlete1.class !== "D") bestClass = athlete1.class;
+      if (athlete2?.class && athlete2.class !== "D") bestClass = bestClass === "D" ? athlete2.class : getBestClass(bestClass, athlete2.class);
+    }
+
     const enrolledEventIds = entry.event_type_ids || [];
     const entryEventNames = enrolledEventIds
       .map(id => eventTypes.find(et => et.id === id)?.event_name)
@@ -539,7 +548,7 @@ export default function CompetitionEntriesDetail({
         <td className="text-center print:w-[15%] w-[15%]">
           <div className="flex flex-col items-center">
             <span className="text-sm font-bold">{couple.category}</span>
-            <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</span>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {bestClass}</span>
           </div>
         </td>
         <td className="max-w-[300px] print:max-w-none hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">
@@ -657,50 +666,88 @@ export default function CompetitionEntriesDetail({
             </p>
           </div>
           <div className="flex items-center gap-2 print:hidden">
-            {role === "admin" && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={handleSendReport}
-                  disabled={isSendingReport}
-                  className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm"
-                >
-                  <Mail className="w-4 h-4" />
-                  {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
-                </Button>
-                <div className="flex items-center gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handlePdfComparison}
-                    className="hidden"
-                  />
+            {/* Desktop Buttons */}
+            <div className="hidden xl:flex items-center gap-2">
+              {role === "admin" && (
+                <>
                   <Button
                     variant="outline"
+                    onClick={handleSendReport}
+                    disabled={isSendingReport}
                     className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={comparingPdf}
                   >
-                    {comparingPdf ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Search className="w-4 h-4" />
-                    )}
-                    {comparingPdf ? "Confronto..." : "Confronta con PDF"}
+                    <Mail className="w-4 h-4" />
+                    {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
                   </Button>
-                </div>
-              </>
-            )}
-            <Button variant="outline" onClick={generateReport} className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
-              <FileSpreadsheet className="w-4 h-4" />
-              Genera Report Excel
-            </Button>
-            <Button variant="outline" onClick={() => window.print()} className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
-              <Printer className="w-4 h-4" />
-              Stampa / PDF
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handlePdfComparison}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={comparingPdf}
+                    >
+                      {comparingPdf ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Search className="w-4 h-4" />
+                      )}
+                      {comparingPdf ? "Confronto..." : "Confronta con PDF"}
+                    </Button>
+                  </div>
+                </>
+              )}
+              <Button variant="outline" onClick={generateReport} className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
+                <FileSpreadsheet className="w-4 h-4" />
+                Genera Report Excel
+              </Button>
+              <Button variant="outline" onClick={() => window.print()} className="gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
+                <Printer className="w-4 h-4" />
+                Stampa / PDF
+              </Button>
+            </div>
+
+            {/* Mobile/Tablet Dropdown */}
+            <div className="xl:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    Azioni
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {role === "admin" && (
+                    <>
+                      <DropdownMenuItem onClick={handleSendReport} disabled={isSendingReport} className="gap-2">
+                        <Mail className="w-4 h-4" />
+                        {isSendingReport ? "Invio in corso..." : "Invia Report Email"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => fileInputRef.current?.click()} disabled={comparingPdf} className="gap-2">
+                        <Search className="w-4 h-4" />
+                        Confronta con PDF
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={generateReport} className="gap-2">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    Genera Report Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.print()} className="gap-2">
+                    <Printer className="w-4 h-4" />
+                    Stampa / PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
               <X className="w-4 h-4" />
             </Button>
           </div>

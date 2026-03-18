@@ -17,36 +17,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface Competition {
-  id: string;
-  name: string;
-  date: string;
-  end_date: string | null;
-  location: string | null;
-  registration_deadline: string | null;
-  late_fee_deadline: string | null;
-  description: string | null;
-  is_completed?: boolean;
-}
-
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  instructor_id?: string | null;
-  responsabili?: string[] | null;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-}
+import { Athlete, Couple, Profile, Competition } from "@/types/dashboard";
 
 interface CompetitionsListProps {
   competitions: Competition[];
   athletes?: Athlete[];
-  couples?: any[];
+  couples?: Couple[];
   profiles?: Profile[];
   onClose: () => void;
   onRefresh: () => void;

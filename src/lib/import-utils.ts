@@ -207,6 +207,22 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
 
         for (const [code, a] of excelAthleteMap) {
             const dbAthlete = dbAthleteMap.get(code);
+            const athleteDisciplineInfo: Record<string, string> = {};
+            a.disciplines.forEach((d: any) => {
+                const key = d.raw.toLowerCase().includes("south american") ? "show_dance_sa" :
+                            d.raw.toLowerCase().includes("classic show dance") ? "show_dance_classic" :
+                            d.discipline;
+                athleteDisciplineInfo[key] = athleteDisciplineInfo[key] 
+                    ? getBestClass(athleteDisciplineInfo[key], d.class) 
+                    : d.class;
+            });
+
+            // Derive Combinata for athlete if both LAT and STD are present
+            if (athleteDisciplineInfo["combinata"] || (athleteDisciplineInfo["standard"] && athleteDisciplineInfo["latino"])) {
+                const resolved = getBestClass(athleteDisciplineInfo["combinata"] || "D", athleteDisciplineInfo["latino"] || "D");
+                athleteDisciplineInfo["combinata"] = getBestClass(resolved, athleteDisciplineInfo["standard"] || "D");
+            }
+
             const newData = {
                 code,
                 first_name: a.firstName,
@@ -219,7 +235,8 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
                 medical_certificate_expiry: a.medicalExpiry,
                 instructor_id: instructorId,
                 responsabili: a.responsabili,
-            };
+                discipline_info: athleteDisciplineInfo,
+            } as any;
 
             if (!dbAthlete) {
                 // New athlete
@@ -270,10 +287,11 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
         }
 
         // --- STEP 3: Re-fetch all active athletes to get current IDs ---
-        const { data: activeAthletes } = await (supabase
+        const query: any = supabase
             .from("athletes")
             .select("id, code, is_deleted")
-            .eq("is_deleted", false) as any);
+            .eq("is_deleted", false);
+        const { data: activeAthletes } = await query;
 
         const activeCodeToId = new Map<string, string>(
             ((activeAthletes || []) as any[]).map((a: any) => [a.code, a.id])

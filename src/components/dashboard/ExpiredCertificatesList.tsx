@@ -2,13 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  medical_certificate_expiry: string | null;
-}
+import { Athlete } from "@/types/dashboard";
 
 interface ExpiredCertificatesListProps {
   athletes: Athlete[];
