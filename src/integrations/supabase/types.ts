@@ -68,6 +68,8 @@ export type Database = {
           responsabili: string[] | null
           updated_at: string
           gender: string | null
+          discipline_info: Json | null
+          is_deleted: boolean
         }
         Insert: {
           birth_date?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           name: string
           registration_deadline: string | null
           updated_at: string
+          is_deleted: boolean
         }
         Insert: {
           created_at?: string

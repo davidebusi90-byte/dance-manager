@@ -264,21 +264,23 @@ export default function Anomalies() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} aria-label="Torna alla dashboard">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-warning/10 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-warning" />
+        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} aria-label="Torna alla dashboard" className="shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-warning/10 rounded-lg sm:rounded-xl flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-warning" />
+              </div>
+              <h1 className="text-lg sm:text-xl font-display font-bold">Anomalie</h1>
             </div>
-            <h1 className="text-xl font-display font-bold">Anomalie</h1>
           </div>
-          <div className="flex gap-2 ml-2">
-            <Badge variant="destructive">
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            <Badge variant="destructive" className="text-[10px] sm:text-xs">
               {anomalies.length} anomalie coppie
             </Badge>
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-[10px] sm:text-xs">
               {orphanAthletes.length} atleti senza partner
             </Badge>
           </div>
@@ -300,20 +302,22 @@ export default function Anomalies() {
           </Card>
         ) : (
           <Tabs defaultValue="all" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="all">
-                Tutte ({anomalies.length})
-              </TabsTrigger>
-              <TabsTrigger value="category">
-                Categoria/Età ({categoryAnomalies.length})
-              </TabsTrigger>
-              <TabsTrigger value="certificates">
-                Certificati ({certificateAnomalies.length})
-              </TabsTrigger>
-              <TabsTrigger value="orphans">
-                Senza Partner ({orphanAthletes.length})
-              </TabsTrigger>
-            </TabsList>
+            <div className="w-full overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none">
+              <TabsList className="w-max sm:w-auto inline-flex whitespace-nowrap">
+                <TabsTrigger value="all">
+                  Tutte ({anomalies.length})
+                </TabsTrigger>
+                <TabsTrigger value="category">
+                  Categoria/Età ({categoryAnomalies.length})
+                </TabsTrigger>
+                <TabsTrigger value="certificates">
+                  Certificati ({certificateAnomalies.length})
+                </TabsTrigger>
+                <TabsTrigger value="orphans">
+                  Senza Partner ({orphanAthletes.length})
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="all">
               <AnomaliesList anomalies={anomalies} />
@@ -360,9 +364,9 @@ function AnomaliesList({
     <div className="space-y-4">
       {anomalies.map((anomaly) => (
         <Card key={anomaly.couple.id} className="border-warning/30 bg-warning/5">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-medium">
+          <CardHeader className="pb-3 px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="text-sm sm:text-base font-medium">
                 {(() => {
                   // Ensure Male is shown first
                   let first = anomaly.athlete1;
@@ -374,8 +378,8 @@ function AnomaliesList({
                 })()}
               </CardTitle>
               <div className="flex gap-2">
-                <Badge variant="outline">{anomaly.couple.category}</Badge>
-                <Badge variant="secondary">{anomaly.couple.class}</Badge>
+                <Badge variant="outline" className="text-[10px] sm:text-xs">{anomaly.couple.category}</Badge>
+                <Badge variant="secondary" className="text-[10px] sm:text-xs">{anomaly.couple.class}</Badge>
               </div>
             </div>
           </CardHeader>
@@ -457,20 +461,20 @@ function OrphansList({ athletes }: { athletes: Athlete[] }) {
 
           return (
             <Card key={athlete.id} className={bgColorClass}>
-              <CardContent className="py-4 flex items-center justify-between">
-                <div>
-                  <p className="font-bold">{athlete.first_name} {athlete.last_name}</p>
-                  <div className="flex gap-2 mt-1">
-                    <Badge variant="outline">{athlete.code}</Badge>
-                    <Badge variant="secondary">{athlete.category}</Badge>
+              <CardContent className="py-4 px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <p className="font-bold text-sm sm:text-base">{athlete.first_name} {athlete.last_name}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-[10px] sm:text-xs">{athlete.code}</Badge>
+                    <Badge variant="secondary" className="text-[10px] sm:text-xs">{athlete.category}</Badge>
                     {athlete.birth_date && (
-                      <Badge variant="outline" className="font-mono">
+                      <Badge variant="outline" className="font-mono text-[10px] sm:text-xs">
                         {new Date(athlete.birth_date).toLocaleDateString("it-IT")}
                       </Badge>
                     )}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")}>
+                <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="w-full sm:w-auto text-xs sm:text-sm">
                   Assegna Partner
                 </Button>
               </CardContent>

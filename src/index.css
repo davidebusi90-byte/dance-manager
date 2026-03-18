@@ -199,6 +199,15 @@
   .data-table tbody tr {
     @apply transition-colors hover:bg-secondary/30;
   }
+
+  .scrollbar-none {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
 }
 
 @media print {

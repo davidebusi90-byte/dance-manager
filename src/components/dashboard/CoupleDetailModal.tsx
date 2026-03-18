@@ -152,8 +152,8 @@ export default function CoupleDetailModal({
                         </div>
                     )}
 
-                    {/* Enrolled Events - Hidden on Mobile */}
-                    <div className="space-y-2 hidden sm:block">
+                    {/* Enrolled Events */}
+                    <div className="space-y-2">
                         <h3 className="font-semibold text-sm text-muted-foreground">Gare Selezionate</h3>
                         {(enrolledEvents.length > 0 || missingEvents.length > 0) ? (
                             <div className="flex flex-wrap gap-2">

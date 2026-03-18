@@ -528,9 +528,9 @@ export default function CompetitionEntriesDetail({
     return (
       <tr
         key={entry.id}
-        className={`${isLate && showLateFlag ? "bg-warning/10" : ""} ${role === "admin" ? "cursor-pointer hover:bg-muted/50" : ""} transition-colors print:break-inside-avoid break-inside-avoid`}
+        className={`${isLate && showLateFlag ? "bg-warning/10" : ""} cursor-pointer hover:bg-muted/50 transition-colors print:break-inside-avoid break-inside-avoid`}
         style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}
-        onClick={() => role === "admin" && setSelectedEntry(entry)}
+        onClick={() => setSelectedEntry(entry)}
       >
         <td className="font-medium py-3 px-2 align-middle print:w-[35%] w-[35%]">
           <div className="flex items-center gap-2">

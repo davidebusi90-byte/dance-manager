@@ -1,34 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
+import { getBestClass } from "../_shared/class-utils.ts";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-api-key",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-// Map for best class order (Aligned with src/lib/class-utils.ts)
-const CLASS_ORDER: Record<string, number> = {
-    "MASTER": 0,
-    "AS": 1,
-    "A": 2,
-    "A1": 3,
-    "A2": 4,
-    "B": 5,
-    "B1": 5,
-    "B2": 6,
-    "B3": 7,
-    "C": 9,
-    "D": 12,
-    "S": 13,
-};
-
-const getBestClass = (class1: string, class2: string): string => {
-    if (!class1) return class2 || "D";
-    if (!class2) return class1 || "D";
-    const ord1 = CLASS_ORDER[class1.toUpperCase()] || 99;
-    const ord2 = CLASS_ORDER[class2.toUpperCase()] || 99;
-    return ord1 <= ord2 ? class1 : class2;
 };
 
 // Expected payload structure
