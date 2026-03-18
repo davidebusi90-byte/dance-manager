@@ -193,8 +193,8 @@ export default function Dashboard() {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="w-6 h-6" />
+                <Button variant="ghost" className="h-12 w-12">
+                  <Menu className="w-9 h-9" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[80vw] sm:w-[350px]">
