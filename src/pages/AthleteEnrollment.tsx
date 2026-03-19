@@ -621,29 +621,27 @@ export default function AthleteEnrollment() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex gap-2">
+                  {/* Visually hidden but functional input for QR scanner (keyboard wedge) */}
+                  <div className="absolute opacity-0 -z-50 pointer-events-none overflow-hidden h-0 w-0">
                     <Input
                       ref={cidInputRef}
-                      placeholder="Scansiona QR o inserisci CID..."
+                      placeholder="Scansiona QR..."
                       value={cidCode}
                       onChange={(e) => setCidCode(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleCidLookup()}
-                      className="text-lg py-6 text-center font-bold tracking-widest placeholder:font-normal placeholder:tracking-normal"
                       autoFocus
                     />
-                    <Button onClick={handleCidLookup} disabled={loading} className="h-auto px-4">
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
-                    </Button>
                   </div>
                   
-                  <div className="bg-primary/5 rounded-xl p-8 border border-primary/10 flex flex-col items-center text-center gap-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Search className="w-8 h-8 text-primary" />
+                  <div className="bg-primary/5 rounded-xl p-12 border-2 border-dashed border-primary/20 flex flex-col items-center text-center gap-6 cursor-pointer"
+                       onClick={() => cidInputRef.current?.focus()}>
+                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                      <Search className="w-10 h-10 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <p className="font-bold text-lg">In attesa di scansione</p>
-                      <p className="text-sm text-muted-foreground">
-                        Posiziona il QR code dell'atleta sotto il lettore o inserisci manualmente il codice CID.
+                      <p className="font-bold text-xl uppercase tracking-wider">In attesa di scansione</p>
+                      <p className="text-muted-foreground">
+                        Posiziona il QR code dell'atleta sotto il lettore per procedere.
                       </p>
                     </div>
                   </div>
