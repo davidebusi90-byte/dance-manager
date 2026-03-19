@@ -789,20 +789,22 @@ export default function AthleteEnrollment() {
                       </div>
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedCouple(null);
-                        setSelectedCompetitions(new Set());
-                        setSelectedRaces({});
-                        setExpandedCompetitions(new Set());
-                        setStep("enrollment"); // Reset to enrollment step to pick couple
-                      }}
-                      className="text-primary hover:text-primary hover:bg-primary/10 shrink-0 self-start sm:self-center ml-auto sm:ml-0"
-                    >
-                      Cambia Partner
-                    </Button>
+                    {userRole === "admin" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCouple(null);
+                          setSelectedCompetitions(new Set());
+                          setSelectedRaces({});
+                          setExpandedCompetitions(new Set());
+                          setStep("enrollment"); // Reset to enrollment step to pick couple
+                        }}
+                        className="text-primary hover:text-primary hover:bg-primary/10 shrink-0 self-start sm:self-center ml-auto sm:ml-0"
+                      >
+                        Cambia Partner
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
 
