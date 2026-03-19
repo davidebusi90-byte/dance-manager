@@ -26,6 +26,7 @@ interface Athlete {
   category: string;
   class: string;
   birth_date?: string | null;
+  qr_code?: string | null;
 }
 
 interface Couple {
@@ -209,9 +210,11 @@ export default function AthleteEnrollment() {
           });
         }
       } else {
-        // Public user: must match CID exactly
+        // Public user: must match CID or QR Code exactly
         const found = (result.data || []).find(
-          (a: Athlete) => a.code.toLowerCase() === trimmed.toLowerCase()
+          (a: Athlete) => 
+            a.code.toLowerCase() === trimmed.toLowerCase() || 
+            (a.qr_code && a.qr_code.toLowerCase() === trimmed.toLowerCase())
         );
 
         if (found) {
@@ -617,15 +620,32 @@ export default function AthleteEnrollment() {
                   </Button>
                 </div>
               ) : (
-                <div className="bg-primary/5 rounded-xl p-8 border border-primary/10 flex flex-col items-center text-center gap-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Search className="w-8 h-8 text-primary" />
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      ref={cidInputRef}
+                      placeholder="Scansiona QR o inserisci CID..."
+                      value={cidCode}
+                      onChange={(e) => setCidCode(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleCidLookup()}
+                      className="text-lg py-6 text-center font-bold tracking-widest placeholder:font-normal placeholder:tracking-normal"
+                      autoFocus
+                    />
+                    <Button onClick={handleCidLookup} disabled={loading} className="h-auto px-4">
+                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5" />}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <p className="font-bold text-lg">In attesa di scansione</p>
-                    <p className="text-sm text-muted-foreground">
-                      Posiziona il QR code dell'atleta sotto il lettore per accedere automaticamente al modulo di iscrizione.
-                    </p>
+                  
+                  <div className="bg-primary/5 rounded-xl p-8 border border-primary/10 flex flex-col items-center text-center gap-4">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Search className="w-8 h-8 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="font-bold text-lg">In attesa di scansione</p>
+                      <p className="text-sm text-muted-foreground">
+                        Posiziona il QR code dell'atleta sotto il lettore o inserisci manualmente il codice CID.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
