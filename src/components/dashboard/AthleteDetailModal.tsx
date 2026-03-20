@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,8 +15,12 @@ import {
   Users, 
   CheckCircle2, 
   AlertCircle,
-  Clock
+  Clock,
+  Trash2
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/use-user-role";
+import { useToast } from "@/hooks/use-toast";
 import { formatCategoryDisplay, getSportsAge } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
 
@@ -29,6 +34,10 @@ interface AthleteDetailModalProps {
 }
 
 export default function AthleteDetailModal({ athlete, allAthletes = [], couples = [], onClose }: AthleteDetailModalProps) {
+  const { role } = useUserRole();
+  const { toast } = useToast();
+  const [isDeactivating, setIsDeactivating] = useState(false);
+
   if (!athlete) return null;
 
   // We use the same 'bacino' (pool) of data: we check the athlete first,
@@ -280,6 +289,41 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
                   </Badge>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Deactivation Button (Admin Only) */}
+          {role === "admin" && !athlete.is_deleted && (
+            <div className="pt-6 mt-4 border-t border-destructive/10">
+              <button
+                onClick={async () => {
+                  if (!confirm("Sei sicuro di voler disattivare questo atleta? Verrà spostato nella sezione 'Atleti Disattivati'.")) return;
+                  setIsDeactivating(true);
+                  try {
+                    const { error } = await supabase
+                      .from("athletes")
+                      .update({ is_deleted: true } as any)
+                      .eq("id", athlete.id);
+                    
+                    if (error) throw error;
+                    
+                    toast({ title: "Atleta disattivato", description: "L'atleta è stato spostato tra quelli disattivati." });
+                    onClose();
+                    // Reloader logic would naturally be handled by real-time or page refresh if needed, 
+                    // but for now we close and assume the parent will refresh if it has listeners.
+                    window.location.reload(); 
+                  } catch (err: any) {
+                    toast({ title: "Errore", description: err.message, variant: "destructive" });
+                  } finally {
+                    setIsDeactivating(false);
+                  }
+                }}
+                disabled={isDeactivating}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-destructive/5 text-destructive border border-destructive/20 hover:bg-destructive/10 transition-all font-semibold"
+              >
+                <Trash2 className="w-4 h-4" />
+                {isDeactivating ? "Disattivazione..." : "Disattiva Atleta"}
+              </button>
             </div>
           )}
         </div>

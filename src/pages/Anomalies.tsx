@@ -21,6 +21,7 @@ interface Athlete {
   medical_certificate_expiry: string | null;
   responsabili: string[] | null;
   gender?: string | null;
+  instructor_id?: string | null;
 }
 
 interface Couple {
@@ -30,6 +31,13 @@ interface Couple {
   athlete1_id: string;
   athlete2_id: string;
   is_active: boolean;
+  instructor_id?: string | null;
+}
+
+interface Profile {
+  id: string;
+  user_id: string;
+  full_name: string;
 }
 
 
@@ -44,7 +52,6 @@ interface CoupleAnomaly {
 
 export default function Anomalies() {
   const [anomalies, setAnomalies] = useState<CoupleAnomaly[]>([]);
-  const [orphanAthletes, setOrphanAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -66,13 +73,22 @@ export default function Anomalies() {
       if (profilesRes.error) throw profilesRes.error;
 
       const rawAthletes = athletesRes.data || [];
-      const rawCouples = (couplesRes.data as unknown) || [];
+      const rawCouples = (couplesRes.data as unknown as Couple[]) || [];
 
-      let fetchedAthletes = [...rawAthletes];
+      // 1. Deduplicate ALL athletes by code (standardize)
+      const uniqueAthletesMap = new Map<string, Athlete>();
+      rawAthletes.forEach((a) => {
+        if (!uniqueAthletesMap.has(a.code)) {
+          uniqueAthletesMap.set(a.code, a);
+        }
+      });
+      const uniqueAthletes = Array.from(uniqueAthletesMap.values());
+
+      let fetchedAthletes = [...uniqueAthletes];
       let fetchedCouples = [...rawCouples];
 
       if (role !== "admin" && role !== "supervisor") {
-        const currentUserProfile = (profilesRes.data as unknown[]).find(p => p.user_id === userId);
+        const currentUserProfile = (profilesRes.data as unknown as Profile[]).find(p => p.user_id === userId);
         if (currentUserProfile) {
           const titles = ["maestro", "maestra", "m.", "prof.", "prof", "istruttore"];
           const normalize = (s: string) =>
@@ -80,7 +96,8 @@ export default function Anomalies() {
 
           const instructorParts = normalize(currentUserProfile.full_name);
 
-          fetchedAthletes = rawAthletes.filter(athlete => {
+          // Get my athletes (already deduplicated by code)
+          fetchedAthletes = uniqueAthletes.filter(athlete => {
             if (athlete.instructor_id === currentUserProfile.id) return true;
             const respsJoint = (athlete.responsabili || []).join(" ");
             const respParts = normalize(respsJoint);
@@ -121,7 +138,7 @@ export default function Anomalies() {
           onDate: today,
         });
 
-        const categoryIssue = validation.ok ? null : (validation as unknown).reason;
+        const categoryIssue = validation.ok ? null : (validation as { reason: string }).reason;
 
         // Check certificate issues
         const certificateIssues: string[] = [];
@@ -148,65 +165,6 @@ export default function Anomalies() {
         }
       }
 
-      // Detect orphan athletes (those not in any active couple)
-      const athleteIdsInCouples = new Set();
-      for (const couple of fetchedCouples) {
-        athleteIdsInCouples.add(couple.athlete1_id);
-        athleteIdsInCouples.add(couple.athlete2_id);
-      }
-
-      const orphans = fetchedAthletes
-        .filter(a => !athleteIdsInCouples.has(a.id))
-        .sort((a, b) => {
-          // 1. Raggruppa per Genere: Prima Maschi ('M'), Poi Femmine (Altro)
-          const isAMale = (a.gender || "").toUpperCase() === 'M';
-          const isBMale = (b.gender || "").toUpperCase() === 'M';
-
-          if (isAMale && !isBMale) return -1;
-          if (!isAMale && isBMale) return 1;
-
-          // 2. Ordina per Età (dal più giovane al più vecchio)
-          // Nota: getTime() decrescente = più giovane (data recente) - meno giovane (data passata) -> positivi primi?
-          // No: b - a -> Decrescente.
-          // 2020 (b) - 2000 (a) = + -> b viene dopo a.
-          // Quindi a (Old) prima di b (Young).
-          // Se vogliamo Youngest -> Oldest (Ascendente):
-          // a - b. 2000 - 2020 = - -> a prima di b.
-          // Ma new Date() su stringhe vuote può dare NaN.
-
-          const timeA = a.birth_date ? new Date(a.birth_date).getTime() : 0;
-          const timeB = b.birth_date ? new Date(b.birth_date).getTime() : 0;
-
-          // Se 0 (invalid), mettili in fondo? O cima?
-          if (timeA === 0) return 1;
-          if (timeB === 0) return -1;
-
-          // Youngest (Maximum Timestamp) -> Oldest (Minimum Timestamp)
-          // b - a: 2025 - 2000 > 0 -> b dopo a. Ordine: Oldest, Youngest.
-          // Se vogliamo Youngest First: 2025 prima di 2000.
-          // b > a -> return -1.
-          return timeB - timeA; // Descending timestamp = Ascending Age (Youngest first?? No wait)
-          // Timestamp: 2025 (Young) > 2000 (Old).
-          // Descending (b - a): 2025 - 2000 = + . b comes after a.  => Oldest, Youngest.
-          // Ascending (a - b): 2000 - 2025 = - . a comes before b. => Oldest, Youngest.
-
-          // Wait. Youngest person has LARGEST timestamp.
-          // To put Youngest FIRST:
-          // We want Larger Timestamp FIRST.
-          // So Descending Order of Timestamp.
-          // b - a.
-          // If b=2025, a=2000. b-a > 0. b comes after a? 
-          // sort(a,b): result > 0 -> b comes first. result < 0 -> a comes first.
-          // No. result > 0 -> a comes AFTER b (b comes first).
-          // Let's verify: [2, 1].sort((a,b) => a-b). 2-1=1. Result > 0. a(2) after b(1). Result: [1, 2]. (Ascending).
-
-          // We want Youngest (Large Timestamp) First.
-          // So we want Descending Timestamp.
-          // b - a.
-          // If b (2025) - a (2000) > 0. a comes last. b comes first. Correct.
-          // So b - a IS Youngest First.
-        });
-
       // Sort anomalies by age of the youngest in the couple
       const sortedAnomalies = foundAnomalies.sort((a, b) => {
         const getMinDate = (an: CoupleAnomaly) => {
@@ -218,7 +176,6 @@ export default function Anomalies() {
       });
 
       setAnomalies(sortedAnomalies);
-      setOrphanAthletes(orphans);
     } catch (error: unknown) {
       console.error("fetchAnomalies error:", error);
       toast({
@@ -280,15 +237,12 @@ export default function Anomalies() {
             <Badge variant="destructive" className="text-[10px] sm:text-xs">
               {anomalies.length} anomalie coppie
             </Badge>
-            <Badge variant="outline" className="text-[10px] sm:text-xs">
-              {orphanAthletes.length} atleti senza partner
-            </Badge>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {anomalies.length === 0 && orphanAthletes.length === 0 ? (
+        {anomalies.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -313,9 +267,6 @@ export default function Anomalies() {
                 <TabsTrigger value="certificates">
                   Certificati ({certificateAnomalies.length})
                 </TabsTrigger>
-                <TabsTrigger value="orphans">
-                  Senza Partner ({orphanAthletes.length})
-                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -329,10 +280,6 @@ export default function Anomalies() {
 
             <TabsContent value="certificates">
               <AnomaliesList anomalies={certificateAnomalies} showOnlyCertificates />
-            </TabsContent>
-
-            <TabsContent value="orphans">
-              <OrphansList athletes={orphanAthletes} />
             </TabsContent>
           </Tabs>
         )}
@@ -435,53 +382,6 @@ function AnomaliesList({
           </CardContent>
         </Card>
       ))}
-    </div>
-  );
-}
-
-function OrphansList({ athletes }: { athletes: Athlete[] }) {
-  const navigate = useNavigate();
-
-  return (
-    <div className="space-y-4">
-      {athletes.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">
-          Tutti gli atleti hanno un partner assegnato.
-        </Card>
-      ) : (
-        athletes.map((athlete) => {
-          // Colori pastello: Azzurro per Maschi, Arancione per Femmine
-          const isFemale = athlete.gender === 'F';
-          const isMale = athlete.gender === 'M';
-          const bgColorClass = isFemale
-            ? "bg-[#FFD9B3] hover:bg-[#FFE0C2] border-[#FFB366]/50 transition-colors duration-300"
-            : isMale
-              ? "bg-[#CCE5FF] hover:bg-[#D6EAFF] border-[#99CCFF]/50 transition-colors duration-300"
-              : "bg-warning/10 hover:bg-warning/20 border-warning/30 transition-colors duration-300";
-
-          return (
-            <Card key={athlete.id} className={bgColorClass}>
-              <CardContent className="py-4 px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-2">
-                  <p className="font-bold text-sm sm:text-base">{athlete.first_name} {athlete.last_name}</p>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="text-[10px] sm:text-xs">{athlete.code}</Badge>
-                    <Badge variant="secondary" className="text-[10px] sm:text-xs">{athlete.category}</Badge>
-                    {athlete.birth_date && (
-                      <Badge variant="outline" className="font-mono text-[10px] sm:text-xs">
-                        {new Date(athlete.birth_date).toLocaleDateString("it-IT")}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => navigate("/dashboard")} className="w-full sm:w-auto text-xs sm:text-sm">
-                  Assegna Partner
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })
-      )}
     </div>
   );
 }

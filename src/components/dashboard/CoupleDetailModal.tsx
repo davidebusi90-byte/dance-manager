@@ -5,7 +5,11 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/use-user-role";
+import { useToast } from "@/hooks/use-toast";
 import { validateCoupleCategory } from "@/lib/category-validation";
 import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
 
@@ -59,6 +63,10 @@ export default function CoupleDetailModal({
     eventTypes,
     onClose,
 }: CoupleDetailModalProps) {
+    const { role } = useUserRole();
+    const { toast } = useToast();
+    const [isDeactivating, setIsDeactivating] = useState(false);
+
     if (!entry || !entry.couples) return null;
 
     const couple = entry.couples;
@@ -207,6 +215,39 @@ export default function CoupleDetailModal({
                             {entry.is_paid ? "Pagato" : "Da Pagare"}
                         </Badge>
                     </div>
+
+                    {/* Deactivation Button (Admin Only) */}
+                    {role === "admin" && (
+                        <div className="pt-6 mt-4 border-t border-destructive/10">
+                            <button
+                                onClick={async () => {
+                                    if (!confirm("Sei sicuro di voler disattivare questa coppia? Verrà spostata nella sezione 'Coppie Disattivate'.")) return;
+                                    setIsDeactivating(true);
+                                    try {
+                                        const { error } = await supabase
+                                            .from("couples")
+                                            .update({ is_active: false } as any)
+                                            .eq("id", couple.id);
+                                        
+                                        if (error) throw error;
+                                        
+                                        toast({ title: "Coppia disattivata", description: "La coppia è stata spostata tra quelle disattivate." });
+                                        onClose();
+                                        window.location.reload(); 
+                                    } catch (err: any) {
+                                        toast({ title: "Errore", description: err.message, variant: "destructive" });
+                                    } finally {
+                                        setIsDeactivating(false);
+                                    }
+                                }}
+                                disabled={isDeactivating}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-destructive/5 text-destructive border border-destructive/20 hover:bg-destructive/10 transition-all font-semibold"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                {isDeactivating ? "Disattivazione..." : "Disattiva Coppia"}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

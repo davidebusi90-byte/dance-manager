@@ -8,8 +8,10 @@ export type { Athlete, Couple, Competition, Profile };
 
 export function useDashboardData(role: string, userId: string | null) {
     const [athletes, setAthletes] = useState<Athlete[]>([]);
+    const [deactivatedAthletes, setDeactivatedAthletes] = useState<Athlete[]>([]);
     const [allAthletes, setAllAthletes] = useState<Athlete[]>([]);
     const [couples, setCouples] = useState<Couple[]>([]);
+    const [deactivatedCouples, setDeactivatedCouples] = useState<Couple[]>([]);
     const [competitions, setCompetitions] = useState<Competition[]>([]);
     const [profiles, setProfiles] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -21,8 +23,8 @@ export function useDashboardData(role: string, userId: string | null) {
         setLoading(true);
         try {
             const [athletesRes, couplesRes, competitionsRes, profilesRes] = await Promise.all([
-                (supabase.from("athletes").select("*").eq("is_deleted", false) as any),
-                (supabase.from("couples").select("*").eq("is_active", true) as any),
+                (supabase.from("athletes").select("*") as any),
+                (supabase.from("couples").select("*") as any),
                 (supabase.from("competitions").select("*").eq("is_deleted", false).order("date", { ascending: true }) as any),
                 (supabase.from("profiles").select("id, user_id, full_name") as any),
             ]);
@@ -45,24 +47,31 @@ export function useDashboardData(role: string, userId: string | null) {
             });
             const uniqueRawAthletes = Array.from(uniqueAthletesMap.values());
 
-            let fetchedAthletes = [...uniqueRawAthletes];
-            let fetchedCouples = [...rawCouples];
+            let fetchedAthletes = uniqueRawAthletes.filter(a => !a.is_deleted);
+            let fetchedDeactivatedAthletes = uniqueRawAthletes.filter(a => a.is_deleted);
+            let fetchedCouples = rawCouples.filter(c => (c as any).is_active !== false);
+            let fetchedDeactivatedCouples = rawCouples.filter(c => (c as any).is_active === false);
 
             if (role !== "admin" && role !== "supervisor") {
                 const currentUserProfile = rawProfiles.find(p => p.user_id === userId);
                 if (currentUserProfile) {
-                    fetchedAthletes = filterAthletesByInstructor(uniqueRawAthletes, currentUserProfile);
-                    fetchedCouples = rawCouples; // Note: Current logic keeps all couples, check if this is intended
+                    fetchedAthletes = filterAthletesByInstructor(fetchedAthletes, currentUserProfile);
+                    fetchedDeactivatedAthletes = filterAthletesByInstructor(fetchedDeactivatedAthletes, currentUserProfile);
+                    // Keep existing couples logic
                 } else {
                     console.warn("[DashboardData] Profile not found for logged user.");
                     fetchedAthletes = [];
+                    fetchedDeactivatedAthletes = [];
                     fetchedCouples = [];
+                    fetchedDeactivatedCouples = [];
                 }
             }
 
             setAllAthletes(rawAthletes);
             setAthletes(fetchedAthletes);
+            setDeactivatedAthletes(fetchedDeactivatedAthletes);
             setCouples(fetchedCouples);
+            setDeactivatedCouples(fetchedDeactivatedCouples);
 
             // Deduplicate competitions by name and date
             const uniqueCompetitionsMap = new Map();
@@ -94,8 +103,10 @@ export function useDashboardData(role: string, userId: string | null) {
 
     return {
         athletes,
+        deactivatedAthletes,
         allAthletes,
         couples,
+        deactivatedCouples,
         competitions,
         profiles,
         loading,

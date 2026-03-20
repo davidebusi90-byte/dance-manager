@@ -26,9 +26,10 @@ interface CompetitionsListProps {
   profiles?: Profile[];
   onClose: () => void;
   onRefresh: () => void;
+  lastSyncTime?: Date | null;
 }
 
-export default function CompetitionsList({ competitions, athletes = [], couples = [], profiles = [], onClose, onRefresh }: CompetitionsListProps) {
+export default function CompetitionsList({ competitions, athletes = [], couples = [], profiles = [], onClose, onRefresh, lastSyncTime }: CompetitionsListProps) {
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
   const [competitionToDelete, setCompetitionToDelete] = useState<Competition | null>(null);
   const [competitionToComplete, setCompetitionToComplete] = useState<Competition | null>(null);
@@ -171,7 +172,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
     }
 
     return comps.map((competition) => {
-      const deadlinePassed = isDeadlinePassed(competition.registration_deadline);
+      const deadlinePassed = isDeadlinePassed(competition.registration_deadline, competition.late_fee_deadline);
       return (
         <div
           key={competition.id}
@@ -249,7 +250,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
     }
 
     return comps.map((competition) => {
-      const deadlinePassed = isDeadlinePassed(competition.registration_deadline);
+      const deadlinePassed = isDeadlinePassed(competition.registration_deadline, competition.late_fee_deadline);
       return (
         <tr
           key={competition.id}
@@ -329,10 +330,23 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
   return (
     <Card className="animate-fade-in">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-accent" />
-          Competizioni ({activeCompetitions.length})
-        </CardTitle>
+        <div className="flex flex-row items-center gap-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-accent" />
+            Competizioni ({activeCompetitions.length})
+          </CardTitle>
+          {lastSyncTime && (
+            <div className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+              Sincronizzato: {new Intl.DateTimeFormat('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }).format(lastSyncTime)}
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-4 h-4" />

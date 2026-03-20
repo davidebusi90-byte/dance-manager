@@ -95,8 +95,41 @@ serve(async (req) => {
             successful: 0,
             failed: 0,
             couples_synced: 0,
+            removed: [] as { code: string; first_name: string; last_name: string }[],
+            deactivated_couples: 0,
             errors: [] as any[],
         };
+
+        // 0. Identify potential removals (missing from payload)
+        const incomingCodes = new Set(body.athletes.map(a => a.code));
+        const { data: currentAthletes, error: fetchError } = await adminClient
+            .from("athletes")
+            .select("code, first_name, last_name")
+            .eq("is_deleted", false);
+
+        if (fetchError) {
+            console.error("Error fetching current athletes for removal check:", fetchError);
+        } else if (currentAthletes) {
+            const missingAthletes = currentAthletes.filter(a => !incomingCodes.has(a.code));
+            
+            if (missingAthletes.length > 0) {
+                // Perform soft-delete in batches of 100
+                const missingCodes = missingAthletes.map(a => a.code);
+                for (let i = 0; i < missingCodes.length; i += 100) {
+                    const batch = missingCodes.slice(i, i + 100);
+                    const { error: deleteError } = await adminClient
+                        .from("athletes")
+                        .update({ is_deleted: true } as any)
+                        .in("code", batch);
+                    
+                    if (deleteError) {
+                        console.error("Error soft-deleting athletes:", deleteError);
+                        results.errors.push({ error: "Failed to remove some athletes", details: deleteError.message });
+                    }
+                }
+                results.removed = missingAthletes;
+            }
+        }
 
         // 1. Process Athletes
         for (const athlete of body.athletes) {
@@ -229,6 +262,29 @@ serve(async (req) => {
         }
 
         if (couplesToUpsert.length > 0) {
+            // 2.1 Deactivate existing active couples that are not in the new payload
+            // This ensures partner changes and removals are handled correctly.
+            const { data: existingActiveCouples, error: fetchCouplesError } = await adminClient
+                .from("couples")
+                .select("id, athlete1_id, athlete2_id")
+                .eq("is_active", true);
+
+            if (!fetchCouplesError && existingActiveCouples) {
+                const newPairs = new Set(couplesToUpsert.map(c => `${c.athlete1_id}-${c.athlete2_id}`));
+                const couplesToDeactivate = existingActiveCouples.filter(c => !newPairs.has(`${c.athlete1_id}-${c.athlete2_id}`));
+                
+                if (couplesToDeactivate.length > 0) {
+                    const deactivateIds = couplesToDeactivate.map(c => c.id);
+                    const { error: deactivateError } = await adminClient
+                        .from("couples")
+                        .update({ is_active: false } as any)
+                        .in("id", deactivateIds);
+                    
+                    if (!deactivateError) results.deactivated_couples = deactivateIds.length;
+                    else console.error("Error deactivating couples:", deactivateError);
+                }
+            }
+
             const { error: couplesError } = await adminClient
                 .from("couples")
                 .upsert(couplesToUpsert, { onConflict: "athlete1_id,athlete2_id" });
@@ -239,8 +295,14 @@ serve(async (req) => {
 
         // 3. Log Sync Result for Real-time Notification (Inserted after processing completes)
         try {
-            const { failed: logFailed, successful: logSuccess, couples_synced: logCouples } = results;
-            const syncMessage = `Sincronizzazione completata: ${logSuccess} atleti, ${logCouples} coppie.`;
+            const { failed: logFailed, successful: logSuccess, couples_synced: logCouples, removed: logRemoved, deactivated_couples: logDeactivated } = results;
+            let syncMessage = `Sincronizzazione completata: ${logSuccess} atleti, ${logCouples} coppie.`;
+            if (logRemoved && logRemoved.length > 0) {
+                syncMessage += ` ${logRemoved.length} atleti rimossi.`;
+            }
+            if (logDeactivated && logDeactivated > 0) {
+                syncMessage += ` ${logDeactivated} coppie disattivate.`;
+            }
             
             await adminClient
                 .from("sync_logs")

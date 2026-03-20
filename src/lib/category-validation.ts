@@ -22,19 +22,19 @@ type CategoryRule = {
 
 // Based on the provided business rules.
 export const CATEGORY_RULES: CategoryRule[] = [
-  { label: "Juvenile 1", minAge: 6, maxAge: 9, displayCode: "6/9" },
-  { label: "Juvenile 2", minAge: 10, maxAge: 11, displayCode: "10/11" },
-  { label: "Junior 1", minAge: 12, maxAge: 13, displayCode: "12/13" },
-  { label: "Junior 2", minAge: 14, maxAge: 15, displayCode: "14/15" },
-  { label: "Youth", minAge: 16, maxAge: 18, displayCode: "16/18" },
-  { label: "Adult", minAge: 19, maxAge: 34, displayCode: "19/34" },
-  { label: "Senior 1", minAge: 35, maxAge: 44, displayCode: "35/44" },
-  { label: "Senior 2", minAge: 45, maxAge: 54, displayCode: "45/54" },
-  { label: "Senior 3a", minAge: 55, maxAge: 60, displayCode: "55/60" },
-  { label: "Senior 3b", minAge: 61, maxAge: 64, displayCode: "61/64" },
-  { label: "Senior 4a", minAge: 65, maxAge: 69, displayCode: "65/69" },
-  { label: "Senior 4b", minAge: 70, maxAge: 74, displayCode: "70/74" },
-  { label: "Senior 5", minAge: 75, maxAge: null, displayCode: "75/0" },
+  { label: "Juvenile 1", minAge: 6, maxAge: 9, displayCode: "6-9" },
+  { label: "Juvenile 2", minAge: 10, maxAge: 11, displayCode: "10-11" },
+  { label: "Junior 1", minAge: 12, maxAge: 13, displayCode: "12-13" },
+  { label: "Junior 2", minAge: 14, maxAge: 15, displayCode: "14-15" },
+  { label: "Youth", minAge: 16, maxAge: 18, displayCode: "16-18" },
+  { label: "Adult", minAge: 19, maxAge: 34, displayCode: "19-34" },
+  { label: "Senior 1", minAge: 35, maxAge: 44, displayCode: "35-44" },
+  { label: "Senior 2", minAge: 45, maxAge: 54, displayCode: "45-54" },
+  { label: "Senior 3a", minAge: 55, maxAge: 60, displayCode: "55-60" },
+  { label: "Senior 3b", minAge: 61, maxAge: 64, displayCode: "61-64" },
+  { label: "Senior 4a", minAge: 65, maxAge: 69, displayCode: "65-69" },
+  { label: "Senior 4b", minAge: 70, maxAge: 74, displayCode: "70-74" },
+  { label: "Senior 5", minAge: 75, maxAge: null, displayCode: "75+" },
 ];
 
 // Age bounds for special/non-standard categories that exist in the DB but are not
@@ -186,10 +186,24 @@ export function normalizeCategoryLabel(label: CategoryLabel): string {
 /**
  * Returns a formatted category display string like "6/9 (Juvenile 1)"
  */
-export function formatCategoryDisplay(categoryLabel: CategoryLabel): string {
-  const rule = CATEGORY_RULES.find((r) => r.label === categoryLabel);
-  if (!rule) return categoryLabel;
-  return `${rule.displayCode} (${rule.label})`;
+export function formatCategoryDisplay(categoryInput: string): string {
+  if (!categoryInput) return "-";
+  
+  const norm = normalizeCategory(categoryInput);
+  const rule = CATEGORY_RULES.find((r) => normalizeCategoryLabel(r.label as CategoryLabel) === norm);
+  
+  if (!rule) {
+    // If it's a special category from SPECIAL_CATEGORY_BOUNDS, format it accordingly
+    const spec = SPECIAL_CATEGORY_BOUNDS[norm];
+    if (spec) {
+      const range = spec.maxAge ? `${spec.minAge}-${spec.maxAge}` : `${spec.minAge}+`;
+      return `(${range}) ${categoryInput}`;
+    }
+    return categoryInput;
+  }
+  
+  // Format: "(Age Range) Category Name" e.g. "(10-11) Juvenile 2"
+  return `(${rule.displayCode}) ${rule.label}`;
 }
 
 /**
@@ -204,10 +218,12 @@ export function validateCategoryMatch(params: {
   storedCategory: string;
   birthDateISO: string | null;
   onDate?: Date;
+  couples?: { athlete1_id: string; athlete2_id: string; category: string }[];
+  athleteId?: string;
 }):
   | { ok: true; expected: CategoryLabel }
   | { ok: false; expected: CategoryLabel[]; reason: string } {
-  const { storedCategory, birthDateISO, onDate = new Date() } = params;
+  const { storedCategory, birthDateISO, onDate = new Date(), couples = [], athleteId } = params;
   if (!birthDateISO) {
     return { ok: false, expected: ["Adult"], reason: "Data di nascita mancante" };
   }
@@ -215,18 +231,43 @@ export function validateCategoryMatch(params: {
   const allowed = getAllowedCategories(birthDateISO, onDate);
   const storedNorm = normalizeCategory(storedCategory);
 
-  const ok = allowed.some(cat => normalizeCategoryLabel(cat) === storedNorm);
-
-  if (ok) {
+  // 1. Check if it's the "natural" category for the age
+  const isNaturalMatch = allowed.some(cat => normalizeCategoryLabel(cat) === storedNorm);
+  if (isNaturalMatch) {
     return { ok: true, expected: allowed[0] };
-  } else {
-    const expectedStr = allowed.map(cat => formatCategoryDisplay(cat)).join(" o ");
-    return {
-      ok: false,
-      expected: allowed,
-      reason: `Categoria attesa: ${expectedStr}`,
-    };
   }
+
+  // 2. Check if it matches a couple's category
+  if (athleteId) {
+    const matchingCouple = couples.find(c => 
+      (c.athlete1_id === athleteId || c.athlete2_id === athleteId) && 
+      normalizeCategory(c.category) === storedNorm
+    );
+    if (matchingCouple) {
+      // If it matches a couple, we consider it valid (we trust the couple's category assignment)
+      return { ok: true, expected: normalizeCategoryLabel(storedNorm as any) as any };
+    }
+  }
+
+  // 3. Flex-rule: Allow "moving up" to a higher category if within 5 years of minAge
+  const sportsAge = getSportsAge(birthDateISO, onDate);
+  const minAgeOfStored = getCategoryMinAge(storedCategory);
+  const maxAgeOfStored = getCategoryMaxAge(storedCategory);
+  
+  // Rule: Younger athletes can dance "up" if sportsAge >= minAge - 5
+  // Also check maxAge to avoid moving down to a too-young category if applicable
+  const fitsExtendedRange = sportsAge >= minAgeOfStored - 5 && (maxAgeOfStored === null || sportsAge <= maxAgeOfStored + 20); // +20 is arbitrary for fallback but usually maxAge is the constraint
+
+  if (fitsExtendedRange) {
+    return { ok: true, expected: normalizeCategoryLabel(storedNorm as any) as any };
+  }
+
+  const expectedStr = allowed.map(cat => formatCategoryDisplay(cat)).join(" o ");
+  return {
+    ok: false,
+    expected: allowed,
+    reason: `Categoria attesa: ${expectedStr} (o categoria coppia compatibile)`,
+  };
 }
 
 export function validateCoupleCategory(params: {

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserCheck, X, Search, Mail } from "lucide-react";
+import { UserCheck, X, Search, Mail, ChevronRight } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -15,8 +15,10 @@ import { Athlete, Couple, Profile } from "@/types/dashboard";
 
 interface CouplesListProps {
   couples: Couple[];
+  deactivatedCouples?: Couple[];
   athletes: Athlete[];
   profiles: Profile[];
+  lastSyncTime?: Date | null;
   onClose: () => void;
 }
 
@@ -29,8 +31,9 @@ const getCategoryLabel = (category: string) => {
   return rule ? rule.label : null;
 };
 
-export default function CouplesList({ couples, athletes, profiles, onClose }: CouplesListProps) {
+export default function CouplesList({ couples, deactivatedCouples = [], athletes, profiles, lastSyncTime, onClose }: CouplesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeactivated, setShowDeactivated] = useState(false);
   const athleteMap = useMemo(() => new Map(athletes.map(a => [a.id, a])), [athletes]);
 
   const getClassForDiscipline = (couple: Couple, key: string) => {
@@ -113,10 +116,23 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
     <Card className="animate-fade-in shadow-xl border-success/10">
       <CardHeader>
         <div className="flex flex-row items-center justify-between mb-4">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-success" />
-            Coppie Attive ({couples.length})
-          </CardTitle>
+          <div className="flex flex-row items-center gap-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-success" />
+              Coppie Attive ({couples.length})
+            </CardTitle>
+            {lastSyncTime && (
+              <div className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                Sincronizzato: {new Intl.DateTimeFormat('it-IT', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }).format(lastSyncTime)}
+              </div>
+            )}
+          </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-destructive/10 hover:text-destructive">
             <X className="w-4 h-4" />
           </Button>
@@ -312,6 +328,52 @@ export default function CouplesList({ couples, athletes, profiles, onClose }: Co
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {deactivatedCouples.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-dashed">
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between text-muted-foreground hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50/50"
+              onClick={() => setShowDeactivated(!showDeactivated)}
+            >
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4 opacity-50" />
+                <span>Coppie Disattivate ({deactivatedCouples.length})</span>
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded ml-2 uppercase tracking-wider font-bold">Inattive</span>
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform ${showDeactivated ? "rotate-90" : ""}`} />
+            </Button>
+
+            {showDeactivated && (
+              <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
+                <div className="overflow-x-auto rounded-lg border border-orange-100 bg-orange-50/10">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold">
+                      <tr>
+                        <th className="px-4 py-2">Cavaliere</th>
+                        <th className="px-4 py-2">Dama</th>
+                        <th className="px-4 py-2">Categoria</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-orange-100/50">
+                      {deactivatedCouples.map((c) => {
+                        const a1 = athleteMap.get(c.athlete1_id);
+                        const a2 = athleteMap.get(c.athlete2_id);
+                        return (
+                          <tr key={c.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20">
+                            <td className="px-4 py-2">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
+                            <td className="px-4 py-2">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
+                            <td className="px-4 py-2">{c.category}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, X, Search, Mail } from "lucide-react";
+import { Users, Search, X, Mail, ChevronRight } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -15,14 +15,17 @@ import { Athlete, Couple, Profile } from "@/types/dashboard";
 
 interface AthletesListProps {
   athletes: Athlete[];
+  deactivatedAthletes?: Athlete[];
   allAthletes: Athlete[];
   couples: Couple[];
   profiles: Profile[];
+  lastSyncTime?: Date | null;
   onClose: () => void;
 }
 
-export default function AthletesList({ athletes, allAthletes, couples, profiles, onClose }: AthletesListProps) {
+export default function AthletesList({ athletes, deactivatedAthletes = [], allAthletes, couples, profiles, lastSyncTime, onClose }: AthletesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeactivated, setShowDeactivated] = useState(false);
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
 
   const formatDate = (date: string | null) => {
@@ -128,10 +131,23 @@ export default function AthletesList({ athletes, allAthletes, couples, profiles,
     <Card className="animate-fade-in shadow-xl border-primary/10">
       <CardHeader>
         <div className="flex flex-row items-center justify-between mb-4">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
-            Lista Atleti ({athletes.length})
-          </CardTitle>
+          <div className="flex flex-row items-center gap-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Lista Atleti ({athletes.length})
+            </CardTitle>
+            {lastSyncTime && (
+              <div className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                Sincronizzato: {new Intl.DateTimeFormat('it-IT', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }).format(lastSyncTime)}
+              </div>
+            )}
+          </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-destructive/10 hover:text-destructive">
             <X className="w-4 h-4" />
           </Button>
@@ -158,8 +174,10 @@ export default function AthletesList({ athletes, allAthletes, couples, profiles,
                 const categoryCheck = validateCategoryMatch({
                   storedCategory: athlete.category,
                   birthDateISO: athlete.birth_date,
+                  couples: couples,
+                  athleteId: athlete.id
                 });
-                const categoryDisplay = categoryCheck.ok ? formatCategoryDisplay(categoryCheck.expected) : athlete.category;
+                const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : athlete.category);
                 const isOrphan = !athleteIdsInCouples.has(athlete.id);
                 const isFemale = athlete.gender === 'F';
                 const isMale = athlete.gender === 'M';
@@ -242,8 +260,10 @@ export default function AthletesList({ athletes, allAthletes, couples, profiles,
                     const categoryCheck = validateCategoryMatch({
                       storedCategory: athlete.category,
                       birthDateISO: athlete.birth_date,
+                      couples: couples,
+                      athleteId: athlete.id
                     });
-                    const categoryDisplay = categoryCheck.ok ? formatCategoryDisplay(categoryCheck.expected) : athlete.category;
+                    const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : athlete.category);
                     const isOrphan = !athleteIdsInCouples.has(athlete.id);
                     const isFemale = athlete.gender === 'F';
                     const isMale = athlete.gender === 'M';
@@ -311,6 +331,48 @@ export default function AthletesList({ athletes, allAthletes, couples, profiles,
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {deactivatedAthletes.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-dashed">
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-between text-muted-foreground hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50/50"
+              onClick={() => setShowDeactivated(!showDeactivated)}
+            >
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 opacity-50" />
+                <span>Atleti Disattivati ({deactivatedAthletes.length})</span>
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded ml-2 uppercase tracking-wider font-bold">Inattivi</span>
+              </div>
+              <ChevronRight className={`w-4 h-4 transition-transform ${showDeactivated ? "rotate-90" : ""}`} />
+            </Button>
+
+            {showDeactivated && (
+              <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
+                <div className="overflow-x-auto rounded-lg border border-orange-100 bg-orange-50/10">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold">
+                      <tr>
+                        <th className="px-4 py-2">Codice</th>
+                        <th className="px-4 py-2">Atleta</th>
+                        <th className="px-4 py-2">Categoria</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-orange-100/50">
+                      {deactivatedAthletes.map((a) => (
+                        <tr key={a.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20">
+                          <td className="px-4 py-2 font-mono">{a.code}</td>
+                          <td className="px-4 py-2">{a.first_name} {a.last_name}</td>
+                          <td className="px-4 py-2">{a.category}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

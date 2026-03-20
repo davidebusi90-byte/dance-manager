@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, ExternalLink, Menu } from "lucide-react";
+import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, ExternalLink, Menu, Calendar } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import StatCard from "@/components/dashboard/StatCard";
 import AthletesList from "@/components/dashboard/AthletesList";
@@ -21,14 +21,18 @@ type ActiveView = "none" | "athletes" | "couples" | "competitions";
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeView, setActiveView] = useState<ActiveView>("none");
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [removedAthletes, setRemovedAthletes] = useState<{ code: string, first_name: string, last_name: string }[]>([]);
   const navigate = useNavigate();
 
   useIsAdmin();
   const { role, userId } = useUserRole();
   const {
     athletes,
+    deactivatedAthletes,
     allAthletes,
     couples,
+    deactivatedCouples,
     competitions,
     profiles,
     loading,
@@ -39,6 +43,25 @@ export default function Dashboard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) navigate("/auth");
     });
+
+    const fetchLastSync = async () => {
+      const { data, error } = await (supabase
+        .from("sync_logs" as any)
+        .select("created_at, results")
+        .in("status", ["success", "warning"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle() as any);
+      
+      if (!error && data) {
+        setLastSyncTime(new Date(data.created_at));
+        if (data.results?.removed) {
+          setRemovedAthletes(data.results.removed);
+        }
+      }
+    };
+
+    fetchLastSync();
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -61,6 +84,12 @@ export default function Dashboard() {
               description: newLog.message,
               duration: 5000,
             });
+            setLastSyncTime(new Date(newLog.created_at));
+            if (newLog.results?.removed) {
+              setRemovedAthletes(newLog.results.removed);
+            } else {
+              setRemovedAthletes([]);
+            }
             // Auto-refresh dashboard data
             refresh();
           }
@@ -318,9 +347,11 @@ export default function Dashboard() {
         {activeView === "athletes" && (
           <AthletesList
             athletes={athletes}
+            deactivatedAthletes={deactivatedAthletes}
             allAthletes={allAthletes}
             couples={couples}
             profiles={profiles}
+            lastSyncTime={lastSyncTime}
             onClose={() => setActiveView("none")}
           />
         )}
@@ -328,8 +359,10 @@ export default function Dashboard() {
         {activeView === "couples" && (
           <CouplesList
             couples={couples}
+            deactivatedCouples={deactivatedCouples}
             athletes={allAthletes}
             profiles={profiles}
+            lastSyncTime={lastSyncTime}
             onClose={() => setActiveView("none")}
           />
         )}
@@ -340,6 +373,7 @@ export default function Dashboard() {
             athletes={allAthletes}
             couples={couples}
             profiles={profiles}
+            lastSyncTime={lastSyncTime}
             onClose={() => setActiveView("none")}
             onRefresh={refresh}
           />
@@ -347,9 +381,51 @@ export default function Dashboard() {
 
         {activeView === "none" && (
           <>
+            {removedAthletes.length > 0 && (
+              <Card className="mb-8 border-orange-200 bg-orange-50/30">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center gap-2 text-orange-700">
+                    <FileWarning className="w-5 h-5" />
+                    <CardTitle className="text-lg">Atleti rimossi nell'ultima sincronizzazione</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-orange-600 mb-3">
+                    I seguenti atleti non sono presenti nel caricamento API e sono stati segnati come eliminati:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {removedAthletes.map((a) => (
+                      <div key={a.code} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-medium border border-orange-200">
+                        {a.first_name} {a.last_name} ({a.code})
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="mt-4 text-orange-700 hover:text-orange-800 hover:bg-orange-100"
+                    onClick={() => setRemovedAthletes([])}
+                  >
+                    Nascondi avviso
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="mb-8">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center gap-4 space-y-0">
                 <CardTitle className="text-lg">Cerca Atleta</CardTitle>
+                {lastSyncTime && (
+                  <div className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                    Sincronizzato: {new Intl.DateTimeFormat('it-IT', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }).format(lastSyncTime)}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="relative">

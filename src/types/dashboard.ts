@@ -27,6 +27,7 @@ export interface Couple {
     responsabili?: string[] | null;
     athlete1?: Athlete;
     athlete2?: Athlete;
+    is_active?: boolean;
 }
 
 export interface Competition {
