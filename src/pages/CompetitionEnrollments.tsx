@@ -39,7 +39,7 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
   { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
 
   // Adult
-  { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
+  { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2"], minAge: 19, maxAge: 34 },
 
   // Senior 1 & 2
   { name: "Senior 1 (35/44)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35, maxAge: 44 },

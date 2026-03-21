@@ -352,22 +352,61 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
             {showDeactivated && (
               <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
                 <div className="overflow-x-auto rounded-lg border border-orange-100 bg-orange-50/10">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold">
+                  <table className="w-full text-[11px] text-left border-collapse">
+                    <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold border-b border-orange-100">
                       <tr>
                         <th className="px-4 py-2">Codice</th>
-                        <th className="px-4 py-2">Atleta</th>
+                        <th className="px-4 py-2">Nome e Cognome</th>
+                        <th className="px-4 py-2">Email</th>
                         <th className="px-4 py-2">Categoria</th>
+                        <th className="px-4 py-2">Nascita</th>
+                        <th className="px-4 py-2">Certificato</th>
+                        <th className="px-4 py-2">Istruttori</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-orange-100/50">
-                      {deactivatedAthletes.map((a) => (
-                        <tr key={a.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20">
-                          <td className="px-4 py-2 font-mono">{a.code}</td>
-                          <td className="px-4 py-2">{a.first_name} {a.last_name}</td>
-                          <td className="px-4 py-2">{a.category}</td>
-                        </tr>
-                      ))}
+                      {deactivatedAthletes.map((a) => {
+                        const certStatus = getCertificateStatus(a.medical_certificate_expiry);
+                        const categoryCheck = validateCategoryMatch({
+                          storedCategory: a.category,
+                          birthDateISO: a.birth_date,
+                          couples: couples,
+                          athleteId: a.id
+                        });
+                        const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : a.category);
+
+                        return (
+                          <tr key={a.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20 transition-colors">
+                            <td className="px-4 py-2 font-mono text-[10px]">{a.code}</td>
+                            <td className="px-4 py-2 font-semibold">{a.first_name} {a.last_name}</td>
+                            <td className="px-4 py-2">
+                              {a.email ? (
+                                <div className="flex items-center gap-1 truncate max-w-[120px]" title={a.email}>
+                                  <Mail className="w-3 h-3 shrink-0 opacity-50" />
+                                  <span className="truncate">{a.email}</span>
+                                </div>
+                              ) : "-"}
+                            </td>
+                            <td className="px-4 py-2">
+                              <div className="flex items-center gap-1">
+                                <span>{categoryDisplay}</span>
+                                {!categoryCheck.ok && <span className="text-destructive font-black">!</span>}
+                              </div>
+                            </td>
+                            <td className="px-4 py-2">{formatDate(a.birth_date)}</td>
+                            <td className="px-4 py-2">
+                              <span className={`status-badge ${certStatus.class} text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase opacity-80`}>
+                                {certStatus.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 max-w-[150px] truncate">
+                              {a.responsabili?.length ? (
+                                <span className="text-[10px]">{a.responsabili.join(", ")}</span>
+                              ) : "-"}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

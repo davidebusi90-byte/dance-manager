@@ -503,23 +503,49 @@ export default function CompetitionEntriesDetail({
     const athlete2 = getAthlete(entry, 2);
     const isLate = isLateEntry(entry.created_at);
 
-    // Derive best class from athletes
-    const disciplines = ["latino", "standard", "combinata"];
-    let bestClass = couple.class;
-    disciplines.forEach(d => {
-      const class1 = athlete1?.discipline_info?.[d];
-      const class2 = athlete2?.discipline_info?.[d];
-      if (class1) bestClass = getBestClass(bestClass, class1);
-      if (class2) bestClass = getBestClass(bestClass, class2);
-    });
+    // Determine the most appropriate class to display based on enrolled events
+    const enrolledEventIds = entry.event_type_ids || [];
+    const entryEvents = enrolledEventIds.map(id => eventTypes.find(et => et.id === id)).filter(Boolean);
+    
+    let displayClass = couple.class;
 
-    // Last resort fallback for table row
-    if (bestClass === "D") {
-      if (athlete1?.class && athlete1.class !== "D") bestClass = athlete1.class;
-      if (athlete2?.class && athlete2.class !== "D") bestClass = bestClass === "D" ? athlete2.class : getBestClass(bestClass, athlete2.class);
+    if (entryEvents.length > 0) {
+      // Check if all enrolled events belong to a single discipline
+      const isLatinOnly = entryEvents.every(e => e?.event_name.toLowerCase().includes("latino") || e?.event_name.toLowerCase().includes("latini"));
+      const isStandardOnly = entryEvents.every(e => e?.event_name.toLowerCase().includes("standard"));
+
+      if (isLatinOnly) {
+        const lat1 = athlete1?.discipline_info?.["latino"];
+        const lat2 = athlete2?.discipline_info?.["latino"];
+        const discClass = couple.discipline_info?.["latino"] || getBestClass(lat1, lat2);
+        if (discClass && discClass !== "D") displayClass = discClass;
+      } else if (isStandardOnly) {
+        const std1 = athlete1?.discipline_info?.["standard"];
+        const std2 = athlete2?.discipline_info?.["standard"];
+        const discClass = couple.discipline_info?.["standard"] || getBestClass(std1, std2);
+        if (discClass && discClass !== "D") displayClass = discClass;
+      } else {
+        // Multi-discipline competition: use the best class among enrolled disciplines
+        let maxClass = "D";
+        entryEvents.forEach(e => {
+          const eff = getEffectiveClass(couple, e!.event_name);
+          maxClass = getBestClass(maxClass, eff);
+        });
+        displayClass = maxClass;
+      }
+    } else {
+      // Fallback: use couple's base class but check athletes' info
+      const disciplines = ["latino", "standard", "combinata"];
+      let bestClass = couple.class;
+      disciplines.forEach(d => {
+        const class1 = athlete1?.discipline_info?.[d];
+        const class2 = athlete2?.discipline_info?.[d];
+        if (class1) bestClass = getBestClass(bestClass, class1);
+        if (class2) bestClass = getBestClass(bestClass, class2);
+      });
+      displayClass = bestClass;
     }
 
-    const enrolledEventIds = entry.event_type_ids || [];
     const entryEventNames = enrolledEventIds
       .map(id => {
         const name = eventTypes.find(et => et.id === id)?.event_name;
@@ -555,7 +581,7 @@ export default function CompetitionEntriesDetail({
         <td className="text-center print:w-[15%] w-[15%]">
           <div className="flex flex-col items-center">
             <span className="text-sm font-bold">{couple.category}</span>
-            <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {bestClass}</span>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {displayClass}</span>
           </div>
         </td>
         <td className="max-w-[300px] print:max-w-none hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">

@@ -349,23 +349,74 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
             {showDeactivated && (
               <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
                 <div className="overflow-x-auto rounded-lg border border-orange-100 bg-orange-50/10">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold">
+                  <table className="w-full text-[11px] text-left border-collapse">
+                    <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold border-b border-orange-100">
                       <tr>
-                        <th className="px-4 py-2">Cavaliere</th>
-                        <th className="px-4 py-2">Dama</th>
-                        <th className="px-4 py-2">Categoria</th>
+                        <th className="px-3 py-3">Cav. Cod.</th>
+                        <th className="px-3 py-3">Cavaliere</th>
+                        <th className="px-3 py-3">Cav. Email</th>
+                        <th className="px-3 py-3">Dam. Cod.</th>
+                        <th className="px-3 py-3">Dama</th>
+                        <th className="px-3 py-3">Dam. Email</th>
+                        <th className="px-3 py-3 text-center min-w-[120px]">Categoria</th>
+                        <th className="px-2 py-3 text-center">LAT</th>
+                        <th className="px-2 py-3 text-center">STD</th>
+                        <th className="px-2 py-3 text-center">CMB</th>
+                        <th className="px-2 py-3 text-center">SA</th>
+                        <th className="px-2 py-3 text-center">CL</th>
+                        <th className="px-3 py-3">Responsabili</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-orange-100/50">
                       {deactivatedCouples.map((c) => {
-                        const a1 = athleteMap.get(c.athlete1_id);
-                        const a2 = athleteMap.get(c.athlete2_id);
+                        let a1 = athleteMap.get(c.athlete1_id);
+                        let a2 = athleteMap.get(c.athlete2_id);
+                        if ((a2?.gender === 'M' && a1?.gender !== 'M') || (a1?.gender === 'F' && a2?.gender === 'M')) {
+                          [a1, a2] = [a2, a1];
+                        }
+                        const resps = Array.from(new Set([...(a1?.responsabili || []), ...(a2?.responsabili || [])].map(r => r.trim())));
+                        const categoryCheck = validateCoupleCategory({
+                          storedCategory: c.category,
+                          athlete1BirthDateISO: a1?.birth_date ?? null,
+                          athlete2BirthDateISO: a2?.birth_date ?? null,
+                        });
+
                         return (
-                          <tr key={c.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20">
-                            <td className="px-4 py-2">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
-                            <td className="px-4 py-2">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
-                            <td className="px-4 py-2">{c.category}</td>
+                          <tr key={c.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20 transition-colors">
+                            <td className="px-3 py-2 font-mono">{a1?.code || "-"}</td>
+                            <td className="px-3 py-2 font-bold">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
+                            <td className="px-3 py-2">
+                              {a1?.email ? (
+                                <div className="flex items-center gap-1 truncate max-w-[100px]" title={a1.email}>
+                                  <Mail className="w-3 h-3 shrink-0 opacity-50" />
+                                  <span className="truncate">{a1.email}</span>
+                                </div>
+                              ) : "-"}
+                            </td>
+                            <td className="px-3 py-2 font-mono">{a2?.code || "-"}</td>
+                            <td className="px-3 py-2 font-bold">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
+                            <td className="px-3 py-2">
+                              {a2?.email ? (
+                                <div className="flex items-center gap-1 truncate max-w-[100px]" title={a2.email}>
+                                  <Mail className="w-3 h-3 shrink-0 opacity-50" />
+                                  <span className="truncate">{a2.email}</span>
+                                </div>
+                              ) : "-"}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <span className="font-bold">{c.category}</span>
+                                {!categoryCheck.ok && <span className="w-3 h-3 rounded-full bg-warning/20 text-warning-foreground flex items-center justify-center text-[7px] font-black">!</span>}
+                              </div>
+                            </td>
+                            <td className="px-2 py-2 text-center font-mono">{getClassForDiscipline(c, "latino")}</td>
+                            <td className="px-2 py-2 text-center font-mono">{getClassForDiscipline(c, "standard")}</td>
+                            <td className="px-2 py-2 text-center font-mono">{getClassForDiscipline(c, "combinata")}</td>
+                            <td className="px-2 py-2 text-center font-mono">{getClassForDiscipline(c, "show_dance_sa")}</td>
+                            <td className="px-2 py-2 text-center font-mono">{getClassForDiscipline(c, "show_dance_classic")}</td>
+                            <td className="px-3 py-2 max-w-[150px] truncate">
+                              {resps.length ? resps.join(", ") : "-"}
+                            </td>
                           </tr>
                         );
                       })}
