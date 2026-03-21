@@ -45,7 +45,7 @@ serve(async (req) => {
       const sanitized = query.replace(/[^a-zA-ZÀ-ÿ0-9\s'-]/g, "").substring(0, 50);
       if (!sanitized) return new Response(JSON.stringify({ data: [] }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
       const pattern = `%${sanitized}%`;
-      const { data, error } = await supabase.from("athletes").select("id, code, first_name, last_name, category, class, qr_code").or(`first_name.ilike.${pattern},last_name.ilike.${pattern},code.ilike.${pattern},qr_code.ilike.${pattern}`).limit(20);
+      const { data, error } = await supabase.from("athletes").select("id, code, first_name, last_name, category, class, qr_code, discipline_info").or(`first_name.ilike.${pattern},last_name.ilike.${pattern},code.ilike.${pattern},qr_code.ilike.${pattern}`).limit(20);
       if (error) return new Response(JSON.stringify({ error: "Search error" }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
       return new Response(JSON.stringify({ data }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
@@ -53,7 +53,7 @@ serve(async (req) => {
     if (action === "couples") {
       const athleteId = url.searchParams.get("athlete_id");
       if (!athleteId || !uuidRegex.test(athleteId)) return new Response(JSON.stringify({ error: "ID non valido" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
-      const sel = "id, category, class, disciplines, athlete1:athletes!couples_athlete1_id_fkey (id, code, first_name, last_name, category, class, birth_date), athlete2:athletes!couples_athlete2_id_fkey (id, code, first_name, last_name, category, class, birth_date)";
+      const sel = "id, category, class, disciplines, discipline_info, athlete1:athletes!couples_athlete1_id_fkey (id, code, first_name, last_name, category, class, birth_date, discipline_info), athlete2:athletes!couples_athlete2_id_fkey (id, code, first_name, last_name, category, class, birth_date, discipline_info)";
       const [r1, r2] = await Promise.all([
         supabase.from("couples").select(sel).eq("athlete1_id", athleteId).eq("is_active", true),
         supabase.from("couples").select(sel).eq("athlete2_id", athleteId).eq("is_active", true),

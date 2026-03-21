@@ -130,6 +130,7 @@ export default function CompetitionEntriesDetail({
             responsabili,
             athlete1_id,
             athlete2_id,
+            discipline_info,
             athlete1:athletes!couples_athlete1_id_fkey (
               id,
               code,
