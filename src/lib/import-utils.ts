@@ -86,24 +86,39 @@ export async function importCompetitors(arrayBuffer: ArrayBuffer) {
 
         const headerRow = (rawData[1] || []).map((h: any) => String(h).toUpperCase().trim());
 
-        const colIdx = {
-            COGNOME: 0,
-            NOME: 1,
-            DATA_NASCITA: 3,
-            SESSO: 4,
-            CID: 5,
-            SCADENZA_CERT_MEDICO: 7,
-            CAT: 10,
-            RESP_1: 11,
-            RESP_2: 12,
-            RESP_3: 13,
-            RESP_4: 14,
-            PARTNER_CID: 18,
-        };
-
         const findColIdx = (names: string[]) => {
             return headerRow.findIndex(h => names.some(n => h.includes(n.toUpperCase())));
         };
+
+        const colIdx = {
+            COGNOME: findColIdx(["COGNOME", "COGN"]),
+            NOME: findColIdx(["NOME"]),
+            DATA_NASCITA: findColIdx(["DATA", "NASCITA", "NATO"]),
+            SESSO: findColIdx(["SESSO", "SEX"]),
+            CID: findColIdx(["CID", "CODICE", "TESSERA", "IDENTIFICATIVO"]),
+            SCADENZA_CERT_MEDICO: findColIdx(["CERTIF", "SCADENZA", "MEDICO"]),
+            CAT: findColIdx(["CAT", "CATEGORIA"]),
+            RESP_1: findColIdx(["RESP_1", "RESP. 1", "ISTRUTTORE 1"]),
+            RESP_2: findColIdx(["RESP_2", "RESP. 2", "ISTRUTTORE 2"]),
+            RESP_3: findColIdx(["RESP_3", "RESP. 3", "ISTRUTTORE 3"]),
+            RESP_4: findColIdx(["RESP_4", "RESP. 4", "ISTRUTTORE 4"]),
+            PARTNER_CID: findColIdx(["PARTNER_CID", "CID PARTNER", "SOCIO"]),
+        };
+
+        // Fallback for critical missing indices if findColIdx fails
+        if (colIdx.COGNOME === -1) colIdx.COGNOME = 0;
+        if (colIdx.NOME === -1) colIdx.NOME = 1;
+        if (colIdx.DATA_NASCITA === -1) colIdx.DATA_NASCITA = 3;
+        if (colIdx.SESSO === -1) colIdx.SESSO = 4;
+        if (colIdx.CID === -1) colIdx.CID = 5;
+        if (colIdx.SCADENZA_CERT_MEDICO === -1) colIdx.SCADENZA_CERT_MEDICO = 7;
+        if (colIdx.CAT === -1) colIdx.CAT = 10;
+        if (colIdx.RESP_1 === -1) colIdx.RESP_1 = 11;
+        if (colIdx.RESP_2 === -1) colIdx.RESP_2 = 12;
+        if (colIdx.RESP_3 === -1) colIdx.RESP_3 = 13;
+        if (colIdx.RESP_4 === -1) colIdx.RESP_4 = 14;
+        if (colIdx.PARTNER_CID === -1) colIdx.PARTNER_CID = 18;
+
         const emailIdx = findColIdx(["EMAIL", "E-MAIL", "MAIL"]);
         const discIndices: { disc: number, cls: number }[] = [];
         for (let j = 1; j <= 10; j++) {

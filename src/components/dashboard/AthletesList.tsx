@@ -367,17 +367,24 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                     <tbody className="divide-y divide-orange-100/50">
                       {deactivatedAthletes.map((a) => {
                         const certStatus = getCertificateStatus(a.medical_certificate_expiry);
+                        
+                        // Heuristic to detect swapped CID and Category/Place
+                        // If code has no numbers and category has numbers and is long, they are likely swapped
+                        const isLikelySwapped = !/\d/.test(a.code) && /\d/.test(a.category) && a.category.length >= 11;
+                        const displayCode = isLikelySwapped ? a.category : a.code;
+                        const rawCategory = isLikelySwapped ? a.code : a.category;
+
                         const categoryCheck = validateCategoryMatch({
-                          storedCategory: a.category,
+                          storedCategory: rawCategory,
                           birthDateISO: a.birth_date,
                           couples: couples,
                           athleteId: a.id
                         });
-                        const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : a.category);
+                        const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : rawCategory);
 
                         return (
                           <tr key={a.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20 transition-colors">
-                            <td className="px-4 py-2 font-mono text-[10px]">{a.code}</td>
+                            <td className="px-4 py-2 font-mono text-[10px]">{displayCode}</td>
                             <td className="px-4 py-2 font-semibold">{a.first_name} {a.last_name}</td>
                             <td className="px-4 py-2">
                               {a.email ? (
