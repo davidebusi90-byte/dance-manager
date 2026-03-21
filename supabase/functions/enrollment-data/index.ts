@@ -53,7 +53,7 @@ serve(async (req) => {
     if (action === "couples") {
       const athleteId = url.searchParams.get("athlete_id");
       if (!athleteId || !uuidRegex.test(athleteId)) return new Response(JSON.stringify({ error: "ID non valido" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
-      const sel = "id, category, class, disciplines, athlete1:athletes!couples_athlete1_id_fkey (id, code, first_name, last_name, category, class), athlete2:athletes!couples_athlete2_id_fkey (id, code, first_name, last_name, category, class)";
+      const sel = "id, category, class, disciplines, athlete1:athletes!couples_athlete1_id_fkey (id, code, first_name, last_name, category, class, birth_date), athlete2:athletes!couples_athlete2_id_fkey (id, code, first_name, last_name, category, class, birth_date)";
       const [r1, r2] = await Promise.all([
         supabase.from("couples").select(sel).eq("athlete1_id", athleteId).eq("is_active", true),
         supabase.from("couples").select(sel).eq("athlete2_id", athleteId).eq("is_active", true),

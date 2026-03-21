@@ -18,7 +18,11 @@ import {
 } from "@/components/ui/select";
 import { isInstructorResponsibleForCoupleByResponsabili } from "@/lib/instructor-utils";
 import { getSportsAge } from "@/lib/category-validation";
-import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
+import { 
+  isEventAllowedForCouple,
+  getEffectClassForCouple as getEffectiveClass,
+  formatEventName
+} from "@/lib/enrollment-utils";
 import { extractTextFromPdf, extractCidsFromText } from "@/lib/pdf-utils";
 import { getBestClass } from "@/lib/class-utils";
 import CoupleDetailModal from "./CoupleDetailModal";
@@ -517,13 +521,16 @@ export default function CompetitionEntriesDetail({
 
     const enrolledEventIds = entry.event_type_ids || [];
     const entryEventNames = enrolledEventIds
-      .map(id => eventTypes.find(et => et.id === id)?.event_name)
+      .map(id => {
+        const name = eventTypes.find(et => et.id === id)?.event_name;
+        return name ? formatEventName(name) : null;
+      })
       .filter(Boolean);
 
     const missingEventNames = eventTypes
       .filter(et => !enrolledEventIds.includes(et.id))
       .filter(et => isEventAllowedForCouple(et, couple))
-      .map(et => et.event_name);
+      .map(et => formatEventName(et.event_name));
 
     return (
       <tr
@@ -555,12 +562,12 @@ export default function CompetitionEntriesDetail({
           <div className="flex flex-col gap-0.5">
             {entryEventNames.map(name => (
               <div key={`enrolled-${name}`} className="text-[11px] py-0.5 px-2 bg-[#dcfce7] text-[#166534] rounded-md whitespace-nowrap border border-[#bbf7d0]">
-                {name}
+                {formatEventName(name, getEffectiveClass(couple, name))}
               </div>
             ))}
             {missingEventNames.map(name => (
               <div key={`missing-${name}`} className="text-[11px] py-0.5 px-2 bg-[#fee2e2] text-[#991b1b] rounded-md whitespace-nowrap border border-[#fecaca] opacity-70">
-                {name}
+                {formatEventName(name, getEffectiveClass(couple, name))}
               </div>
             ))}
             {entryEventNames.length === 0 && missingEventNames.length === 0 ? (

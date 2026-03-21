@@ -14,7 +14,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useUserRole } from "@/hooks/use-user-role";
 import { 
   isEventAllowedForCouple, 
-  getEffectClassForCouple as getEffectiveClass 
+  getEffectClassForCouple as getEffectiveClass,
+  formatEventName
 } from "@/lib/enrollment-utils";
 
 
@@ -960,7 +961,7 @@ export default function AthleteEnrollment() {
                                                     className="text-sm font-medium cursor-pointer"
                                                     onClick={(e) => e.stopPropagation()}
                                                   >
-                                                    {et.event_name}
+                                                    {formatEventName(et.event_name, getEffectiveClass(selectedCouple, et.event_name))}
                                                   </Label>
                                                 </div>
                                               </div>

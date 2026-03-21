@@ -11,7 +11,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useToast } from "@/hooks/use-toast";
 import { validateCoupleCategory } from "@/lib/category-validation";
-import { isEventAllowedForCouple } from "@/lib/enrollment-utils";
+import { 
+    isEventAllowedForCouple,
+    getEffectClassForCouple as getEffectiveClass,
+    formatEventName
+} from "@/lib/enrollment-utils";
 
 interface Athlete {
     id: string;
@@ -82,13 +86,17 @@ export default function CoupleDetailModal({
 
     const enrolledEventIds = entry.event_type_ids || [];
     const enrolledEvents = enrolledEventIds
-        .map(id => eventTypes.find(et => et.id === id)?.event_name)
+        .map(id => {
+            const et = eventTypes.find(et => et.id === id);
+            if (!et) return null;
+            return formatEventName(et.event_name, getEffectiveClass(couple, et.event_name));
+        })
         .filter(Boolean);
 
     const missingEvents = eventTypes
         .filter(et => !enrolledEventIds.includes(et.id))
         .filter(et => isEventAllowedForCouple(et, couple))
-        .map(et => et.event_name);
+        .map(et => formatEventName(et.event_name, getEffectiveClass(couple, et.event_name)));
 
     // Check for category anomalies
     const categoryCheck = validateCoupleCategory({

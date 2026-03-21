@@ -35,8 +35,8 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
   { name: "Youth (16/18)", classes: ["C", "B1", "B2", "B3", "A", "AS"], minAge: 16, maxAge: 18 },
 
   // Under 16 & Under 21 (Special)
-  { name: "Under 16", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS"], maxAge: 15 },
-  { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
+  { name: "Under 16", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], maxAge: 15 },
+  { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
 
   // Adult
   { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2", "AS", "MASTER"], minAge: 19, maxAge: 34 },
@@ -62,7 +62,7 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
   { name: "Over 65", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65 },
 
   // Open / General
-  { name: "Open Classe A", classes: ["A", "A1", "A2"], minAge: 16 },
+  { name: "Adult Open", classes: ["A", "A1", "A2"], minAge: 16 },
   { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
 ];
 
@@ -274,7 +274,7 @@ export default function CompetitionEnrollments() {
       const nameLower = p.name.toLowerCase();
       // Escludiamo over/under e Open Classe A
       const isNotSpecial = !nameLower.includes("over") && !nameLower.includes("under");
-      const isNotOpenA = !nameLower.includes("open classe a");
+      const isNotOpenA = !nameLower.includes("open classe a") && !nameLower.includes("adult open");
       return isNotSpecial && isNotOpenA;
     }).map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);

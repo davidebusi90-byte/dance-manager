@@ -1,5 +1,30 @@
 import { getBestClass } from "./class-utils";
-import { getCategoryMinAge, getCategoryMaxAge } from "./category-validation";
+import { getCategoryMinAge, getCategoryMaxAge, getSportsAge } from "./category-validation";
+
+/**
+ * Funzione di utilità per formattare i nomi delle gare secondo le specifiche utente.
+ * 1. "Open Classe A" -> "Adult Open"
+ * 2. Se viene passata la classe, la aggiunge (es. "Junior 1 (12/13) - D")
+ */
+export const formatEventName = (name: string, effectiveClass?: string | null): string => {
+    if (!name) return "";
+    
+    let formatted = name;
+    
+    // Regola specifica: Open Classe A -> Adult Open
+    const openARegex = /open\s+classe\s+a/gi;
+    if (openARegex.test(formatted)) {
+        formatted = formatted.replace(openARegex, "Adult Open");
+    }
+    
+    // Regola dell'aggiunta della classe (tranne che per le Open)
+    if (effectiveClass && !formatted.toLowerCase().includes("open")) {
+        formatted = `${formatted} - ${effectiveClass}`;
+    }
+    
+    return formatted;
+};
+
 
 export const getEffectClassForCouple = (couple: any, eventName: string) => {
     const rawClass = couple.discipline_info ? (couple.class || "D") : couple.class;
@@ -39,14 +64,40 @@ export const getEffectClassForCouple = (couple: any, eventName: string) => {
     return normalize(couple.class);
 };
 
-export const isEventAllowedByAge = (et: any, category: string) => {
+export const isEventAllowedByAge = (et: any, category: string, athlete1BirthDate?: string | null, athlete2BirthDate?: string | null) => {
+    // If birth dates are available, use precise sports age check
+    if (athlete1BirthDate && athlete2BirthDate) {
+        const refDate = new Date();
+        const age1 = getSportsAge(athlete1BirthDate, refDate);
+        const age2 = getSportsAge(athlete2BirthDate, refDate);
+        const coupleMinAge = Math.min(age1, age2);
+        const coupleMaxAge = Math.max(age1, age2);
+
+        if (et.max_age !== null && coupleMaxAge > et.max_age) return false;
+        if (et.min_age !== null && coupleMinAge < et.min_age) return false;
+        return true;
+    }
+
+    // Fallback to category-based logic if birth dates are missing
     const coupleMinAge = getCategoryMinAge(category);
     const coupleMaxAge = getCategoryMaxAge(category); // null means no upper bound (e.g. Senior 5, Adult)
 
-    // If the event has a maximum age limit, the couple's category must fully fit within it.
+    // IMPROVED LOGIC: For overlapping categories like "Under 21", we allow if 
+    // the category's typical range overlaps with the event's range.
+    
     if (et.max_age !== null) {
         if (coupleMaxAge === null) return false;
-        if (coupleMaxAge > et.max_age) return false;
+        
+        // If it's an "Under X" event, we are more lenient: if the category's MINIMUM 
+        // age fits, we allow it (the user is responsible for ensuring the specific athletes fit).
+        // This solves the "Adult (19-34)" vs "Under 21 (16-20)" issue.
+        const isUnderEvent = et.event_name.toLowerCase().includes("under");
+        if (isUnderEvent) {
+            if (coupleMinAge > et.max_age) return false;
+        } else {
+            // Standard behavior for Senior classes etc: the category must fit.
+            if (coupleMaxAge > et.max_age) return false;
+        }
     }
 
     // If the event has a minimum age, ensure the couple's category minimum age meets it.
@@ -89,15 +140,26 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
 
     const effectiveClass = getEffectClassForCouple(couple, et.event_name);
     let isRaceAllowed = (et.allowed_classes || []).includes(effectiveClass);
+    
+    // LOGICA DI COMPATIBILITÀ CLASSI (per dati esistenti nel DB)
+    if (!isRaceAllowed) {
+        if (effectiveClass === "A") {
+            isRaceAllowed = (et.allowed_classes || []).includes("A1") || (et.allowed_classes || []).includes("A2");
+        } else if (effectiveClass === "B" || effectiveClass === "B1") {
+            isRaceAllowed = (et.allowed_classes || []).includes("B1") || (et.allowed_classes || []).includes("B2") || (et.allowed_classes || []).includes("B3");
+        }
+    }
+
     const nameNorm = et.event_name.toLowerCase();
+    const nameFormattedNorm = formatEventName(et.event_name).toLowerCase();
     const c = couple.class.toUpperCase();
 
     // REGOLA CLASSE C e D - SPECIFICHE UTENTE 13/03/2026
     if (c === "D" || c === "C") {
         const lowerName = et.event_name.toLowerCase();
-        // Controllo flessibile per Open C e Open B
-        const isOpenB = lowerName.includes("open") && lowerName.includes("b");
-        const isOpenC = lowerName.includes("open") && lowerName.includes("c");
+        // Controllo flessibile per Open C e Open B - Ora più stringente per evitare falsi positivi
+        const isOpenB = /\bopen\s+b\b/i.test(lowerName);
+        const isOpenC = /\bopen\s+c\b/i.test(lowerName);
 
         if (isOpenB || isOpenC) return true;
     }
@@ -107,7 +169,7 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         const nameUpper = et.event_name.toUpperCase();
         
         // 0. Blocco PREVENTIVO Classi Alte (A, AS, MASTER) - Priorità assoluta
-        if (nameUpper.includes("CLASSE A") || nameUpper.includes(" A1") || nameUpper.includes(" A2") || nameUpper.includes(" AS") || nameUpper.includes("MASTER")) return false;
+        if (nameUpper.includes("CLASSE A") || nameUpper.includes("ADULT OPEN") || nameUpper.includes(" A1") || nameUpper.includes(" A2") || nameUpper.includes(" AS") || nameUpper.includes("MASTER")) return false;
 
         // 2. Blocco Under 21: MAI per Classe D (richiesta utente 17/03/2026)
         if (nameNorm.includes("under 21")) return false;
@@ -132,9 +194,10 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     }
 
     // Check età standard (basato sulla categoria della coppia)
-    if (!isEventAllowedByAge(et, couple.category)) return false;
+    if (!isEventAllowedByAge(et, couple.category, couple.athlete1?.birth_date, couple.athlete2?.birth_date)) return false;
 
     if (!isRaceAllowed) return false;
 
     return true;
 };
+
