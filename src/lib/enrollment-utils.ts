@@ -1,5 +1,5 @@
 import { getBestClass } from "./class-utils";
-import { getCategoryMinAge, getCategoryMaxAge, getSportsAge } from "./category-validation";
+import { getCategoryMinAge, getCategoryMaxAge, getSportsAge, normalizeCategory } from "./category-validation";
 
 /**
  * Funzione di utilità per formattare i nomi delle gare secondo le specifiche utente.
@@ -153,6 +153,12 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     const nameNorm = et.event_name.toLowerCase();
     const nameFormattedNorm = formatEventName(et.event_name).toLowerCase();
     const c = couple.class.toUpperCase();
+
+    // REGOLA AS ADULT - SPECIFICHE UTENTE 21/03/2026
+    // La classe AS Adult può ballare solo Adult Open
+    if (c === "AS" && normalizeCategory(couple.category) === "adult") {
+        if (!nameFormattedNorm.includes("adult open")) return false;
+    }
 
     // REGOLA CLASSE C e D - SPECIFICHE UTENTE 13/03/2026
     if (c === "D" || c === "C") {

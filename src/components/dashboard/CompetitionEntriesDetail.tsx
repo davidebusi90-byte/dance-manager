@@ -1012,6 +1012,7 @@ export default function CompetitionEntriesDetail({
         entry={selectedEntry}
         eventTypes={eventTypes}
         onClose={() => setSelectedEntry(null)}
+        onUpdate={fetchEntries}
       />
 
       <Dialog open={showComparisonDialog} onOpenChange={setShowComparisonDialog}>

@@ -6,10 +6,12 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2, Pencil, Save, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { validateCoupleCategory } from "@/lib/category-validation";
 import { 
     isEventAllowedForCouple,
@@ -60,18 +62,32 @@ interface CoupleDetailModalProps {
     entry: CompetitionEntry | null;
     eventTypes: EventType[];
     onClose: () => void;
+    onUpdate?: () => void;
 }
 
 export default function CoupleDetailModal({
     entry,
     eventTypes,
     onClose,
+    onUpdate,
 }: CoupleDetailModalProps) {
     const { role } = useUserRole();
     const { toast } = useToast();
     const [isDeactivating, setIsDeactivating] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editedEventIds, setEditedEventIds] = useState<string[]>([]);
+    const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => {
+        if (entry) {
+            setEditedEventIds(entry.event_type_ids || []);
+            setIsEditing(false);
+        }
+    }, [entry]);
 
     if (!entry || !entry.couples) return null;
+
+    const isAdmin = role === "admin";
 
     const couple = entry.couples;
     let athlete1 = couple.athlete1;
@@ -104,6 +120,38 @@ export default function CoupleDetailModal({
         athlete1BirthDateISO: athlete1?.birth_date ?? null,
         athlete2BirthDateISO: athlete2?.birth_date ?? null,
     });
+
+    const allAllowedEvents = eventTypes
+        .filter(et => isEventAllowedForCouple(et, couple));
+
+    const toggleEvent = (eventId: string) => {
+        if (!isEditing) return;
+        setEditedEventIds(prev =>
+            prev.includes(eventId)
+                ? prev.filter(id => id !== eventId)
+                : [...prev, eventId]
+        );
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from("competition_entries")
+                .update({ event_type_ids: editedEventIds } as any)
+                .eq("id", entry.id);
+
+            if (error) throw error;
+
+            toast({ title: "Iscrizione aggiornata", description: "Le gare della coppia sono state modificate." });
+            setIsEditing(false);
+            if (onUpdate) onUpdate();
+        } catch (err: any) {
+            toast({ title: "Errore nel salvataggio", description: err.message, variant: "destructive" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     // Use couple's responsabili field directly
     const responsabiliArray = couple.responsabili || [];
@@ -169,23 +217,85 @@ export default function CoupleDetailModal({
                     )}
 
                     {/* Enrolled Events */}
-                    <div className="space-y-2">
-                        <h3 className="font-semibold text-sm text-muted-foreground">Gare Selezionate</h3>
-                        {(enrolledEvents.length > 0 || missingEvents.length > 0) ? (
-                            <div className="flex flex-wrap gap-2">
-                                {enrolledEvents.map(event => (
-                                    <Badge key={`enrolled-${event}`} className="bg-primary/10 text-primary border-primary/20">
-                                        {event}
-                                    </Badge>
-                                ))}
-                                {missingEvents.map(event => (
-                                    <Badge key={`missing-${event}`} variant="outline" className="bg-gray-50 border-gray-300 text-black line-through">
-                                        {event}
-                                    </Badge>
-                                ))}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Gare Iscritte</h3>
+                            {isAdmin && !isEditing && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsEditing(true)}
+                                    className="h-7 gap-1.5 text-[11px]"
+                                >
+                                    <Pencil className="w-3 h-3" />
+                                    Modifica Gare
+                                </Button>
+                            )}
+                            {isEditing && (
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setIsEditing(false);
+                                            setEditedEventIds(entry.event_type_ids || []);
+                                        }}
+                                        className="h-7 gap-1.5 text-[11px]"
+                                    >
+                                        <X className="w-3 h-3" />
+                                        Annulla
+                                    </Button>
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        className="h-7 gap-1.5 text-[11px] bg-primary"
+                                    >
+                                        {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                        Salva
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+
+                        {allAllowedEvents.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 p-3 bg-muted/5 rounded-lg border border-muted-foreground/10">
+                                {allAllowedEvents.map(et => {
+                                    const isSelected = isEditing 
+                                        ? editedEventIds.includes(et.id)
+                                        : enrolledEventIds.includes(et.id);
+                                    
+                                    const eventLabel = formatEventName(et.event_name, getEffectiveClass(couple, et.event_name));
+
+                                    if (!isEditing && !isSelected) return null;
+
+                                    return (
+                                        <Badge
+                                            key={et.id}
+                                            onClick={() => toggleEvent(et.id)}
+                                            variant={isSelected ? "default" : "outline"}
+                                            className={`
+                                                px-3 py-1.5 text-[11px] transition-all cursor-default select-none
+                                                ${isEditing ? 'cursor-pointer hover:scale-105 active:scale-95' : ''}
+                                                ${isSelected 
+                                                    ? 'bg-primary/10 text-primary border-primary/20' 
+                                                    : 'bg-background text-muted-foreground border-dashed opacity-60'
+                                                }
+                                            `}
+                                        >
+                                            {eventLabel}
+                                        </Badge>
+                                    );
+                                })}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground italic">-</p>
+                            <p className="text-sm text-muted-foreground italic">- Nessuna gara disponibile -</p>
+                        )}
+                        {isEditing && (
+                            <p className="text-[10px] text-muted-foreground italic mt-1">
+                                * Clicca sulle gare per aggiungerle o rimuoverle dall'iscrizione.
+                            </p>
                         )}
                     </div>
 

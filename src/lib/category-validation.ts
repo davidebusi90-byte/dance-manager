@@ -52,7 +52,7 @@ export const ALLOWED_CLASSES_BY_CATEGORY: Record<string, string[]> = {
   "junior1": ["D", "C", "B3", "B2", "B1", "A"],
   "junior2": ["D", "C", "B3", "B2", "B1", "A", "AS"],
   "youth": ["D", "C", "B3", "B2", "B1", "A", "AS"],
-  "adult": ["D", "C", "B3", "B2", "B1", "A2", "A1", "AS", "MASTER"],
+  "adult": ["D", "C", "B3", "B2", "B1", "A2", "A1"],
   "senior1": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
   "senior2": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
   "senior3a": ["D", "C", "B3", "B2", "B1", "A", "AS"],
