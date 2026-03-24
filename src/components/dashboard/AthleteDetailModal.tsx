@@ -25,6 +25,7 @@ import { formatCategoryDisplay, getSportsAge } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
 
 import { Athlete, Couple } from "@/types/dashboard";
+import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
 
 interface AthleteDetailModalProps {
   athlete: Athlete | null;
@@ -60,8 +61,10 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
   };
 
   // RESOLUTION LOGIC: Merge data from all possible sources (pool of data)
-  const displayCode = athlete.code;
-  const rawCategory = athlete.category;
+  // Apply swap heuristic for display
+  const isSwapped = isCidAndCategorySwapped(athlete.code, athlete.category);
+  const displayCode = isSwapped ? athlete.category : athlete.code;
+  const rawCategory = isSwapped ? athlete.code : athlete.category;
 
   const relatedAthletes = allAthletes.filter(a => a.code === athlete.code);
   const relatedAthleteIds = new Set(relatedAthletes.map(a => a.id));

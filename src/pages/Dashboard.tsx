@@ -15,6 +15,7 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { toast } from "sonner";
 import { Athlete, Couple, Profile } from "@/types/dashboard";
+import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
 
 type ActiveView = "none" | "athletes" | "couples" | "competitions";
 
@@ -467,8 +468,10 @@ export default function Dashboard() {
                             const isFemale = athlete.gender === 'F';
                             const isMale = athlete.gender === 'M';
 
-                            const displayCode = athlete.code;
-                            const displayCategory = athlete.category;
+                            // Apply swap heuristic for display
+                            const isSwapped = isCidAndCategorySwapped(athlete.code, athlete.category);
+                            const displayCode = isSwapped ? athlete.category : athlete.code;
+                            const displayCategory = isSwapped ? athlete.code : athlete.category;
 
                             let rowColor = "";
                             if (isOrphan) {

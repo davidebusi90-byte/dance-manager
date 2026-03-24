@@ -12,6 +12,7 @@ import { validateCategoryMatch, formatCategoryDisplay, getSportsAge } from "@/li
 import AthleteDetailModal from "./AthleteDetailModal";
 
 import { Athlete, Couple, Profile } from "@/types/dashboard";
+import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
 
 interface AthletesListProps {
   athletes: Athlete[];
@@ -172,8 +173,10 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
               {filteredSortedAthletes.map((athlete) => {
                 const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
 
-                const displayCode = athlete.code;
-                const rawCategory = athlete.category;
+                // Apply swap heuristic for display
+                const isSwapped = isCidAndCategorySwapped(athlete.code, athlete.category);
+                const displayCode = isSwapped ? athlete.category : athlete.code;
+                const rawCategory = isSwapped ? athlete.code : athlete.category;
 
                 const categoryCheck = validateCategoryMatch({
                   storedCategory: rawCategory,
@@ -262,8 +265,10 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                   {filteredSortedAthletes.map((athlete) => {
                     const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
 
-                    const displayCode = athlete.code;
-                    const rawCategory = athlete.category;
+                    // Apply swap heuristic for display
+                    const isSwapped = isCidAndCategorySwapped(athlete.code, athlete.category);
+                    const displayCode = isSwapped ? athlete.category : athlete.code;
+                    const rawCategory = isSwapped ? athlete.code : athlete.category;
 
                     const categoryCheck = validateCategoryMatch({
                       storedCategory: rawCategory,
@@ -376,8 +381,10 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                       {deactivatedAthletes.map((a) => {
                         const certStatus = getCertificateStatus(a.medical_certificate_expiry);
                         
-                        const displayCode = a.code;
-                        const rawCategory = a.category;
+                        // Apply swap heuristic for display
+                        const isSwapped = isCidAndCategorySwapped(a.code, a.category);
+                        const displayCode = isSwapped ? a.category : a.code;
+                        const rawCategory = isSwapped ? a.code : a.category;
 
                         const categoryCheck = validateCategoryMatch({
                           storedCategory: rawCategory,
