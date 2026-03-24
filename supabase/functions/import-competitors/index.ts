@@ -91,6 +91,20 @@ serve(async (req) => {
             auth: { autoRefreshToken: false, persistSession: false },
         });
 
+        // Pre-process payload to assign fallback CIDs if missing
+        let missingCidCount = 0;
+        for (const athlete of body.athletes) {
+            let code = athlete.code ? String(athlete.code).trim() : "";
+            const firstName = athlete.first_name ? String(athlete.first_name).trim() : "";
+            const lastName = athlete.last_name ? String(athlete.last_name).trim() : "";
+
+            if ((!code || code.toLowerCase() === "undefined") && firstName && lastName) {
+                missingCidCount++;
+                code = `XX${String(missingCidCount).padStart(4, "0")}`;
+                athlete.code = code;
+            }
+        }
+
         const results = {
             successful: 0,
             failed: 0,
