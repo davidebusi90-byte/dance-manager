@@ -111,8 +111,6 @@ serve(async (req) => {
             });
         }
 
-        const body = (await req.json()) as Body;
-
         if (!body || !body.athletes || !Array.isArray(body.athletes)) {
             return new Response(JSON.stringify({ error: "Invalid payload format. Expected { athletes: [...] }" }), {
                 status: 400,
