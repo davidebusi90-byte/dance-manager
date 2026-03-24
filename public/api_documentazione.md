@@ -48,11 +48,10 @@ Il sistema utilizza la logica **Upsert** basata sulla chiave primaria `code`: se
 
 | Campo | Tipo | Obbligo | Descrizione |
 |---|---|---|---|
-| `code` | `string` | **Sì***| Codice univoco dell'atleta (CID). *Se assente, il sistema userà il `fiscal_code` / `codice_fiscale`. Se manca, ne creerà uno (es. XX0001). |
+| `code` | `string` | **Sì***| Codice univoco dell'atleta (CID). *Se assente, il sistema cercherà un atleta con stesso Nome e Cognome nel DB e userà il suo CID. Se non esiste, estrarrà un nuovo CID numerico consecutivo automatically. |
 | `first_name` | `string` | **Sì** | Nome dell'atleta. |
 | `last_name` | `string` | **Sì** | Cognome dell'atleta. |
 | `category` | `string` | **Sì** | Categoria di appartenenza (Es. "19/34"). |
-| `fiscal_code` | `string` | No | Codice Fiscale (anche `codice_fiscale`). Usato come fallback se `code` è assente. |
 | `birth_date` | `string` | No | Data di nascita (formato YYYY-MM-DD). |
 | `gender` | `string` | No | Sesso ("M", "F"). |
 | `email` | `string` | No | Indirizzo email. |

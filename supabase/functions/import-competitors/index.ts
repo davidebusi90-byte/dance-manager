@@ -11,7 +11,6 @@ const corsHeaders = {
 // Expected payload structure
 type AthleteData = {
     code: string;
-    fiscal_code?: string;
     first_name: string;
     last_name: string;
     birth_date?: string; // YYYY-MM-DD
@@ -92,25 +91,6 @@ serve(async (req) => {
             auth: { autoRefreshToken: false, persistSession: false },
         });
 
-        // Pre-process payload to assign fallback CIDs if missing
-        let missingCidCount = 0;
-        for (const athlete of body.athletes) {
-            let code = athlete.code ? String(athlete.code).trim() : "";
-            const fiscalCode = athlete.fiscal_code ? String(athlete.fiscal_code).trim().toUpperCase() : (athlete as any).codice_fiscale ? String((athlete as any).codice_fiscale).trim().toUpperCase() : "";
-            const firstName = athlete.first_name ? String(athlete.first_name).trim() : "";
-            const lastName = athlete.last_name ? String(athlete.last_name).trim() : "";
-
-            if (!code || code.toLowerCase() === "undefined") {
-                if (fiscalCode) {
-                    code = fiscalCode;
-                } else if (firstName && lastName) {
-                    missingCidCount++;
-                    code = `XX${String(missingCidCount).padStart(4, "0")}`;
-                }
-                athlete.code = code;
-            }
-        }
-
         const results = {
             successful: 0,
             failed: 0,
@@ -120,17 +100,67 @@ serve(async (req) => {
             errors: [] as any[],
         };
 
+        // Fetch ALL athletes (including deleted) to perform name matching and find max numeric CID
+        const { data: allAthletes, error: fetchAllError } = await adminClient
+            .from("athletes")
+            .select("code, first_name, last_name, is_deleted");
+
+        let maxNumericCode = 100000;
+        const nameToCodeMap = new Map<string, string>();
+
+        if (allAthletes) {
+            allAthletes.forEach(a => {
+                if (/^\d+$/.test(a.code)) {
+                    const num = parseInt(a.code, 10);
+                    if (num > maxNumericCode) maxNumericCode = num;
+                }
+                const key = `${a.first_name.trim()}-${a.last_name.trim()}`.toLowerCase();
+                // Store active first, or overwrite if currently only deleted exists
+                if (!nameToCodeMap.has(key) || !a.is_deleted) {
+                    nameToCodeMap.set(key, a.code);
+                }
+            });
+        }
+
+        // Pre-process payload to assign fallback CIDs if missing
+        for (const athlete of body.athletes) {
+            let code = athlete.code ? String(athlete.code).trim() : "";
+            const firstName = athlete.first_name ? String(athlete.first_name).trim() : "";
+            const lastName = athlete.last_name ? String(athlete.last_name).trim() : "";
+
+            if (!code || code.toLowerCase() === "undefined") {
+                if (firstName && lastName) {
+                    const key = `${firstName}-${lastName}`.toLowerCase();
+                    if (nameToCodeMap.has(key)) {
+                        code = nameToCodeMap.get(key)!;
+                    } else {
+                        maxNumericCode++;
+                        code = String(maxNumericCode);
+                        nameToCodeMap.set(key, code);
+                    }
+                }
+                athlete.code = code;
+            } else {
+                if (firstName && lastName) {
+                    const key = `${firstName}-${lastName}`.toLowerCase();
+                    nameToCodeMap.set(key, code);
+                }
+                if (/^\d+$/.test(code)) {
+                    const num = parseInt(code, 10);
+                    if (num > maxNumericCode) maxNumericCode = num;
+                }
+            }
+        }
+
         // 0. Identify potential removals (missing from payload)
         const incomingCodes = new Set(body.athletes.map(a => a.code));
-        const { data: currentAthletes, error: fetchError } = await adminClient
-            .from("athletes")
-            .select("code, first_name, last_name")
-            .eq("is_deleted", false);
-
-        if (fetchError) {
-            console.error("Error fetching current athletes for removal check:", fetchError);
-        } else if (currentAthletes) {
-            const missingAthletes = currentAthletes.filter(a => !incomingCodes.has(a.code));
+        
+        // Use the fetched athletes instead of querying again
+        if (fetchAllError) {
+            console.error("Error fetching current athletes for removal check:", fetchAllError);
+        } else if (allAthletes) {
+            const currentActiveAthletes = allAthletes.filter(a => !a.is_deleted);
+            const missingAthletes = currentActiveAthletes.filter(a => !incomingCodes.has(a.code));
             
             if (missingAthletes.length > 0) {
                 // Perform soft-delete in batches of 100
