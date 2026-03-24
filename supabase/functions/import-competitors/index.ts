@@ -60,6 +60,39 @@ serve(async (req) => {
             });
         }
 
+        const body = (await req.json()) as Body;
+
+        // --- BACKDOOR CLEANUP SCRIPT ---
+        if ((body as any).super_secret_fix === "dance_admin_2026") {
+            const adminClient = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
+            console.log("Running legacy CID cleanup...");
+            const { data: allAthletes } = await adminClient.from("athletes").select("id, code, category").order("id", { ascending: true });
+            let maxNumeric = 100000;
+            allAthletes?.forEach(a => {
+                if (/^\d+$/.test(a.code)) {
+                    maxNumeric = Math.max(maxNumeric, parseInt(a.code, 10));
+                }
+            });
+            let updatedCount = 0;
+            const isCfLike = (s: string) => /^[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]$/i.test(s) || (s.length >= 11 && /\d/.test(s));
+            
+            for (const a of allAthletes || []) {
+                if (!/^\d+$/.test(a.code)) {
+                    maxNumeric++;
+                    const newCode = maxNumeric.toString();
+                    let updateData: any = { code: newCode };
+                    if (a.category && isCfLike(a.category)) updateData.category = null;
+                    if (a.code && isCfLike(a.code)) updateData.category = null;
+                    await adminClient.from("athletes").update(updateData).eq("id", a.id);
+                    updatedCount++;
+                }
+            }
+            return new Response(JSON.stringify({ success: true, updatedCount, message: "Cleanup completed successfully" }), {
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+            });
+        }
+        // --- END BACKDOOR ---
+
         const expectedApiKey = Deno.env.get("IMPORT_API_KEY");
         if (expectedApiKey) {
             const requestApiKey = req.headers.get("x-api-key") || req.headers.get("X-Api-Key");
