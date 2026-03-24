@@ -91,6 +91,27 @@ serve(async (req) => {
             auth: { autoRefreshToken: false, persistSession: false },
         });
 
+        // --- Save raw payload to Storage as a log file ---
+        try {
+            const { data: bucket } = await adminClient.storage.getBucket('api-logs');
+            if (!bucket) {
+                await adminClient.storage.createBucket('api-logs', { public: false });
+            }
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const logFilename = `sync_${timestamp}.json`;
+            
+            await adminClient.storage.from('api-logs').upload(
+                logFilename, 
+                JSON.stringify(body, null, 2),
+                { contentType: 'application/json' }
+            );
+            console.log(`Saved API payload to bucket api-logs as ${logFilename}`);
+        } catch (storageErr: any) {
+            console.error("Failed to save API log to storage:", storageErr);
+        }
+        // -------------------------------------------------
+
         const results = {
             successful: 0,
             failed: 0,
