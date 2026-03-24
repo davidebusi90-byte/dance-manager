@@ -467,6 +467,9 @@ export default function Dashboard() {
                             const isFemale = athlete.gender === 'F';
                             const isMale = athlete.gender === 'M';
 
+                            const displayCode = athlete.code;
+                            const displayCategory = athlete.category;
+
                             let rowColor = "";
                             if (isOrphan) {
                               if (isFemale) rowColor = "bg-[#FFD9B3] hover:bg-[#FFE0C2]";
@@ -478,9 +481,9 @@ export default function Dashboard() {
 
                             return (
                               <tr key={athlete.id} className={`${rowColor} transition-colors duration-300`}>
-                                <td className="font-mono text-sm">{athlete.code}</td>
+                                <td className="font-mono text-sm">{displayCode}</td>
                                 <td className="font-medium">{athlete.first_name} {athlete.last_name}</td>
-                                <td>{athlete.category}</td>
+                                <td>{displayCategory}</td>
                                 <td>{athlete.class}</td>
                                 <td>
                                   {athlete.medical_certificate_expiry ? (

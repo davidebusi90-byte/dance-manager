@@ -60,12 +60,14 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
   };
 
   // RESOLUTION LOGIC: Merge data from all possible sources (pool of data)
-  const athleteCode = athlete.code;
-  const relatedAthletes = allAthletes.filter(a => a.code === athleteCode);
+  const displayCode = athlete.code;
+  const rawCategory = athlete.category;
+
+  const relatedAthletes = allAthletes.filter(a => a.code === athlete.code);
   const relatedAthleteIds = new Set(relatedAthletes.map(a => a.id));
   relatedAthleteIds.add(athlete.id);
 
-  let derivedCategory = athlete.category;
+  let derivedCategory = rawCategory;
 
   // 1. Accumulate discipline info from all related records (dynamic keys)
   const derivedDisciplineInfo: Record<string, string> = {};
@@ -155,7 +157,7 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <IdCard className="w-3.5 h-3.5" />
-                  Codice: {athlete.code}
+                  Codice: {displayCode}
                 </p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Crosshair className="w-3.5 h-3.5" />

@@ -1,38 +1,7 @@
 
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
-import { validateAthleteRow } from "@/lib/import-validation";
-import { getBestClass } from "@/lib/class-utils";
-import type { Database } from "@/integrations/supabase/types";
-
-type DanceCategory = Database["public"]["Enums"]["dance_category"];
-
-const DISCIPLINE_MAP: Record<string, DanceCategory> = {
-    "danze latino americane": "latino",
-    "danze latine": "latino",
-    "latino americane": "latino",
-    "latine": "latino",
-    "latino": "latino",
-    "danze standard": "standard",
-    "standard": "standard",
-    "combinata standard-latini": "combinata",
-    "combinata standard latini": "combinata",
-    "combinata": "combinata",
-    "10 balli": "combinata",
-    "south american showdance": "show_dance",
-    "south american show dance": "show_dance",
-    "classic showdance": "show_dance",
-    "classic show dance": "show_dance",
-    "showdance": "show_dance",
-    "show dance": "show_dance",
-    "show": "show_dance",
-};
-
-const parseDiscipline = (value: string): DanceCategory | null => {
-    if (!value) return null;
-    const normalized = value.toLowerCase().trim();
-    return DISCIPLINE_MAP[normalized] || null;
-};
+// Legacy helper for Excel dates used by importCompetitions
 
 const parseExcelDate = (value: any): string | null => {
     if (!value) return null;
@@ -65,14 +34,6 @@ const parseExcelDate = (value: any): string | null => {
     }
     return null;
 };
-
-const parseCategory = (value: string): string => {
-    if (!value) return "";
-    const match = value.match(/cat:\s*(.+)/i);
-    return match ? match[1].trim() : value.trim();
-};
-
-
 
 export async function importCompetitions(arrayBuffer: ArrayBuffer) {
     try {

@@ -171,13 +171,17 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
             <div className="md:hidden space-y-4">
               {filteredSortedAthletes.map((athlete) => {
                 const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
+
+                const displayCode = athlete.code;
+                const rawCategory = athlete.category;
+
                 const categoryCheck = validateCategoryMatch({
-                  storedCategory: athlete.category,
+                  storedCategory: rawCategory,
                   birthDateISO: athlete.birth_date,
                   couples: couples,
                   athleteId: athlete.id
                 });
-                const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : athlete.category);
+                const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : rawCategory);
                 const isOrphan = !athleteIdsInCouples.has(athlete.id);
                 const isFemale = athlete.gender === 'F';
                 const isMale = athlete.gender === 'M';
@@ -199,7 +203,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                       <div>
                         <p className="font-bold text-lg text-primary/90">{athlete.first_name} {athlete.last_name}</p>
                         <div className="flex flex-col gap-0.5 mt-0.5">
-                          <p className="text-xs font-mono text-muted-foreground">{athlete.code}</p>
+                          <p className="text-xs font-mono text-muted-foreground">{displayCode}</p>
                           {athlete.email && (
                             <a href={`mailto:${athlete.email}`} className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
                               <Mail className="w-3 h-3" />
@@ -257,13 +261,17 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                 <tbody className="divide-y divide-border/50">
                   {filteredSortedAthletes.map((athlete) => {
                     const certStatus = getCertificateStatus(athlete.medical_certificate_expiry);
+
+                    const displayCode = athlete.code;
+                    const rawCategory = athlete.category;
+
                     const categoryCheck = validateCategoryMatch({
-                      storedCategory: athlete.category,
+                      storedCategory: rawCategory,
                       birthDateISO: athlete.birth_date,
                       couples: couples,
                       athleteId: athlete.id
                     });
-                    const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : athlete.category);
+                    const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : rawCategory);
                     const isOrphan = !athleteIdsInCouples.has(athlete.id);
                     const isFemale = athlete.gender === 'F';
                     const isMale = athlete.gender === 'M';
@@ -281,7 +289,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                         onClick={() => setSelectedAthlete(athlete)}
                         className={`${rowBg} transition-colors duration-200 cursor-pointer group`}
                       >
-                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{athlete.code}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{displayCode}</td>
                         <td className="px-4 py-3 font-semibold text-primary/80">{athlete.first_name} {athlete.last_name}</td>
                         <td className="px-4 py-3">
                           {athlete.email ? (
@@ -368,11 +376,8 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                       {deactivatedAthletes.map((a) => {
                         const certStatus = getCertificateStatus(a.medical_certificate_expiry);
                         
-                        // Heuristic to detect swapped CID and Category/Place
-                        // If code has no numbers and category has numbers and is long, they are likely swapped
-                        const isLikelySwapped = !/\d/.test(a.code) && /\d/.test(a.category) && a.category.length >= 11;
-                        const displayCode = isLikelySwapped ? a.category : a.code;
-                        const rawCategory = isLikelySwapped ? a.code : a.category;
+                        const displayCode = a.code;
+                        const rawCategory = a.category;
 
                         const categoryCheck = validateCategoryMatch({
                           storedCategory: rawCategory,
