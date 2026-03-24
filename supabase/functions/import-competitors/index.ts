@@ -95,12 +95,17 @@ serve(async (req) => {
         let missingCidCount = 0;
         for (const athlete of body.athletes) {
             let code = athlete.code ? String(athlete.code).trim() : "";
+            const qrCode = athlete.qr_code ? String(athlete.qr_code).trim() : "";
             const firstName = athlete.first_name ? String(athlete.first_name).trim() : "";
             const lastName = athlete.last_name ? String(athlete.last_name).trim() : "";
 
-            if ((!code || code.toLowerCase() === "undefined") && firstName && lastName) {
-                missingCidCount++;
-                code = `XX${String(missingCidCount).padStart(4, "0")}`;
+            if (!code || code.toLowerCase() === "undefined") {
+                if (qrCode) {
+                    code = qrCode;
+                } else if (firstName && lastName) {
+                    missingCidCount++;
+                    code = `XX${String(missingCidCount).padStart(4, "0")}`;
+                }
                 athlete.code = code;
             }
         }
