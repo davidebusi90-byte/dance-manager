@@ -11,6 +11,7 @@ const corsHeaders = {
 // Expected payload structure
 type AthleteData = {
     code: string;
+    fiscal_code?: string;
     first_name: string;
     last_name: string;
     birth_date?: string; // YYYY-MM-DD
@@ -95,13 +96,13 @@ serve(async (req) => {
         let missingCidCount = 0;
         for (const athlete of body.athletes) {
             let code = athlete.code ? String(athlete.code).trim() : "";
-            const qrCode = athlete.qr_code ? String(athlete.qr_code).trim() : "";
+            const fiscalCode = athlete.fiscal_code ? String(athlete.fiscal_code).trim().toUpperCase() : (athlete as any).codice_fiscale ? String((athlete as any).codice_fiscale).trim().toUpperCase() : "";
             const firstName = athlete.first_name ? String(athlete.first_name).trim() : "";
             const lastName = athlete.last_name ? String(athlete.last_name).trim() : "";
 
             if (!code || code.toLowerCase() === "undefined") {
-                if (qrCode) {
-                    code = qrCode;
+                if (fiscalCode) {
+                    code = fiscalCode;
                 } else if (firstName && lastName) {
                     missingCidCount++;
                     code = `XX${String(missingCidCount).padStart(4, "0")}`;
