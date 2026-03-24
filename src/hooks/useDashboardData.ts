@@ -48,7 +48,18 @@ export function useDashboardData(role: string, userId: string | null) {
             const uniqueRawAthletes = Array.from(uniqueAthletesMap.values());
 
             let fetchedAthletes = uniqueRawAthletes.filter(a => !a.is_deleted);
-            let fetchedDeactivatedAthletes = uniqueRawAthletes.filter(a => a.is_deleted);
+            
+            // To prevent deactivated duplicates showing up when an active athlete with the same name exists
+            const activeNames = new Set(
+                fetchedAthletes.map(a => `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`)
+            );
+            
+            let fetchedDeactivatedAthletes = uniqueRawAthletes.filter(a => {
+                if (!a.is_deleted) return false;
+                const nameKey = `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`;
+                return !activeNames.has(nameKey);
+            });
+            
             let fetchedCouples = rawCouples.filter(c => (c as any).is_active !== false);
             let fetchedDeactivatedCouples = rawCouples.filter(c => (c as any).is_active === false);
 
