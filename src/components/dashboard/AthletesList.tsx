@@ -252,7 +252,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
               <table className="w-full border-collapse text-sm">
                 <thead className="bg-gray-100 border-b border-gray-200 text-left">
                   <tr>
-                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Codice</th>
+                    <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">CID</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Nome e Cognome</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Email</th>
                     <th className="px-4 py-3 font-bold uppercase text-[11px] tracking-wider text-gray-700">Categoria</th>
@@ -368,7 +368,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                   <table className="w-full text-[11px] text-left border-collapse">
                     <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold border-b border-orange-100">
                       <tr>
-                        <th className="px-4 py-2">Codice</th>
+                        <th className="px-4 py-2">CID</th>
                         <th className="px-4 py-2">Nome e Cognome</th>
                         <th className="px-4 py-2">Email</th>
                         <th className="px-4 py-2">Categoria</th>

@@ -170,14 +170,14 @@ export default function CoupleDetailModal({
                             <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Cavaliere</h3>
                             <div className="space-y-1">
                                 <p className="font-bold sm:font-medium text-lg sm:text-base">{athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}</p>
-                                <p className="text-sm text-muted-foreground">Codice: {athlete1?.code || "-"}</p>
+                                <p className="text-sm text-muted-foreground">CID: {athlete1?.code || "-"}</p>
                             </div>
                         </div>
                         <div className="space-y-2 bg-muted/10 p-3 rounded-lg sm:bg-transparent sm:p-0">
                             <h3 className="font-semibold text-xs sm:text-sm text-muted-foreground uppercase tracking-wider">Dama</h3>
                             <div className="space-y-1">
                                 <p className="font-bold sm:font-medium text-lg sm:text-base">{athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}</p>
-                                <p className="text-sm text-muted-foreground">Codice: {athlete2?.code || "-"}</p>
+                                <p className="text-sm text-muted-foreground">CID: {athlete2?.code || "-"}</p>
                             </div>
                         </div>
                     </div>

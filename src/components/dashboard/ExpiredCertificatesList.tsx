@@ -41,7 +41,7 @@ export default function ExpiredCertificatesList({ athletes, onClose }: ExpiredCe
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Codice</th>
+                  <th>CID</th>
                   <th>Nome e Cognome</th>
                   <th>Stato Certificato</th>
                   <th>Data Scadenza</th>

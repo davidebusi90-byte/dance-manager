@@ -233,10 +233,10 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
               <table className="w-full border-collapse text-[11px]">
                 <thead className="bg-teal-100 border-b border-teal-200 text-left">
                   <tr>
-                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cav. Cod.</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">CID Cav.</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cavaliere</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Cav. Email</th>
-                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dam. Cod.</th>
+                    <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">CID Dama</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dama</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700">Dam. Email</th>
                     <th className="px-3 py-3 font-bold uppercase tracking-wider text-teal-700 text-center min-w-[120px]">Categoria</th>
@@ -352,10 +352,10 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
                   <table className="w-full text-[11px] text-left border-collapse">
                     <thead className="bg-orange-50/50 text-orange-800 uppercase text-[10px] font-bold border-b border-orange-100">
                       <tr>
-                        <th className="px-3 py-3">Cav. Cod.</th>
+                        <th className="px-3 py-3">CID Cav.</th>
                         <th className="px-3 py-3">Cavaliere</th>
                         <th className="px-3 py-3">Cav. Email</th>
-                        <th className="px-3 py-3">Dam. Cod.</th>
+                        <th className="px-3 py-3">CID Dama</th>
                         <th className="px-3 py-3">Dama</th>
                         <th className="px-3 py-3">Dam. Email</th>
                         <th className="px-3 py-3 text-center min-w-[120px]">Categoria</th>

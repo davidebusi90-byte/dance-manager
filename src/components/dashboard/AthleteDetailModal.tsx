@@ -160,7 +160,7 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <IdCard className="w-3.5 h-3.5" />
-                  Codice: {displayCode}
+                  CID: {displayCode}
                 </p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                   <Crosshair className="w-3.5 h-3.5" />

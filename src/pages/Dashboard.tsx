@@ -432,7 +432,7 @@ export default function Dashboard() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Cerca per nome, cognome o codice..."
+                    placeholder="Cerca per nome, cognome o CID..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="search-input pl-10"
@@ -454,7 +454,7 @@ export default function Dashboard() {
                       <table className="data-table">
                         <thead>
                           <tr>
-                            <th>Codice</th>
+                            <th>CID</th>
                             <th>Nome</th>
                             <th>Categoria</th>
                             <th>Classe</th>

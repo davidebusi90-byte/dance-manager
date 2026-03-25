@@ -377,8 +377,8 @@ export default function CompetitionEntriesDetail({
           "Classe": bestClass,
           "Cavaliere": a1 ? `${a1.first_name} ${a1.last_name}` : "-",
           "Dama": a2 ? `${a2.first_name} ${a2.last_name}` : "-",
-          "Codice Cav.": a1?.code || "-",
-          "Codice Dama": a2?.code || "-",
+          "CID Cav.": a1?.code || "-",
+          "CID Dama": a2?.code || "-",
           "Data Iscrizione": formatDate(e.created_at),
         };
       });
