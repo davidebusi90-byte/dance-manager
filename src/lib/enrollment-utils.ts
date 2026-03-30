@@ -310,6 +310,20 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         }
     }
 
+    // 11. REGOLA B1/B2/B3: Nelle gare Syllabus per fascia d'età NON partecipano le classi B
+    //     (devono usare solo la B Open). La regola NON si applica a: Over, Under, Open, Rising Star, Master.
+    //     L'effectiveClass è già calcolato per disciplina, quindi funziona correttamente
+    //     per coppie con classi diverse per Standard e Latino.
+    const isRegularAgeCategory =
+        !nameNorm.includes("open") &&
+        !nameNorm.includes("rising star") &&
+        !nameNorm.includes("master") &&
+        !nameNorm.includes("over") &&
+        !nameNorm.includes("under");
+    if (["B", "B1", "B2", "B3"].includes(effectiveClass) && isRegularAgeCategory) {
+        return false;
+    }
+
     return isRaceAllowed;
 };
 

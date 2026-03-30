@@ -285,4 +285,81 @@ describe('isEventAllowedForCouple', () => {
             expect(isEventAllowedForCouple(event, juvenile2Couple)).toBe(false);
         });
     });
+    describe('B1/B2/B3 Syllabus restrictions', () => {
+        const youthB1Couple = {
+            class: 'B1',
+            disciplines: ['standard', 'latino'],
+            category: 'Youth',
+            discipline_info: { standard: 'B1', latino: 'B1' },
+            athlete1: { birth_date: '2008-01-01' }, // 18 in 2026
+            athlete2: { birth_date: '2009-01-01' }  // 17 in 2026
+        };
+
+        const mixedDisciplineCouple = {
+            class: 'B1',
+            disciplines: ['standard', 'latino'],
+            category: 'Youth',
+            discipline_info: { standard: 'B1', latino: 'D' },
+            athlete1: { birth_date: '2008-01-01' },
+            athlete2: { birth_date: '2009-01-01' }
+        };
+
+        it('should NOT allow B1 couple to see age-category Syllabus events (Youth Standard)', () => {
+            const event = {
+                event_name: 'Danze Standard - Youth (16/18)',
+                allowed_classes: ['D', 'C', 'B1', 'B2', 'B3'],
+                min_age: 16, max_age: 18
+            };
+            expect(isEventAllowedForCouple(event, youthB1Couple)).toBe(false);
+        });
+
+        it('should NOT allow B1 couple to see age-category Syllabus events (Junior Latino)', () => {
+            const event = {
+                event_name: 'Danze Latino Americane - Junior 1 (12/13)',
+                allowed_classes: ['D', 'C', 'B1', 'B2', 'B3'],
+                min_age: 12, max_age: 13
+            };
+            expect(isEventAllowedForCouple(event, youthB1Couple)).toBe(false);
+        });
+
+        it('should allow B1 couple to see Open Classe B events', () => {
+            const event = {
+                event_name: 'Danze Standard - Open Classe B',
+                allowed_classes: ['B1', 'B2', 'B3'],
+                min_age: null, max_age: null
+            };
+            expect(isEventAllowedForCouple(event, youthB1Couple)).toBe(true);
+        });
+
+        it('should allow B1 couple to see Over events', () => {
+            const seniorB1Couple = {
+                class: 'B1',
+                disciplines: ['standard'],
+                category: 'Senior 1',
+                discipline_info: { standard: 'B1' },
+                athlete1: { birth_date: '1985-01-01' },
+                athlete2: { birth_date: '1986-01-01' }
+            };
+            const event = {
+                event_name: 'Over 35 Open Standard',
+                allowed_classes: ['B1'], min_age: 35, max_age: null
+            };
+            expect(isEventAllowedForCouple(event, seniorB1Couple)).toBe(true);
+        });
+
+        it('mixed couple (B1 Standard, D Latino): should NOT see Youth Standard but SHOULD see Youth Latino', () => {
+            const youthStdEvent = {
+                event_name: 'Danze Standard - Youth (16/18)',
+                allowed_classes: ['D', 'C', 'B1', 'B2', 'B3'],
+                min_age: 16, max_age: 18
+            };
+            const youthLatEvent = {
+                event_name: 'Danze Latino Americane - Youth (16/18)',
+                allowed_classes: ['D', 'C', 'B1', 'B2', 'B3'],
+                min_age: 16, max_age: 18
+            };
+            expect(isEventAllowedForCouple(youthStdEvent, mixedDisciplineCouple)).toBe(false);
+            expect(isEventAllowedForCouple(youthLatEvent, mixedDisciplineCouple)).toBe(true);
+        });
+    });
 });
