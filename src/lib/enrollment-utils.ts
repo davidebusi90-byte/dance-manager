@@ -279,7 +279,7 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
 
     // 9. REGOLA CLASSE C/D: Accesso a Open B e Open C
     if (c === "D" || c === "C") {
-        const isOpenBC = /\b(open\s+b|b\s+open|open\s+c|c\s+open)\b/i.test(nameNorm);
+        const isOpenBC = /\b(open\s+(?:classe\s+)?b|b\s+open|open\s+(?:classe\s+)?c|c\s+open)\b/i.test(nameNorm);
         if (isOpenBC) return true;
     }
 

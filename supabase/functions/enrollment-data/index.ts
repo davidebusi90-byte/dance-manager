@@ -66,7 +66,7 @@ serve(async (req) => {
       const coupleId = url.searchParams.get("couple_id");
       if (!coupleId || !uuidRegex.test(coupleId)) return new Response(JSON.stringify({ error: "ID non valido" }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
       const [cRes, eRes, tRes] = await Promise.all([
-        supabase.from("competitions").select("id, name, date, end_date, location, registration_deadline, late_fee_deadline").gte("date", new Date().toISOString().split("T")[0]).order("date", { ascending: true }),
+        supabase.from("competitions").select("id, name, date, end_date, location, registration_deadline, late_fee_deadline").eq("is_deleted", false).gte("date", new Date().toISOString().split("T")[0]).order("date", { ascending: true }),
         supabase.from("competition_entries").select("competition_id").eq("couple_id", coupleId).neq("status", "cancelled"),
         supabase.from("competition_event_types").select("id, competition_id, event_name, allowed_classes, min_age, max_age"),
       ]);
