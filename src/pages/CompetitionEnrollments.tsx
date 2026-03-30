@@ -25,45 +25,45 @@ const DISCIPLINES = ["Danze Standard", "Danze Latino Americane", "Combinata"];
 
 // Predefined event types for Standard and Latin
 const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number; maxAge?: number }[] = [
+  /**
+   * --- SYLLABUS CATEGORIES ---
+   */
   // Juvenile & Junior
   { name: "Juvenile 1 (6/9)", classes: ["D", "C", "B1", "B2", "B3"], minAge: 6, maxAge: 9 },
   { name: "Juvenile 2 (10/11)", classes: ["D", "C", "B1", "B2", "B3", "A"], minAge: 10, maxAge: 11 },
   { name: "Junior 1 (12/13)", classes: ["D", "C", "B1", "B2", "B3", "A"], minAge: 12, maxAge: 13 },
   { name: "Junior 2 (14/15)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 14, maxAge: 15 },
 
-  // Youth
+  // Youth & Adult
   { name: "Youth (16/18)", classes: ["C", "B1", "B2", "B3", "A", "AS"], minAge: 16, maxAge: 18 },
-
-  // Under 16 & Under 21 (Special)
-  { name: "Under 16", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], maxAge: 15 },
-  { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
-
-  // Adult
   { name: "Adult (19/34)", classes: ["D", "C", "B1", "B2", "B3", "A1", "A2"], minAge: 19, maxAge: 34 },
 
-  // Senior 1 & 2
+  // Seniors
   { name: "Senior 1 (35/44)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35, maxAge: 44 },
   { name: "Senior 2 (45/54)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 45, maxAge: 54 },
-
-  // Senior 3a, 3b
   { name: "Senior 3a (55/60)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55, maxAge: 60 },
   { name: "Senior 3b (61/64)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 61, maxAge: 64 },
-
-  // Senior 4a, 4b
   { name: "Senior 4a (65/69)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65, maxAge: 69 },
   { name: "Senior 4b (70/74)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 70, maxAge: 74 },
-  
   { name: "Senior 5 (75+)", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 75 },
 
-  // Over Specifics
+  // Age Specifics (Under/Over)
+  { name: "Under 16", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], maxAge: 15 },
+  { name: "Under 21", classes: ["C", "B1", "B2", "B3", "A", "A1", "A2", "AS"], minAge: 16, maxAge: 20 },
   { name: "Over 35", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 35 },
   { name: "Over 45", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 45 },
   { name: "Over 55", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55 },
   { name: "Over 65", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65 },
 
-  // Open / General
-  { name: "Adult Open", classes: ["A", "A1", "A2"], minAge: 16 },
+  /**
+   * --- OPEN & RISING STAR CATEGORIES ---
+   */
+  { name: "Adult Open", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
+  { name: "Amator Open A", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
+  { name: "Rising Star", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
+  { name: "Rising Star Master", classes: ["MASTER"] },
   { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
+  { name: "Adult Master", classes: ["MASTER"] },
 ];
 
 // Specific event types for Combinata
@@ -268,25 +268,36 @@ export default function CompetitionEnrollments() {
     });
   };
 
-  const toggleSyllabusEvents = (competitionId: string, discipline: string) => {
+  /**
+   * --- QUICK TOGGLE FUNCTIONS ---
+   */
+
+  const toggleEventsByFilter = (competitionId: string, discipline: string, filterFn: (name: string) => boolean) => {
     const events = getEventsForDiscipline(discipline);
-    const names = events.filter(p => {
-      const nameLower = p.name.toLowerCase();
-      // Escludiamo over/under e Open Classe A
-      const isNotSpecial = !nameLower.includes("over") && !nameLower.includes("under");
-      const isNotOpenA = !nameLower.includes("open classe a") && !nameLower.includes("adult open");
-      return isNotSpecial && isNotOpenA;
-    }).map(p => p.name);
+    const names = events
+      .filter(p => filterFn(p.name.toLowerCase()))
+      .map(p => p.name);
     toggleEventTypesRange(competitionId, discipline, names);
   };
 
   const toggleAllEvents = (competitionId: string, discipline: string) => {
-    const events = getEventsForDiscipline(discipline);
-    const names = events.filter(p => {
-      const nameLower = p.name.toLowerCase();
-      return !nameLower.includes("over") && !nameLower.includes("under");
-    }).map(p => p.name);
-    toggleEventTypesRange(competitionId, discipline, names);
+    toggleEventsByFilter(competitionId, discipline, () => true);
+  };
+
+  const toggleStarCupEvents = (competitionId: string, discipline: string) => {
+    toggleEventsByFilter(competitionId, discipline, (name) => {
+      // Per la Star Cup escludiamo solo Adult Open e Adult Master
+      return !name.includes("adult open") && !name.includes("adult master");
+    });
+  };
+
+  const toggleSyllabusEvents = (competitionId: string, discipline: string) => {
+    toggleEventsByFilter(competitionId, discipline, (name) => {
+      // Escludiamo specialità (over/under) e categorie Open alte
+      const isNotSpecial = !name.includes("over") && !name.includes("under");
+      const isNotOpen = !name.includes("open") && !name.includes("rising star") && !name.includes("master");
+      return isNotSpecial && isNotOpen;
+    });
   };
 
   const saveAllChanges = async () => {
@@ -577,8 +588,8 @@ export default function CompetitionEnrollments() {
                                   className="h-7 px-3 text-[10px] font-bold bg-[#faf5ff] hover:bg-[#f3e8ff] text-[#9333ea] border border-[#e9d5ff]/50 rounded-full transition-all"
                                   onClick={(e) => { 
                                     e.stopPropagation(); 
-                                    // Star Cup: Solo Standard e Latino
-                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleAllEvents(competition.id, d)); 
+                                    // Star Cup: Solo Standard e Latino, usando la nuova logica Star Cup
+                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleStarCupEvents(competition.id, d)); 
                                   }}
                                 >
                                   Star Cup

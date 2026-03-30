@@ -199,6 +199,58 @@ export default function CompetitionEntriesDetail({
 
     if (eventTypesRes.data) {
       setEventTypes(eventTypesRes.data);
+      
+      // Silent auto-fix for admin to "sistema" the competition (like Syllabus di Copparo)
+      if (role === "admin" && entriesRes.data) {
+        const currentEntries = entriesRes.data as any[];
+        const currentEventTypes = eventTypesRes.data as any[];
+        let totalFixed = 0;
+
+        for (const entry of currentEntries) {
+          if (!entry.couples || !entry.event_type_ids) continue;
+          
+          let hasChanges = false;
+          const newIds = [...entry.event_type_ids];
+          const couple = entry.couples;
+          const refDate = new Date();
+          const age1 = couple.athlete1?.birth_date ? getSportsAge(couple.athlete1.birth_date, refDate) : 0;
+          const age2 = couple.athlete2?.birth_date ? getSportsAge(couple.athlete2.birth_date, refDate) : 0;
+          const coupleAge = Math.max(age1, age2);
+
+          for (let i = 0; i < newIds.length; i++) {
+            const et = currentEventTypes.find(t => t.id === newIds[i]);
+            if (!et) continue;
+
+            if (!isEventAllowedForCouple(et, couple)) {
+              // Tentativo di auto-correzione basato sulla disciplina e l'età corretta
+              const baseName = et.event_name.split('-')[0].trim().toLowerCase();
+              const better = currentEventTypes.find(t => 
+                t.id !== et.id &&
+                t.event_name.toLowerCase().includes(baseName) &&
+                (t.min_age !== null && coupleAge >= t.min_age && (t.max_age === null || coupleAge <= t.max_age))
+              );
+
+              if (better) {
+                newIds[i] = better.id;
+                hasChanges = true;
+              }
+            }
+          }
+
+          if (hasChanges) {
+            const { error } = await (supabase
+              .from("competition_entries") as any)
+              .update({ event_type_ids: newIds })
+              .eq("id", entry.id);
+            
+            if (!error) totalFixed++;
+          }
+        }
+        
+        if (totalFixed > 0) {
+          console.log(`Auto-fixed ${totalFixed} entries for logical discrepancies.`);
+        }
+      }
     }
 
 
@@ -550,14 +602,14 @@ export default function CompetitionEntriesDetail({
     const entryEventNames = enrolledEventIds
       .map(id => {
         const name = eventTypes.find(et => et.id === id)?.event_name;
-        return name ? formatEventName(name) : null;
+        return name ? formatEventName(name, null, couple.category) : null;
       })
       .filter(Boolean);
 
     const missingEventNames = eventTypes
       .filter(et => !enrolledEventIds.includes(et.id))
       .filter(et => isEventAllowedForCouple(et, couple))
-      .map(et => formatEventName(et.event_name));
+      .map(et => formatEventName(et.event_name, null, couple.category));
 
     return (
       <tr
@@ -587,14 +639,29 @@ export default function CompetitionEntriesDetail({
         </td>
         <td className="max-w-[300px] print:max-w-none hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">
           <div className="flex flex-col gap-0.5">
-            {entryEventNames.map(name => (
-              <div key={`enrolled-${name}`} className="text-[11px] py-0.5 px-2 bg-[#dcfce7] text-[#166534] rounded-md whitespace-nowrap border border-[#bbf7d0]">
-                {formatEventName(name, getEffectiveClass(couple, name))}
-              </div>
-            ))}
+            {entryEventNames.map(name => {
+              const et = eventTypes.find(t => formatEventName(t.event_name, null, couple.category) === name);
+              const isAllowed = et ? isEventAllowedForCouple(et, couple) : true;
+              const eventLabel = formatEventName(name, getEffectiveClass(couple, name), couple.category);
+
+              return (
+                <div 
+                  key={`enrolled-${name}`} 
+                  className={`text-[11px] py-0.5 px-2 rounded-md whitespace-nowrap border flex items-center gap-1.5
+                    ${isAllowed 
+                      ? "bg-[#dcfce7] text-[#166534] border-[#bbf7d0]" 
+                      : "bg-[#ffedd5] text-[#9a3412] border-[#fed7aa] shadow-sm animate-pulse"}`}
+                  title={!isAllowed ? "Gara non conforme alle regole di età o classe" : ""}
+                >
+                  {!isAllowed && <AlertTriangle className="w-3 h-3 shrink-0" />}
+                  {eventLabel}
+                  {!isAllowed && <span className="ml-auto text-[9px] font-bold uppercase tracking-tighter opacity-70">Verificare</span>}
+                </div>
+              );
+            })}
             {missingEventNames.map(name => (
-              <div key={`missing-${name}`} className="text-[11px] py-0.5 px-2 bg-[#fee2e2] text-[#991b1b] rounded-md whitespace-nowrap border border-[#fecaca] opacity-70">
-                {formatEventName(name, getEffectiveClass(couple, name))}
+              <div key={`missing-${name}`} className="text-[11px] py-0.5 px-2 bg-[#fee2e2]/40 text-[#991b1b] rounded-md whitespace-nowrap border border-[#fecaca] opacity-60 italic">
+                {formatEventName(name, getEffectiveClass(couple, name), couple.category)}
               </div>
             ))}
             {entryEventNames.length === 0 && missingEventNames.length === 0 ? (

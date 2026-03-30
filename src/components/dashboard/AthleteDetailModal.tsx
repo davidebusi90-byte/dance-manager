@@ -23,6 +23,7 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { useToast } from "@/hooks/use-toast";
 import { formatCategoryDisplay, getSportsAge } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
+import { resolveDisciplineClass, normalizeClassDisplay } from "@/lib/discipline-utils";
 
 import { Athlete, Couple } from "@/types/dashboard";
 import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
@@ -44,20 +45,12 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
   // We use the same 'bacino' (pool) of data: we check the athlete first,
   // and then fallback to the couples they belong to (just like the couples list does)
   const getDisciplineClass = (couple: Couple, key: string) => {
-    if (couple.discipline_info && couple.discipline_info[key]) return couple.discipline_info[key];
-    const mappedKey = key === "show_dance_sa" || key === "show_dance_classic" ? "show_dance" : key;
-
-    if (key === "combinata" && couple.disciplines?.includes("combinata")) {
-      const combClass = (couple.discipline_info && couple.discipline_info[key]) || couple.class || "D";
-      const latClass = couple.discipline_info?.["latino"];
-      const stdClass = couple.discipline_info?.["standard"];
-      let resolvedClass = combClass;
-      if (latClass) resolvedClass = getBestClass(resolvedClass, latClass);
-      if (stdClass) resolvedClass = getBestClass(resolvedClass, stdClass);
-      return resolvedClass;
-    }
-
-    return couple.disciplines?.includes(mappedKey) ? (couple.class || "-") : "-";
+    // We can't easily use resolveDisciplineClass here because we only have one couple 
+    // at a time in the loop, but we want the athlete info to be considered.
+    // However, resolveDisciplineClass handles exactly this.
+    const a1 = couple.athlete1_id === athlete.id ? athlete : null;
+    const a2 = couple.athlete2_id === athlete.id ? athlete : null;
+    return resolveDisciplineClass(key, a1, a2, couple);
   };
 
   // RESOLUTION LOGIC: Merge data from all possible sources (pool of data)
@@ -112,7 +105,6 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
   // FINAL FALLBACK: If we still don't have basic disciplines, use the athlete's 'class' property
   // This handles athletes (singles or couples) that only have the general 'class' saved (legacy)
   if (athlete.class) {
-    // If no LAT/STD/CMB info at all, we use the base class as fallback
     if (!derivedDisciplineInfo.latino && !derivedDisciplineInfo.standard && !derivedDisciplineInfo.combinata) {
       ["latino", "standard", "combinata"].forEach(d => {
         if (!derivedDisciplineInfo[d] || derivedDisciplineInfo[d] === "-") {
@@ -121,6 +113,11 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
       });
     }
   }
+
+  // Apply final normalization for display
+  Object.keys(derivedDisciplineInfo).forEach(key => {
+    derivedDisciplineInfo[key] = normalizeClassDisplay(derivedDisciplineInfo[key]);
+  });
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";

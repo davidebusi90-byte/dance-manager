@@ -105,14 +105,14 @@ export default function CoupleDetailModal({
         .map(id => {
             const et = eventTypes.find(et => et.id === id);
             if (!et) return null;
-            return formatEventName(et.event_name, getEffectiveClass(couple, et.event_name));
+            return formatEventName(et.event_name, getEffectiveClass(couple, et.event_name), couple.category);
         })
         .filter(Boolean);
 
     const missingEvents = eventTypes
         .filter(et => !enrolledEventIds.includes(et.id))
         .filter(et => isEventAllowedForCouple(et, couple))
-        .map(et => formatEventName(et.event_name, getEffectiveClass(couple, et.event_name)));
+        .map(et => formatEventName(et.event_name, getEffectiveClass(couple, et.event_name), couple.category));
 
     // Check for category anomalies
     const categoryCheck = validateCoupleCategory({
@@ -266,7 +266,7 @@ export default function CoupleDetailModal({
                                         ? editedEventIds.includes(et.id)
                                         : enrolledEventIds.includes(et.id);
                                     
-                                    const eventLabel = formatEventName(et.event_name, getEffectiveClass(couple, et.event_name));
+                                    const eventLabel = formatEventName(et.event_name, getEffectiveClass(couple, et.event_name), couple.category);
 
                                     if (!isEditing && !isSelected) return null;
 

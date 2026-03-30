@@ -103,6 +103,21 @@ export function expectedCategoryFromAge(age: number): CategoryLabel {
   return match?.label ?? "Adult";
 }
 
+/**
+ * Returns the minimum allowed age for the younger partner given the
+ * category's minimum age and label. Implements specific FIDS Senior rules.
+ */
+export function getMinYoungerAgeForRule(minAge: number, categoryLabel?: string): number {
+  if (categoryLabel === "Senior 3a") return 50;
+  if (categoryLabel === "Senior 3b") return 55;
+  if (categoryLabel === "Senior 4a") return 60;
+  if (categoryLabel === "Senior 4b") return 65;
+  if (categoryLabel === "Senior 5") return 70;
+  
+  // Generic fallback: younger partner must be within 5 years of the category minAge
+  return minAge > 5 ? minAge - 5 : 0;
+}
+
 export function getCategoryMinAge(categoryLabel: string): number {
   const norm = normalizeCategory(categoryLabel);
   const match = CATEGORY_RULES.find(r => normalizeCategoryLabel(r.label) === norm);
@@ -293,26 +308,39 @@ export function validateCoupleCategory(params: {
     onDate
   );
 
-  // Logic for age gap handling
-  // If the younger partner is too young for the older partner's category (minAge - 5 rule),
-  // they generally fall back to a lower category.
-  // Specifically for Senior categories, if they don't fit, they fall back to Adult (19-34).
+  // Logic for age gap handling:
+  // If the younger partner is too young for the older partner's category,
+  // we step down to find the highest possible category where both partners
+  // meet the specific age limits.
 
   let effectiveCategoryLabel = allowed[0];
   let effectiveRule = CATEGORY_RULES.find(r => r.label === effectiveCategoryLabel)!;
 
-  // Check if we need to downgrade from Senior to Adult
-  // The rule is: younger partner must be roughly within 5 years of the category minimum.
-  // If not, they can't dance in that category.
-
-  // We check if the current expected category is valid for the younger partner.
+  // Determine minimum allowed age for the younger partner depending on the category.
   const minAge = effectiveRule.minAge;
-  const okYounger = youngerAge >= minAge - 5;
+  const requiredYoungerMinAge = getMinYoungerAgeForRule(minAge, effectiveCategoryLabel);
+
+  const okYounger = youngerAge >= requiredYoungerMinAge;
 
   if (!okYounger) {
-    // Fallback alla categoria del componente più giovane
-    effectiveCategoryLabel = expectedCategoryFromAge(youngerAge);
-    effectiveRule = CATEGORY_RULES.find(r => r.label === effectiveCategoryLabel)!;
+    // Find the highest category where both partners meet the minimum age requirements
+    const olderAge = Math.max(sportsAge1, sportsAge2);
+    const sortedRules = [...CATEGORY_RULES].sort((a, b) => b.minAge - a.minAge);
+    let bestRule = CATEGORY_RULES.find(r => r.label === expectedCategoryFromAge(youngerAge))!;
+    
+    for (const rule of sortedRules) {
+      if (olderAge >= rule.minAge) {
+        const reqYounger = getMinYoungerAgeForRule(rule.minAge, rule.label);
+        
+        if (youngerAge >= reqYounger) {
+          bestRule = rule;
+          break;
+        }
+      }
+    }
+    
+    effectiveCategoryLabel = bestRule.label;
+    effectiveRule = bestRule;
   }
 
   // Now validate against the *effective* category
@@ -322,7 +350,9 @@ export function validateCoupleCategory(params: {
 
   // Re-check younger age against the NEW effective category (should be OK if we fell back correctly)
   const finalMinAge = effectiveRule.minAge;
-  const finalOkYounger = youngerAge >= finalMinAge - 5;
+  const finalRequiredYoungerMinAge = getMinYoungerAgeForRule(finalMinAge, effectiveCategoryLabel);
+
+  const finalOkYounger = youngerAge >= finalRequiredYoungerMinAge;
 
   if (isCategoryMatch && finalOkYounger) {
     return { ok: true, expected: effectiveCategoryLabel };
@@ -334,7 +364,7 @@ export function validateCoupleCategory(params: {
     reasons.push(`Categoria attesa: ${expectedStr}`);
   }
   if (!finalOkYounger) {
-    reasons.push(`Partner più giovane (${youngerAge} anni) troppo distante dall'età minima categoria ${effectiveCategoryLabel} (${finalMinAge} anni). Minimo richiesto: ${finalMinAge - 5} anni.`);
+    reasons.push(`Partner più giovane (${youngerAge} anni) troppo distante dall'età minima categoria ${effectiveCategoryLabel} (${finalMinAge} anni). Minimo richiesto: ${finalRequiredYoungerMinAge} anni.`);
   }
 
   return {

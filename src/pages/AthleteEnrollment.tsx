@@ -322,34 +322,7 @@ export default function AthleteEnrollment() {
     return hasAllowedEvent;
   };
 
-  const getEventDiscipline = (eventName: string): string | null => {
-    const lowerName = eventName.toLowerCase();
 
-    // Riconoscimento flessibile (cerca la parola chiave ovunque nel nome)
-    if (lowerName.includes("standard")) return "standard";
-    if (lowerName.includes("latino") || lowerName.includes("latini") || lowerName.includes("latin")) return "latino";
-    if (lowerName.includes("combinata")) return "combinata";
-
-    return null;
-  };
-
-  const isEventMatchingCoupleDiscipline = (eventName: string, coupleDisciplines: string[]): boolean => {
-    const eventDiscipline = getEventDiscipline(eventName);
-    if (!eventDiscipline) return true;
-
-    const normalizedCoupleDisciplines = coupleDisciplines.map(d => d.toLowerCase());
-
-    // Supporto per nuovi nomi completi richiesti
-    const isLatino = normalizedCoupleDisciplines.includes("latino") || normalizedCoupleDisciplines.includes("danze latino americane");
-    const isStandard = normalizedCoupleDisciplines.includes("standard") || normalizedCoupleDisciplines.includes("danze standard");
-    const isCombinata = normalizedCoupleDisciplines.includes("combinata");
-
-    if (eventDiscipline === "latino" && isLatino) return true;
-    if (eventDiscipline === "standard" && isStandard) return true;
-    if (eventDiscipline === "combinata" && isCombinata) return true;
-
-    return normalizedCoupleDisciplines.includes(eventDiscipline);
-  };
 
   const sortEventTypes = (events: EventType[]) => {
     const getPriority = (name: string) => {
@@ -961,7 +934,7 @@ export default function AthleteEnrollment() {
                                                     className="text-sm font-medium cursor-pointer"
                                                     onClick={(e) => e.stopPropagation()}
                                                   >
-                                                    {formatEventName(et.event_name, getEffectiveClass(selectedCouple, et.event_name))}
+                                                    {formatEventName(et.event_name, getEffectiveClass(selectedCouple, et.event_name), selectedCouple.category)}
                                                   </Label>
                                                 </div>
                                               </div>
