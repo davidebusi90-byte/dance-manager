@@ -1,0 +1,7 @@
+fix: restore enrollment logic and sync systemic audit corrections
+
+- Restored truncated enrollment-utils.ts
+- Standardized imports between enrollment-utils, discipline-utils, and category-validation
+- Verified 37/37 Vitest passes
+- Audited baseline migration and SQL syntax validity
+- Confirmed UI aesthetics and component organization compatibility
