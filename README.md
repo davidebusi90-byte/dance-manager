@@ -70,4 +70,30 @@ Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🛡️ Project Maintenance & Health Audit
+
+We have implemented a systemic audit tool to ensure the project remains stable and synchronized. You can run it anytime to verify the status of migrations, business logic (tests), and production build compatibility.
+
+### Run Systemic Audit
+To perform a full project health check, run the following command in your terminal:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/maintain.ps1
+```
+
+This tool verifies:
+- **Supabase Sync**: Ensures local and remote migrations are identical.
+- **Logic Integrity**: Runs the full suite of 35 Vitest cases for enrollment rules.
+- **Vercel Readiness**: Validates that the Vite production build completes successfully.
+
+## 🚀 Deployment
+
+The project is optimized for deployment on **Vercel**. 
+- **Security**: `vercel.json` includes strict security headers (HSTS, CSP, X-Frame-Options).
+- **SEO**: A basic `robots.txt` is included in the `public/` directory to manage search engine crawling.
+
+## 📂 Project Structure Note
+
+- **`supabase/migrations/`**: Has been squashed into a single baseline `20260100000000_initial_schema.sql` for a clean start.
+- **`supabase/scripts/dev/`**: Contains dangerous or administrative scripts like `reset_data.sql` that are excluded from automatic migrations.
+
