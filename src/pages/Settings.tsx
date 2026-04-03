@@ -11,7 +11,7 @@ import { ArrowLeft, Lock, User, Mail } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
 import { usePrivacyConsent } from "@/hooks/usePrivacyConsent";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ShieldCheck, ShieldAlert } from "lucide-react";
 import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
 
 export default function Settings() {
@@ -169,25 +169,11 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-background">
-      {showPrivacyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl p-6">
-             <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-4 top-4"
-                onClick={() => setShowPrivacyModal(false)}
-             >
-               <ArrowLeft className="w-5 h-5" />
-             </Button>
-             <PrivacyConsentModal />
-             <div className="mt-8 text-center text-sm text-muted-foreground">
-               La finestra si chiuderà una volta accettati i termini. 
-               Se hai già accettato, premi il pulsante chiudi in alto a destra.
-             </div>
-          </div>
-        </div>
-      )}
+      <PrivacyConsentModal 
+        isOpen={showPrivacyModal} 
+        onClose={() => setShowPrivacyModal(false)}
+        isReviewMode={true}
+      />
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
@@ -214,26 +200,38 @@ export default function Settings() {
                 <Input value={userEmail ?? ""} disabled className="bg-muted" />
               </div>
               
-              <div className="pt-4 border-t border-border">
-                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-sky-600" />
-                  Privacy & GDPR
-                </h4>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-sky-50 border border-sky-100">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className={`w-5 h-5 ${hasConsented ? 'text-green-600' : 'text-slate-300'}`} />
+              <div className="pt-6 border-t border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-semibold flex items-center gap-2 text-sky-900">
+                    <ShieldCheck className="w-4 h-4 text-sky-600" />
+                    Privacy & GDPR
+                  </h4>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${hasConsented ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {hasConsented ? 'Conforme' : 'Azione Richiesta'}
+                  </span>
+                </div>
+                
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${hasConsented ? 'bg-slate-50 border-slate-200' : 'bg-sky-50 border-sky-200 shadow-sm shadow-sky-100'}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasConsented ? 'bg-green-100 text-green-600' : 'bg-sky-100 text-sky-600'}`}>
+                      {hasConsented ? <CheckCircle2 className="w-6 h-6" /> : <ShieldAlert className="w-6 h-6 animate-pulse" />}
+                    </div>
                     <div className="text-sm">
-                      <p className="font-medium text-sky-900">Informativa Privacy v1.0</p>
-                      <p className="text-sky-700/70">{hasConsented ? 'Accettata correttamente' : 'In attesa di accettazione'}</p>
+                      <p className="font-bold text-slate-900">Informativa Privacy v1.0</p>
+                      <p className={`${hasConsented ? 'text-slate-500' : 'text-sky-700 font-medium'}`}>
+                        {hasConsented ? 'Accettata correttamente' : 'In attesa di accettazione'}
+                      </p>
                     </div>
                   </div>
                   <Button 
-                    variant="outline" 
+                    variant={hasConsented ? "outline" : "default"}
                     size="sm" 
-                    className="border-sky-200 text-sky-700 hover:bg-sky-100"
+                    className={hasConsented 
+                      ? "border-slate-200 text-slate-600 hover:bg-slate-100" 
+                      : "bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-200"}
                     onClick={() => setShowPrivacyModal(true)}
                   >
-                    Rivedi
+                    {hasConsented ? 'Rivedi' : 'Accetta ora'}
                   </Button>
                 </div>
               </div>
