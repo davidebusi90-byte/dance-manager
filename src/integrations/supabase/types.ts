@@ -70,6 +70,7 @@ export type Database = {
           gender: string | null
           discipline_info: Json | null
           is_deleted: boolean
+          deleted_at: string | null
         }
         Insert: {
           birth_date?: string | null
@@ -88,6 +89,7 @@ export type Database = {
           responsabili?: string[] | null
           updated_at?: string
           gender?: string | null
+          deleted_at?: string | null
         }
         Update: {
           birth_date?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           responsabili?: string[] | null
           updated_at?: string
           gender?: string | null
+          deleted_at?: string | null
         }
         Relationships: [
           {
@@ -357,6 +360,8 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          deleted_at: string | null
+          last_login_at: string | null
         }
         Insert: {
           created_at?: string
@@ -366,6 +371,8 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          deleted_at?: string | null
+          last_login_at?: string | null
         }
         Update: {
           created_at?: string
@@ -375,8 +382,92 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          deleted_at?: string | null
+          last_login_at?: string | null
         }
         Relationships: []
+      }
+      user_consents: {
+        Row: {
+          accepted_at: string | null
+          consent_type: string
+          id: string
+          ip_address: string | null
+          is_accepted: boolean
+          profile_id: string
+          user_agent: string | null
+          version: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          consent_type: string
+          id?: string
+          ip_address?: string | null
+          is_accepted?: boolean
+          profile_id: string
+          user_agent?: string | null
+          version: string
+        }
+        Update: {
+          accepted_at?: string | null
+          consent_type?: string
+          id?: string
+          ip_address?: string | null
+          is_accepted?: boolean
+          profile_id?: string
+          user_agent?: string | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_consents_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      privacy_audit_logs: {
+        Row: {
+          action: string
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_audit_logs_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -408,6 +499,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_athletes_server: {
+        Args: { search_term: string }
+        Returns: Database["public"]["Tables"]["athletes"]["Row"][]
       }
     }
     Enums: {

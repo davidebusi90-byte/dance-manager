@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Lock, User, Mail } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
+import { usePrivacyConsent } from "@/hooks/usePrivacyConsent";
+import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
 
 export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
@@ -161,8 +164,30 @@ export default function Settings() {
     }
   };
 
+  const { hasConsented } = usePrivacyConsent('privacy_policy', '1.0');
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
+      {showPrivacyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl p-6">
+             <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-4 top-4"
+                onClick={() => setShowPrivacyModal(false)}
+             >
+               <ArrowLeft className="w-5 h-5" />
+             </Button>
+             <PrivacyConsentModal />
+             <div className="mt-8 text-center text-sm text-muted-foreground">
+               La finestra si chiuderà una volta accettati i termini. 
+               Se hai già accettato, premi il pulsante chiudi in alto a destra.
+             </div>
+          </div>
+        </div>
+      )}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
@@ -183,9 +208,35 @@ export default function Settings() {
             <CardDescription>Informazioni del tuo account</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={userEmail ?? ""} disabled className="bg-muted" />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input value={userEmail ?? ""} disabled className="bg-muted" />
+              </div>
+              
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-sky-600" />
+                  Privacy & GDPR
+                </h4>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-sky-50 border border-sky-100">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className={`w-5 h-5 ${hasConsented ? 'text-green-600' : 'text-slate-300'}`} />
+                    <div className="text-sm">
+                      <p className="font-medium text-sky-900">Informativa Privacy v1.0</p>
+                      <p className="text-sky-700/70">{hasConsented ? 'Accettata correttamente' : 'In attesa di accettazione'}</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-sky-200 text-sky-700 hover:bg-sky-100"
+                    onClick={() => setShowPrivacyModal(true)}
+                  >
+                    Rivedi
+                  </Button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

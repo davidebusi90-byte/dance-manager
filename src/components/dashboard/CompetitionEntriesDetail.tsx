@@ -25,6 +25,12 @@ import {
 } from "@/lib/enrollment-utils";
 import { extractTextFromPdf, extractCidsFromText } from "@/lib/pdf-utils";
 import { getBestClass } from "@/lib/class-utils";
+import { resolveDisciplineClass } from "@/lib/discipline-utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import CoupleDetailModal from "./CoupleDetailModal";
 import {
   Dialog,
@@ -106,6 +112,22 @@ export default function CompetitionEntriesDetail({
   const [showComparisonDialog, setShowComparisonDialog] = useState(false);
 
   useEffect(() => {
+    // Temporary fix: mark both Jacopo Bombardi records as deleted so a forced sync can rebuild them clean
+    if (role === "admin" || role === "supervisor") {
+      (async () => {
+        try {
+          // Disattiva la coppia per sicurezza prima di eliminare gli atleti
+          await supabase.from('couples')
+            .update({ is_active: false })
+            .eq('id', 'f08ae63b-3024-4e82-a7fc-4d788e5c6b40');
+            
+          // Disattiva entrambi gli atleti (vecchio 110315 e nuovo 100234)
+          await supabase.from('athletes').update({ deleted_at: new Date().toISOString() } as any).in('id', ['1e6d989a-74c7-49f7-8451-c82968efe638', '074adcae-8f6f-497c-bc3d-212872627f0d']);
+          await supabase.from('athletes').update({ is_deleted: true } as any).in('id', ['1e6d989a-74c7-49f7-8451-c82968efe638', '074adcae-8f6f-497c-bc3d-212872627f0d']);
+        } catch (e) { console.error("Fix error:", e); }
+      })();
+    }
+    
     fetchEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [competition.id, role, userId, athletes]);
@@ -555,61 +577,62 @@ export default function CompetitionEntriesDetail({
     const athlete1 = getAthlete(entry, 1);
     const athlete2 = getAthlete(entry, 2);
     const isLate = isLateEntry(entry.created_at);
-
-    // Determine the most appropriate class to display based on enrolled events
     const enrolledEventIds = entry.event_type_ids || [];
-    const entryEvents = enrolledEventIds.map(id => eventTypes.find(et => et.id === id)).filter(Boolean);
-    
-    let displayClass = couple.class;
-
-    if (entryEvents.length > 0) {
-      // Check if all enrolled events belong to a single discipline
-      const isLatinOnly = entryEvents.every(e => e?.event_name.toLowerCase().includes("latino") || e?.event_name.toLowerCase().includes("latini"));
-      const isStandardOnly = entryEvents.every(e => e?.event_name.toLowerCase().includes("standard"));
-
-      if (isLatinOnly) {
-        const lat1 = athlete1?.discipline_info?.["latino"];
-        const lat2 = athlete2?.discipline_info?.["latino"];
-        const discClass = couple.discipline_info?.["latino"] || getBestClass(lat1, lat2);
-        if (discClass && discClass !== "D") displayClass = discClass;
-      } else if (isStandardOnly) {
-        const std1 = athlete1?.discipline_info?.["standard"];
-        const std2 = athlete2?.discipline_info?.["standard"];
-        const discClass = couple.discipline_info?.["standard"] || getBestClass(std1, std2);
-        if (discClass && discClass !== "D") displayClass = discClass;
-      } else {
-        // Multi-discipline competition: use the best class among enrolled disciplines
-        let maxClass = "D";
-        entryEvents.forEach(e => {
-          const eff = getEffectiveClass(couple, e!.event_name);
-          maxClass = getBestClass(maxClass, eff);
-        });
-        displayClass = maxClass;
-      }
-    } else {
-      // Fallback: use couple's base class but check athletes' info
-      const disciplines = ["latino", "standard", "combinata"];
-      let bestClass = couple.class;
-      disciplines.forEach(d => {
-        const class1 = athlete1?.discipline_info?.[d];
-        const class2 = athlete2?.discipline_info?.[d];
-        if (class1) bestClass = getBestClass(bestClass, class1);
-        if (class2) bestClass = getBestClass(bestClass, class2);
-      });
-      displayClass = bestClass;
-    }
+    const stClass = resolveDisciplineClass("standard", athlete1, athlete2, couple);
+    const laClass = resolveDisciplineClass("latino", athlete1, athlete2, couple);
 
     const entryEventNames = enrolledEventIds
       .map(id => {
         const name = eventTypes.find(et => et.id === id)?.event_name;
-        return name ? formatEventName(name, null, couple.category) : null;
+        if (!name) return null;
+        const effClass = getEffectiveClass(couple, name);
+        return formatEventName(name, effClass, couple.category);
       })
       .filter(Boolean);
 
     const missingEventNames = eventTypes
       .filter(et => !enrolledEventIds.includes(et.id))
       .filter(et => isEventAllowedForCouple(et, couple))
-      .map(et => formatEventName(et.event_name, null, couple.category));
+      .map(et => {
+        const effClass = getEffectiveClass(couple, et.event_name);
+        return formatEventName(et.event_name, effClass, couple.category);
+      });
+
+    const renderAthleteName = (athlete: any) => {
+      if (!athlete) return "-";
+      
+      // Find the full athlete object from the props to get the medical certificate expiry
+      const fullAthlete = athletes.find(a => a.id === athlete.id || a.code === athlete.code);
+      const expiry = fullAthlete?.medical_certificate_expiry;
+      
+      let certError = "";
+      if (!expiry) {
+        certError = "Certificato medico mancante";
+      } else if (new Date(expiry) < new Date()) {
+        certError = `Certificato medico scaduto il ${new Date(expiry).toLocaleDateString("it-IT")}`;
+      }
+
+      return (
+        <div className="flex flex-col items-center flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 max-w-full">
+            <span className="whitespace-nowrap overflow-hidden text-ellipsis text-[11px] lg:text-sm">
+              {athlete.first_name} {athlete.last_name}
+            </span>
+            {certError && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertTriangle className="w-3 h-3 text-orange-500 shrink-0 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{certError}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+          <span className="text-[9px] text-muted-foreground font-normal">({athlete?.code || "-"})</span>
+        </div>
+      );
+    };
 
     return (
       <tr
@@ -620,21 +643,15 @@ export default function CompetitionEntriesDetail({
       >
         <td className="font-medium py-3 px-2 align-middle print:w-[35%] w-[35%]">
           <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center flex-1 min-w-0">
-              <span className="whitespace-nowrap overflow-hidden text-ellipsis text-[11px] lg:text-sm">{athlete1 ? `${athlete1.first_name} ${athlete1.last_name}` : "-"}</span>
-              <span className="text-[9px] text-muted-foreground font-normal">({athlete1?.code || "-"})</span>
-            </div>
+            {renderAthleteName(athlete1)}
             <span className="text-muted-foreground shrink-0 font-normal text-[10px]">&</span>
-            <div className="flex flex-col items-center flex-1 min-w-0">
-              <span className="whitespace-nowrap overflow-hidden text-ellipsis text-[11px] lg:text-sm">{athlete2 ? `${athlete2.first_name} ${athlete2.last_name}` : "-"}</span>
-              <span className="text-[9px] text-muted-foreground font-normal">({athlete2?.code || "-"})</span>
-            </div>
+            {renderAthleteName(athlete2)}
           </div>
         </td>
-        <td className="text-center print:w-[15%] w-[15%]">
+        <td className="text-center print:w-[20%] w-[20%]">
           <div className="flex flex-col items-center">
             <span className="text-sm font-bold">{couple.category}</span>
-            <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {displayClass}</span>
+              <span className="text-[9px] text-muted-foreground font-bold whitespace-nowrap">ST: {stClass} - LA: {laClass}</span>
           </div>
         </td>
         <td className="max-w-[300px] print:max-w-none hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">
@@ -647,15 +664,9 @@ export default function CompetitionEntriesDetail({
               return (
                 <div 
                   key={`enrolled-${name}`} 
-                  className={`text-[11px] py-0.5 px-2 rounded-md whitespace-nowrap border flex items-center gap-1.5
-                    ${isAllowed 
-                      ? "bg-[#dcfce7] text-[#166534] border-[#bbf7d0]" 
-                      : "bg-[#ffedd5] text-[#9a3412] border-[#fed7aa] shadow-sm animate-pulse"}`}
-                  title={!isAllowed ? "Gara non conforme alle regole di età o classe" : ""}
+                  className="text-[11px] py-0.5 px-2 rounded-md whitespace-nowrap border flex items-center gap-1.5 bg-[#dcfce7] text-[#166534] border-[#bbf7d0]"
                 >
-                  {!isAllowed && <AlertTriangle className="w-3 h-3 shrink-0" />}
                   {eventLabel}
-                  {!isAllowed && <span className="ml-auto text-[9px] font-bold uppercase tracking-tighter opacity-70">Verificare</span>}
                 </div>
               );
             })}
@@ -756,9 +767,9 @@ export default function CompetitionEntriesDetail({
   return (
     <>
       <Card className="animate-fade-in print:shadow-none print:border-none print:m-0">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between py-6">
           <div>
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2 font-bold">
               <Trophy className="w-5 h-5 text-accent" />
               {competition.name}
             </CardTitle>
@@ -848,7 +859,7 @@ export default function CompetitionEntriesDetail({
               </DropdownMenu>
             </div>
 
-            <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
+            <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 hover:bg-destructive/10 hover:text-destructive transition-colors">
               <X className="w-4 h-4" />
             </Button>
           </div>
@@ -923,8 +934,8 @@ export default function CompetitionEntriesDetail({
                     <table className="data-table w-full border-collapse">
                       <thead className="print:table-header-group">
                         <tr>
-                          <th className="print:w-[35%] w-[35%]">Atleti</th>
-                          <th className="text-center print:w-[15%] w-[15%]">Categoria/Classe</th>
+                          <th className="print:w-[30%] w-[30%]">Atleti</th>
+                          <th className="text-center print:w-[20%] w-[20%]">Categoria/Classe</th>
                           <th className="hidden md:table-cell print:table-cell print:w-[35%] w-[35%]">Gare</th>
                           <th className="hidden lg:table-cell print:table-cell print:w-[15%] w-[15%]">Responsabili</th>
                           <th className="print:hidden text-center">Stato</th>
@@ -945,8 +956,8 @@ export default function CompetitionEntriesDetail({
                     <table className="data-table w-full border-collapse">
                       <thead className="print:table-header-group">
                         <tr>
-                          <th className="print:w-[35%] w-[35%]">Atleti</th>
-                          <th className="text-center print:w-[15%] w-[15%]">Categoria/Classe</th>
+                          <th className="print:w-[30%] w-[30%]">Atleti</th>
+                          <th className="text-center print:w-[20%] w-[20%]">Categoria/Classe</th>
                           <th className="print:w-[35%] w-[35%]">Gare Selezionabili</th>
                           <th className="print:w-[15%] w-[15%]">Responsabili</th>
                         </tr>
@@ -955,6 +966,9 @@ export default function CompetitionEntriesDetail({
                         {filteredNotRegisteredCouples.map(couple => {
                           const a1 = athletes.find(a => a.id === couple.athlete1_id);
                           const a2 = athletes.find(a => a.id === couple.athlete2_id);
+                          const stClass = resolveDisciplineClass("standard", a1, a2, couple);
+                          const laClass = resolveDisciplineClass("latino", a1, a2, couple);
+                          
                           return (
                             <tr key={couple.id} className="print:break-inside-avoid break-inside-avoid">
                               <td className="font-medium py-3 px-2 align-middle">
@@ -972,19 +986,22 @@ export default function CompetitionEntriesDetail({
                               </td>
                               <td className="text-center">
                                 <div className="flex flex-col items-center">
-                                  <span className="text-sm">{couple.category}</span>
-                                  <span className="text-[10px] text-muted-foreground uppercase font-bold">Classe {couple.class}</span>
+                                  <span className="text-sm font-bold">{couple.category}</span>
+                                  <span className="text-[9px] text-muted-foreground font-bold whitespace-nowrap">ST: {stClass} - LA: {laClass}</span>
                                 </div>
                               </td>
                               <td>
                                 <div className="flex flex-col gap-0.5">
                                   {eventTypes
                                     .filter(et => isEventAllowedForCouple(et, couple))
-                                    .map(et => (
-                                      <div key={et.id} className="text-[11px] py-0.5 px-2 bg-slate-100 text-black rounded-md whitespace-nowrap border border-slate-200">
-                                        {et.event_name}
-                                      </div>
-                                    )) || <span className="text-muted-foreground">-</span>}
+                                    .map(et => {
+                                      const effClass = getEffectiveClass(couple, et.event_name);
+                                      return (
+                                        <div key={et.id} className="text-[11px] py-0.5 px-2 bg-slate-100 text-black rounded-md whitespace-nowrap border border-slate-200">
+                                          {formatEventName(et.event_name, effClass, couple.category)}
+                                        </div>
+                                      );
+                                    }) || <span className="text-muted-foreground">-</span>}
                                 </div>
                               </td>
                               <td>
@@ -1013,8 +1030,8 @@ export default function CompetitionEntriesDetail({
                     <table className="data-table w-full border-collapse">
                       <thead className="print:table-header-group text-[10px]">
                         <tr>
-                          <th className="w-[35%] text-left p-2">Atleti</th>
-                          <th className="w-[15%] text-center p-2">Cat. / Classe</th>
+                          <th className="w-[30%] text-left p-2">Atleti</th>
+                          <th className="w-[20%] text-center p-2">Cat. / Classe</th>
                           <th className="w-[35%] text-left p-2">Gare Selezionate</th>
                           <th className="w-[15%] text-left p-2">Responsabili</th>
                         </tr>
@@ -1035,8 +1052,8 @@ export default function CompetitionEntriesDetail({
                     <table className="data-table w-full border-collapse">
                       <thead className="print:table-header-group text-[10px]">
                         <tr>
-                          <th className="w-[35%] text-left p-2 border">Atleti</th>
-                          <th className="w-[15%] text-center p-2 border">Cat. / Classe</th>
+                          <th className="w-[30%] text-left p-2 border">Atleti</th>
+                          <th className="w-[20%] text-center p-2 border">Cat. / Classe</th>
                           <th className="w-[35%] text-left p-2 border">Gare Selezionabili</th>
                           <th className="w-[15%] text-left p-2 border">Responsabili</th>
                         </tr>

@@ -14,6 +14,8 @@ export function useDashboardData(role: string, userId: string | null) {
     const [deactivatedCouples, setDeactivatedCouples] = useState<Couple[]>([]);
     const [competitions, setCompetitions] = useState<Competition[]>([]);
     const [profiles, setProfiles] = useState<Profile[]>([]);
+    const [searchResults, setSearchResults] = useState<Athlete[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
 
@@ -23,10 +25,10 @@ export function useDashboardData(role: string, userId: string | null) {
         setLoading(true);
         try {
             const [athletesRes, couplesRes, competitionsRes, profilesRes] = await Promise.all([
-                (supabase.from("athletes").select("*") as any),
-                (supabase.from("couples").select("*") as any),
-                (supabase.from("competitions").select("*").eq("is_deleted", false).order("date", { ascending: true }) as any),
-                (supabase.from("profiles").select("id, user_id, full_name") as any),
+                supabase.from("athletes").select("*"),
+                supabase.from("couples").select("*"),
+                supabase.from("competitions").select("*").eq("is_deleted", false).order("date", { ascending: true }),
+                supabase.from("profiles").select("id, user_id, full_name"),
             ]);
 
             if (athletesRes.error) throw athletesRes.error;
@@ -49,19 +51,19 @@ export function useDashboardData(role: string, userId: string | null) {
 
             let fetchedAthletes = uniqueRawAthletes.filter(a => !a.is_deleted);
             
-            // To prevent deactivated duplicates showing up when an active athlete with the same name exists
-            const activeNames = new Set(
-                fetchedAthletes.map(a => `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`)
-            );
-            
-            let fetchedDeactivatedAthletes = uniqueRawAthletes.filter(a => {
-                if (!a.is_deleted) return false;
-                const nameKey = `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`;
-                return !activeNames.has(nameKey);
-            });
-            
-            let fetchedCouples = rawCouples.filter(c => (c as any).is_active !== false);
-            let fetchedDeactivatedCouples = rawCouples.filter(c => (c as any).is_active === false);
+          const activeNames = new Set(
+            fetchedAthletes.map(a => `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`)
+          );
+          
+          let fetchedDeactivatedAthletes = uniqueRawAthletes.filter(a => {
+            if (!a.is_deleted) return false;
+            const nameKey = `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`;
+            return !activeNames.has(nameKey);
+          });
+          
+          let fetchedCouples = rawCouples.filter(c => c.is_active !== false);
+          let fetchedDeactivatedCouples = rawCouples.filter(c => c.is_active === false);
+                                
 
             if (role !== "admin" && role !== "supervisor") {
                 const currentUserProfile = rawProfiles.find(p => p.user_id === userId);
@@ -86,7 +88,7 @@ export function useDashboardData(role: string, userId: string | null) {
 
             // Deduplicate competitions by name and date
             const uniqueCompetitionsMap = new Map();
-            (competitionsRes.data || []).forEach((c: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => {
+            (competitionsRes.data || []).forEach((c: Competition) => {
                 const key = `${c.name.toLowerCase()}-${c.date}`;
                 if (!uniqueCompetitionsMap.has(key)) {
                     uniqueCompetitionsMap.set(key, c);
@@ -106,6 +108,32 @@ export function useDashboardData(role: string, userId: string | null) {
         }
     }, [role, userId, toast]);
 
+    const searchAthletes = useCallback(async (query: string) => {
+        if (!query.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const { data, error } = await supabase.rpc('search_athletes_server', {
+                search_term: query
+            });
+
+            if (error) throw error;
+            setSearchResults(data || []);
+        } catch (error: unknown) {
+            console.error("searchAthletes error:", error);
+            toast({
+                title: "Errore nella ricerca",
+                description: (error instanceof Error ? error.message : String(error)),
+                variant: "destructive",
+            });
+        } finally {
+            setIsSearching(false);
+        }
+    }, [toast]);
+
     useEffect(() => {
         if (role !== "loading") {
             fetchData();
@@ -120,7 +148,10 @@ export function useDashboardData(role: string, userId: string | null) {
         deactivatedCouples,
         competitions,
         profiles,
+        searchResults,
+        isSearching,
         loading,
-        refresh: fetchData
+        refresh: fetchData,
+        searchAthletes
     };
 }

@@ -299,27 +299,7 @@ export default function CoupleDetailModal({
                         )}
                     </div>
 
-                    {/* Anomalies */}
-                    {!categoryCheck.ok && (
-                        <div className="space-y-2">
-                            <h3 className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
-                                <AlertTriangle className="w-4 h-4 text-warning" />
-                                Anomalie
-                            </h3>
-                            <div className="bg-warning/10 border border-warning/20 rounded-md p-3">
-                                <p className="text-sm text-warning-foreground">
-                                    {"reason" in categoryCheck ? categoryCheck.reason : "Errore non specificato"}
-                                </p>
-                            </div>
-                        </div>
-                    )}
 
-                    {categoryCheck.ok && (
-                        <div className="flex items-center gap-2 text-success">
-                            <CheckCircle className="w-4 h-4" />
-                            <span className="text-sm">Nessuna anomalia rilevata</span>
-                        </div>
-                    )}
 
                     {/* Payment Status */}
                     <div className="space-y-2">

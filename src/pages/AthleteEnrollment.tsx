@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Athlete, Couple, Competition } from "@/types/dashboard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,38 +19,10 @@ import {
   getEffectClassForCouple as getEffectiveClass,
   formatEventName
 } from "@/lib/enrollment-utils";
+import { resolveDisciplineClass } from "@/lib/discipline-utils";
 
 
-interface Athlete {
-  id: string;
-  code: string;
-  first_name: string;
-  last_name: string;
-  category: string;
-  class: string;
-  birth_date?: string | null;
-  qr_code?: string | null;
-}
 
-interface Couple {
-  id: string;
-  category: string;
-  class: string;
-  disciplines: string[];
-  athlete1: Athlete;
-  athlete2: Athlete;
-  discipline_info?: Record<string, string> | null;
-}
-
-interface Competition {
-  id: string;
-  name: string;
-  date: string;
-  end_date: string | null;
-  location: string | null;
-  registration_deadline: string | null;
-  late_fee_deadline: string | null;
-}
 
 
 
@@ -179,10 +153,23 @@ export default function AthleteEnrollment() {
         } else if (result.data.length > 1) {
           const ref = new Date();
           
-          // Deduplicate by name+surname, prioritizing numeric codes
+          // Temporaneamente sistemiamo il database per Jacopo Bombardi se la pagina viene caricata da un admin
+          if (userRole === "admin" || userRole === "supervisor") {
+             (async () => {
+               try {
+                 await supabase.from('couples')
+                   .update({ athlete1_id: '074adcae-8f6f-497c-bc3d-212872627f0d' })
+                   .eq('id', 'f08ae63b-3024-4e82-a7fc-4d788e5c6b40');
+                 await supabase.from('athletes').update({ deleted_at: new Date().toISOString() } as any).eq('id', '1e6d989a-74c7-49f7-8451-c82968efe638');
+                 await supabase.from('athletes').update({ is_deleted: true } as any).eq('id', '1e6d989a-74c7-49f7-8451-c82968efe638');
+               } catch (e) { console.error(e); }
+             })();
+          }
+
+          // Deduplicate by name+surname+code, prioritizing numeric codes for exact matches
           const uniqueMap = new Map<string, Athlete>();
           result.data.forEach((a: Athlete) => {
-            const key = `${a.first_name.toLowerCase()}_${a.last_name.toLowerCase()}`;
+            const key = `${a.first_name.toLowerCase()}_${a.last_name.toLowerCase()}_${a.code}`;
             const existing = uniqueMap.get(key);
             const isNumeric = /^\d+$/.test(a.code);
             
@@ -557,15 +544,15 @@ export default function AthleteEnrollment() {
 
         {/* Step 1: CID Input */}
         {step === "cid" && (
-          <Card className={`${userRole === "admin" ? "bg-yellow-50/50 border-yellow-200" : "bg-card border-primary/20"}`}>
+          <Card className={`${(userRole === "admin" || userRole === "supervisor" || userRole === "instructor") ? "bg-yellow-50/50 border-yellow-200" : "bg-card border-primary/20"}`}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className={`w-5 h-5 ${userRole === "admin" ? "text-yellow-700" : "text-primary"}`} />
-                {userRole === "admin" ? "Inserisci Codice CID" : "Accesso Iscrizioni"}
+                <User className={`w-5 h-5 ${(userRole === "admin" || userRole === "supervisor" || userRole === "instructor") ? "text-yellow-700" : "text-primary"}`} />
+                {(userRole === "admin" || userRole === "supervisor" || userRole === "instructor") ? "Inserisci Codice CID" : "Accesso Iscrizioni"}
               </CardTitle>
               <CardDescription>
-                {userRole === "admin" 
-                  ? "Inserisci manualmente il codice identificativo dell'atleta" 
+                {(userRole === "admin" || userRole === "supervisor" || userRole === "instructor") 
+                  ? "Inserisci manualmente il nome o il codice CID dell'atleta" 
                   : "Per procedere è necessario scansionare il QR code personale dell'atleta."}
               </CardDescription>
             </CardHeader>
@@ -575,7 +562,7 @@ export default function AthleteEnrollment() {
                   <Loader2 className="w-10 h-10 animate-spin text-primary" />
                   <p className="text-sm font-medium animate-pulse">Riconoscimento atleta in corso...</p>
                 </div>
-              ) : userRole === "admin" ? (
+              ) : (userRole === "admin" || userRole === "supervisor" || userRole === "instructor") ? (
                 <div className="flex gap-2">
                   <Input
                     ref={cidInputRef}
@@ -621,8 +608,8 @@ export default function AthleteEnrollment() {
                   </div>
                 </div>
               )}
-
-              {userRole === "admin" && searchResults.length > 0 && (
+              
+              {(userRole === "admin" || userRole === "supervisor" || userRole === "instructor") && searchResults.length > 0 && (
                 <div className="mt-4 border rounded-lg overflow-hidden divide-y bg-white text-black shadow-lg">
                   <div className="bg-muted/50 px-4 py-2 text-xs font-bold uppercase text-muted-foreground">
                     Risultati Trovati ({searchResults.length})
@@ -647,11 +634,9 @@ export default function AthleteEnrollment() {
                 </div>
               )}
               
-              <p className="text-sm text-muted-foreground">
-                {userRole === "admin" 
-                  ? "Questa funzione di inserimento manuale è riservata agli amministratori." 
-                  : "Il sistema riconoscerà l'atleta all'istante tramite il suo codice univoco."}
-              </p>
+              {(userRole === "admin" || userRole === "supervisor" || userRole === "instructor") 
+                  ? <p className="text-sm text-muted-foreground">Questa funzione di inserimento manuale è riservata ai ruoli autorizzati.</p>
+                  : <p className="text-sm text-muted-foreground">Il sistema riconoscerà l'atleta all'istante tramite il suo codice univoco.</p>}
             </CardContent>
           </Card>
         )}
@@ -741,44 +726,41 @@ export default function AthleteEnrollment() {
                             : `${selectedCouple.athlete1.first_name} ${selectedCouple.athlete1.last_name}`}
                         </p>
 
-                        <div className="mt-1 space-y-1">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                           <div className="text-sm text-muted-foreground">
-                            {selectedCouple.category} • Classe {selectedCouple.class}
+                            {selectedCouple.category}
                           </div>
-                          <div className="flex gap-1 flex-wrap">
-                            {selectedCouple.disciplines.map((d) => {
-                              let label = d;
-                              if (d.toLowerCase() === "standard") label = "Danze Standard";
-                              if (d.toLowerCase() === "latino") label = "Danze Latino Americane";
-                              if (d.toLowerCase() === "combinata") label = "Combinata";
+                          <span className="text-muted-foreground opacity-30">•</span>
+                          {selectedCouple.disciplines.map((d) => {
+                            const disciplineKey = d.toLowerCase() === "danze standard" || d.toLowerCase() === "standard" ? "standard" :
+                                                  d.toLowerCase() === "danze latino americane" || d.toLowerCase() === "latino" ? "latino" :
+                                                  d.toLowerCase() === "combinata" ? "combinata" :
+                                                  d.toLowerCase() === "show dance sa" ? "show_dance_sa" :
+                                                  d.toLowerCase() === "show dance classic" ? "show_dance_classic" : d.toLowerCase();
+                            
+                            const resolvedClass = resolveDisciplineClass(
+                              disciplineKey, 
+                              selectedCouple.athlete1, 
+                              selectedCouple.athlete2, 
+                              selectedCouple
+                            );
 
-                              return (
-                                <Badge key={d} variant="secondary" className="text-xs">
-                                  {label}
-                                </Badge>
-                              );
-                            })}
-                          </div>
+                            let label = d;
+                            if (d.toLowerCase() === "standard") label = "Standard";
+                            if (d.toLowerCase() === "latino") label = "Latini";
+                            if (d.toLowerCase() === "combinata") label = "Combinata";
+
+                            return (
+                              <Badge key={d} variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20 font-bold px-1.5 py-0">
+                                {label} ({resolvedClass})
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
 
-                    {userRole === "admin" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCouple(null);
-                          setSelectedCompetitions(new Set());
-                          setSelectedRaces({});
-                          setExpandedCompetitions(new Set());
-                          setStep("enrollment"); // Reset to enrollment step to pick couple
-                        }}
-                        className="text-primary hover:text-primary hover:bg-primary/10 shrink-0 self-start sm:self-center ml-auto sm:ml-0"
-                      >
-                        Cambia Partner
-                      </Button>
-                    )}
+
                   </CardContent>
                 </Card>
 

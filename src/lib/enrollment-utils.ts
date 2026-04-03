@@ -1,6 +1,5 @@
-import { getCategoryMaxAge, getCategoryMinAge, getSportsAge, normalizeCategory, CATEGORY_RULES } from "./category-validation";
-
-
+import { getCategoryMaxAge, getCategoryMinAge, getSportsAge, normalizeCategory, CATEGORY_RULES, getMinYoungerAgeForRule } from "./category-validation";
+import { resolveDisciplineClass } from "./discipline-utils";
 
 /**
  * --- EVENT NAME & DISCIPLINE UTILS ---
@@ -8,41 +7,65 @@ import { getCategoryMaxAge, getCategoryMinAge, getSportsAge, normalizeCategory, 
 
 export const getEventDiscipline = (eventName: string): string | null => {
     const name = eventName.toLowerCase();
-    if (name.includes("standard")) return "standard";
-    if (name.includes("latino")) return "latino";
-    if (name.includes("combinata")) return "combinata";
+    if (name.includes("standard") || name.startsWith("st ") || name.includes(" st ")) return "standard";
+    if (name.includes("latino") || name.startsWith("la ") || name.includes(" la ")) return "latino";
+    if (name.includes("combinata") || name.startsWith("c ") || name.includes(" c ")) return "combinata";
     return null;
 };
 
-export const formatEventName = (name: string): string => {
-    return name
-        .replace(/Danze (Standard|Latino Americane|Latino-Americane) - /gi, "")
-        .replace(/ \(\d+\/\d+\)/g, "")
+export const formatEventName = (name: string, effectiveClass?: string | null, category?: string | null): string => {
+    const discipline = getEventDiscipline(name);
+    let discAbbr = "";
+    if (discipline === "standard") discAbbr = "ST";
+    else if (discipline === "latino") discAbbr = "LA";
+    else if (discipline === "combinata") discAbbr = "C";
+
+    let baseName = name
+        .replace(/^(ST|LA|C|Danze (Standard|Latino Americane|Latino-Americane))\s*[-–:]*\s*/gi, "")
+        .replace(/ \(\d+[/-]\d+\)/g, "") // Removes (6/9), (6-9), etc.
         .trim();
+    
+    const isUnder16 = baseName.toLowerCase().includes("under 16");
+    if (isUnder16) {
+        // Specifically for Under 16, strip any remaining age indicators if present
+        baseName = baseName.replace(/\s*\(\d+[/-]\d+\)/gi, "").trim();
+    }
+    
+    let result = baseName;
+    const prefix = discAbbr ? `${discAbbr} ` : "";
+    const isOpenRace = result.toLowerCase().includes("open");
+    
+    // Se l'età (categoria) è presente nel nome ma senza parentesi, proviamo a metterla tra parentesi
+    // Non aggiungiamo l'età se è una gara Under 16
+    if (category && !isUnder16) {
+        const ageRangeRegex = new RegExp(`\\b${category.replace('-', '\\-')}\\b(?!\\))`, 'gi');
+        if (ageRangeRegex.test(result)) {
+            result = result.replace(ageRangeRegex, `(${category})`);
+        } else if (!result.toLowerCase().includes(`(${category.toLowerCase()})`)) {
+            // Se non c'è proprio, la aggiungiamo alla fine (prima della classe se presente)
+            result += ` (${category})`;
+        }
+    }
+
+    // Aggiungi Classe se non già presente nel nome E non è una gara Open o Under 16
+    if (!isOpenRace && !isUnder16 && effectiveClass && !result.toLowerCase().includes(`classe ${effectiveClass.toLowerCase()}`) && !result.toLowerCase().includes(` ${effectiveClass.toLowerCase()}`)) {
+        result += ` ${effectiveClass.toUpperCase()}`;
+    }
+    
+    return `${prefix}${result}`;
 };
 
 export const getEffectClassForCouple = (couple: any, eventName: string): string => {
     const discipline = getEventDiscipline(eventName);
-    if (!discipline || !couple.discipline_info) return (couple.class || "D").toUpperCase();
+    if (!discipline) return (couple.class || "D").toUpperCase();
     
-    // Use discipline specific class if available, fallback to main class
-    return (couple.discipline_info[discipline] || couple.class || "D").toUpperCase();
+    // Resolve the class considering athletes' specific discipline info
+    return resolveDisciplineClass(discipline, couple.athlete1, couple.athlete2, couple);
 };
 
 /**
  * --- AGE VALIDATION ---
  */
-
-const getMinYoungerAgeForRule = (minAge: number, label?: string): number => {
-    // Regola Under 21: il più giovane deve avere almeno 16 anni
-    if (label === 'Under 21') return 16;
-    
-    // Regola Seniors: il più giovane deve avere almeno 30 anni
-    if (minAge >= 35) return 30;
-    
-    // Default: nessuna tolleranza (stessa età minima)
-    return minAge;
-};
 
 export const isEventAllowedByAge = (
     et: any,
@@ -191,9 +214,17 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         if (effectiveMaxAge !== null && effectiveMaxAge >= 55) return false;
     }
 
+    // REGOLA ESCLUSIONE YOUTH: Se la coppia è Youth, non partecipa a gare Adult o Under 21 (richiesta specifica)
+    if (normalizeCategory(couple.category) === "youth") {
+        if (nameNorm.includes("adult") || nameNorm.includes("under 21")) {
+            return false;
+        }
+    }
+
     // 8. REGOLE OPEN & RISING STAR: Accesso basato su età e classi alte
     if (nameNorm.includes("youth open") && normalizeCategory(couple.category) === "youth") {
-        isRaceAllowed = true;
+        const isAllowedClass = ["B", "B1", "B2", "B3", "A", "A1", "A2", "AS"].includes(effectiveClass);
+        if (isAllowedClass) isRaceAllowed = true;
     }
     if (nameNorm.includes("rising star")) {
         const allowsAdultTiers = (et.allowed_classes || []).some(cls => ["A", "A1", "A2"].includes(cls));
@@ -201,7 +232,7 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     }
 
     // 9. REGOLA CLASSE C/D: Accesso a Open B e Open C
-    if (c === "D" || c === "C") {
+    if (effectiveClass === "D" || effectiveClass === "C") {
         const isOpenBC = /\b(open\s+(?:classe\s+)?b|b\s+open|open\s+(?:classe\s+)?c|c\s+open)\b/i.test(nameNorm);
         if (isOpenBC) return true;
     }

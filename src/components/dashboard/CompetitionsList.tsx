@@ -269,7 +269,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
               )}
             </div>
           </td>
-          <td className="font-medium">{competition.name}</td>
+          <td className="font-medium text-center">{competition.name}</td>
           <td>
             {competition.location && (
               <div className="flex items-center gap-2">
@@ -393,7 +393,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
                 <thead className="bg-orange-50 border-b border-orange-200 text-left">
                   <tr>
                     <th className="px-4 py-3 text-center font-medium text-orange-700 bg-orange-50">Data Competizione</th>
-                    <th className="px-4 py-3 text-left font-medium text-orange-700 bg-orange-50">Nome Competizione</th>
+                    <th className="px-4 py-3 text-center font-medium text-orange-700 bg-orange-50">Nome Competizione</th>
                     <th className="px-4 py-3 text-left font-medium text-orange-700 bg-orange-50">Luogo</th>
                     <th className="px-4 py-3 text-center font-medium text-orange-700 bg-orange-50">Scadenza Iscrizione</th>
                     <th className="px-4 py-3 text-center font-medium text-orange-700 bg-orange-50">Iscrizione in ritardo</th>

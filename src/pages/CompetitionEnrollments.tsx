@@ -61,6 +61,7 @@ const STANDARD_LATIN_EVENTS: { name: string; classes: string[]; minAge?: number;
   { name: "Adult Open", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
   { name: "Amator Open A", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
   { name: "Rising Star", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
+  { name: "Youth Open", classes: ["B1", "B2", "B3", "A", "A1", "A2", "AS"], minAge: 16, maxAge: 18 },
   { name: "Rising Star Master", classes: ["MASTER"] },
   { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
   { name: "Adult Master", classes: ["MASTER"] },

@@ -57,6 +57,13 @@ export default function Auth() {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Update last_login_at for GDPR compliance
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("profiles").update({ last_login_at: new Date().toISOString() }).eq("user_id", user.id);
+        }
+        
         navigate("/dashboard");
       } else if (mode === "otp_request") {
         const { error } = await supabase.auth.signInWithOtp({
@@ -78,6 +85,13 @@ export default function Auth() {
           type: "email",
         });
         if (error) throw error;
+
+        // Update last_login_at for GDPR compliance
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("profiles").update({ last_login_at: new Date().toISOString() }).eq("user_id", user.id);
+        }
+
         toast({ title: "Accesso effettuato!" });
         navigate("/dashboard");
       } else if (mode === "reset_request") {

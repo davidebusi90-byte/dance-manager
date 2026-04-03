@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, ExternalLink, Menu, Calendar } from "lucide-react";
+import { Users, UserCheck, Trophy, Search, LogOut, Settings, ClipboardList, FileWarning, ExternalLink, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import StatCard from "@/components/dashboard/StatCard";
 import AthletesList from "@/components/dashboard/AthletesList";
@@ -14,8 +14,8 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { toast } from "sonner";
-import { Athlete, Couple, Profile } from "@/types/dashboard";
 import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
+import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
 
 type ActiveView = "none" | "athletes" | "couples" | "competitions";
 
@@ -36,8 +36,11 @@ export default function Dashboard() {
     deactivatedCouples,
     competitions,
     profiles,
+    searchResults,
+    isSearching,
     loading,
-    refresh
+    refresh,
+    searchAthletes
   } = useDashboardData(role, userId);
 
   useEffect(() => {
@@ -47,10 +50,12 @@ export default function Dashboard() {
 
     const fetchLastSync = async () => {
       const { data, error } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from("sync_logs" as any)
         .select("created_at, results")
         .in("status", ["success", "warning"])
         .order("created_at", { ascending: false })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .limit(1)
         .maybeSingle() as any);
       
@@ -66,6 +71,15 @@ export default function Dashboard() {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Handle server-side search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      searchAthletes(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, searchAthletes]);
 
   // Listen for real-time sync notifications
   useEffect(() => {
@@ -110,28 +124,21 @@ export default function Dashboard() {
   };
 
   const filteredAthletes = useMemo(() => {
-    let list = athletes;
-    if (searchQuery) {
-      const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-      list = athletes.filter((a) => {
-        const first = (a.first_name || "").toLowerCase();
-        const last = (a.last_name || "").toLowerCase();
-        const code = (a.code || "").toLowerCase();
-        return queryWords.every(word =>
-          first.includes(word) ||
-          last.includes(word) ||
-          code.includes(word)
-        );
-      });
+    // If there is a search query, prioritize server-side results
+    if (searchQuery.trim()) {
+      return searchResults;
     }
-
+    
+    // Otherwise show the high-level list (my athletes or snippet)
+    const list = athletes;
+    
     // Deduplicate by code
     const unique = new Map();
     list.forEach(a => {
       if (!unique.has(a.code)) unique.set(a.code, a);
     });
     return Array.from(unique.values());
-  }, [athletes, searchQuery]);
+  }, [athletes, searchResults, searchQuery]);
 
   const handleStatClick = (view: ActiveView) => {
     setActiveView(activeView === view ? "none" : view);
@@ -147,6 +154,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PrivacyConsentModal />
       <header className="border-b border-border bg-card sticky top-0 z-50 print:hidden">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -414,19 +422,22 @@ export default function Dashboard() {
             )}
 
             <Card className="mb-8">
-              <CardHeader className="flex flex-row items-center gap-4 space-y-0">
+              <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
                 <CardTitle className="text-lg">Cerca Atleta</CardTitle>
-                {lastSyncTime && (
-                  <div className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
-                    Sincronizzato: {new Intl.DateTimeFormat('it-IT', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    }).format(lastSyncTime)}
-                  </div>
-                )}
+                <div className="flex items-center gap-4">
+                  {isSearching && <div className="text-xs text-sky-600 animate-pulse font-medium">Ricerca in corso...</div>}
+                  {lastSyncTime && (
+                    <div className="text-xs text-muted-foreground bg-primary/5 px-2 py-1 rounded-md border border-primary/10">
+                      Sincronizzato: {new Intl.DateTimeFormat('it-IT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }).format(lastSyncTime)}
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="relative">
