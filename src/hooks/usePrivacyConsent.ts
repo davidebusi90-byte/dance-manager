@@ -7,32 +7,39 @@ export function usePrivacyConsent(consentType: ConsentType = 'privacy_policy', v
   const [hasConsented, setHasConsented] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function checkConsent() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('user_consents')
-        .select('is_accepted')
-        .eq('consent_type', consentType)
-        .eq('version', version)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error checking privacy consent:", error);
-      } else if (data) {
-        setHasConsented(data.is_accepted);
-      } else {
-        setHasConsented(false);
-      }
+  const checkConsent = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       setLoading(false);
+      return;
     }
 
+    const { data, error } = await supabase
+      .from('user_consents')
+      .select('is_accepted')
+      .eq('consent_type', consentType)
+      .eq('version', version)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error checking privacy consent:", error);
+    } else if (data) {
+      setHasConsented(data.is_accepted);
+    } else {
+      setHasConsented(false);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     checkConsent();
+
+    const handleConsentChange = () => {
+      checkConsent();
+    };
+
+    window.addEventListener(`consent-changed-${consentType}`, handleConsentChange);
+    return () => window.removeEventListener(`consent-changed-${consentType}`, handleConsentChange);
   }, [consentType, version]);
 
   const saveConsent = async (accepted: boolean) => {
@@ -60,9 +67,11 @@ export function usePrivacyConsent(consentType: ConsentType = 'privacy_policy', v
 
     if (!error) {
       setHasConsented(accepted);
+      // Notify other instances of this hook (like the one in Settings)
+      window.dispatchEvent(new Event(`consent-changed-${consentType}`));
     }
     return { error };
   };
 
-  return { hasConsented, loading, saveConsent };
+  return { hasConsented, loading, saveConsent, checkConsent };
 }
