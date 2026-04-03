@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ export function PrivacyConsentModal({ isOpen, onClose, isReviewMode = false }: P
   const [internalOpen, setInternalOpen] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isAcceptingRef = useRef(false);
 
   const open = isOpen !== undefined ? isOpen : internalOpen;
 
@@ -41,16 +42,21 @@ export function PrivacyConsentModal({ isOpen, onClose, isReviewMode = false }: P
     }
   }, [hasConsented]);
 
-  const handleAccept = async () => {
+  const handleAccept = async (e?: React.MouseEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!accepted) return;
     setIsSubmitting(true);
+    isAcceptingRef.current = true;
     await saveConsent(true);
     setIsSubmitting(false);
     if (onClose) onClose();
     setInternalOpen(false);
   };
 
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (isAcceptingRef.current) return;
+    
     if (isReviewMode) {
       if (onClose) onClose();
       setInternalOpen(false);
