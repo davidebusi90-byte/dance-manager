@@ -30,6 +30,7 @@ export interface Couple {
     responsabili?: string[] | null;
     athlete1?: Athlete;
     athlete2?: Athlete;
+    instructor_id?: string | null;
     is_active?: boolean;
 }
 

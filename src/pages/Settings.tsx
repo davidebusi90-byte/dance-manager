@@ -7,12 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Lock, User, Mail } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
 import { usePrivacyConsent } from "@/hooks/usePrivacyConsent";
-import { CheckCircle2, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2 } from "lucide-react";
 import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
+import Layout from "@/components/layout/Layout";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
@@ -168,193 +171,233 @@ export default function Settings() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <Layout>
       <PrivacyConsentModal 
         isOpen={showPrivacyModal} 
         onClose={() => setShowPrivacyModal(false)}
         isReviewMode={true}
       />
-      <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-xl font-display font-bold">Impostazioni</h1>
+      <div className="min-h-[80vh] py-8">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-display font-black tracking-tight uppercase flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <SettingsIcon className="w-6 h-6" />
+              </div>
+              Impostazioni
+            </h1>
+            <p className="text-muted-foreground font-medium mt-2">Gestisci il tuo profilo e le preferenze del sistema</p>
+          </motion.div>
+
+          <div className="grid gap-8">
+            {/* Profile Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                    <User className="w-5 h-5 text-primary" />
+                    Profilo Utente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0 space-y-8">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Email Account</Label>
+                    <Input 
+                      value={userEmail ?? ""} 
+                      disabled 
+                      className="h-14 rounded-2xl bg-black/5 dark:bg-white/5 border-white/10 px-6 font-medium cursor-not-allowed" 
+                    />
+                  </div>
+                  
+                  <div className="pt-8 border-t border-white/10">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-500">
+                          <ShieldCheck className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-lg">Privacy & GDPR</h4>
+                          <p className="text-xs text-muted-foreground">Stato della conformità legale</p>
+                        </div>
+                      </div>
+                      <Badge variant={hasConsented ? "outline" : "destructive"} className={cn(
+                        "rounded-full px-4 py-1 text-[10px] font-black tracking-widest uppercase",
+                        hasConsented ? "bg-green-500/10 text-green-500 border-green-500/20" : "animate-pulse"
+                      )}>
+                        {hasConsented ? 'Conforme' : 'Azione Richiesta'}
+                      </Badge>
+                    </div>
+                    
+                    <div className={cn(
+                      "p-6 rounded-[2rem] border transition-all duration-500 flex items-center justify-between gap-4",
+                      hasConsented ? "bg-white/5 border-white/5" : "bg-sky-500/5 border-sky-500/20 shadow-xl shadow-sky-500/10"
+                    )}>
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg",
+                          hasConsented ? "bg-green-500/10 text-green-600" : "bg-sky-500/10 text-sky-500"
+                        )}>
+                          {hasConsented ? <CheckCircle2 className="w-7 h-7" /> : <ShieldAlert className="w-7 h-7" />}
+                        </div>
+                        <div>
+                          <p className="font-display font-black text-sm uppercase tracking-tight">Informativa Privacy v1.0</p>
+                          <p className="text-xs text-muted-foreground font-medium">
+                            {hasConsented ? 'Accettata correttamente' : 'In attesa di accettazione'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant={hasConsented ? "ghost" : "default"}
+                        onClick={() => setShowPrivacyModal(true)}
+                        className="rounded-xl font-bold h-10 px-6"
+                      >
+                        {hasConsented ? 'Rivedi' : 'Accetta ora'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Security */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-accent" />
+                    Sicurezza Account
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0">
+                  <form onSubmit={handleUpdatePassword} className="space-y-6">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Nuova Password</Label>
+                        <Input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Conferma</Label>
+                        <Input
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
+                          placeholder="••••••••"
+                        />
+                      </div>
+                    </div>
+                    <Button 
+                      type="submit" 
+                      disabled={loading} 
+                      className="w-full h-14 rounded-2xl bg-accent hover:bg-accent/90 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
+                    >
+                      {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Aggiorna Password"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {role === "admin" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="space-y-8"
+              >
+                {/* Email Notifications */}
+                <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                  <CardHeader className="p-8">
+                    <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-primary" />
+                      Sistema Notifiche
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-0 space-y-6">
+                    <div className="flex items-center justify-between p-6 rounded-3xl bg-white/5 border border-white/5">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-lg leading-none">Email Atleti</Label>
+                        <p className="text-xs text-muted-foreground">Invia conferma automatica agli atleti</p>
+                      </div>
+                      <Switch
+                        checked={emailSettings.athletes}
+                        onCheckedChange={(checked) => handleUpdateEmailSetting("athletes", checked)}
+                        disabled={updatingSettings}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between p-6 rounded-3xl bg-white/5 border border-white/5">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-lg leading-none">Email Istruttori</Label>
+                        <p className="text-xs text-muted-foreground">Invia copia all'istruttore della coppia</p>
+                      </div>
+                      <Switch
+                        checked={emailSettings.instructors}
+                        onCheckedChange={(checked) => handleUpdateEmailSetting("instructors", checked)}
+                        disabled={updatingSettings}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Email Diagnostic */}
+                <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                  <CardHeader className="p-8">
+                    <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-accent" />
+                      Diagnostica Email
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-0 space-y-6">
+                    <div className="space-y-2">
+                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Email Destinatario Test</Label>
+                      <Input
+                        type="email"
+                        placeholder="tua@email.it"
+                        value={testEmailTo}
+                        onChange={(e) => setTestEmailTo(e.target.value)}
+                        className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleTestEmail}
+                      disabled={testingEmail}
+                      variant="outline"
+                      className="w-full h-14 rounded-2xl gap-3 text-lg font-bold border-white/10 hover:bg-primary/5 transition-all active:scale-95"
+                    >
+                      {testingEmail ? <Loader2 className="w-6 h-6 animate-spin" /> : <Mail className="w-6 h-6" />}
+                      {testingEmail ? "Invio..." : "Invia Test Diagnostico"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </div>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Profile Info */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Profilo
-            </CardTitle>
-            <CardDescription>Informazioni del tuo account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input value={userEmail ?? ""} disabled className="bg-muted" />
-              </div>
-              
-              <div className="pt-6 border-t border-border">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-semibold flex items-center gap-2 text-sky-900">
-                    <ShieldCheck className="w-4 h-4 text-sky-600" />
-                    Privacy & GDPR
-                  </h4>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${hasConsented ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {hasConsented ? 'Conforme' : 'Azione Richiesta'}
-                  </span>
-                </div>
-                
-                <div className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${hasConsented ? 'bg-slate-50 border-slate-200' : 'bg-sky-50 border-sky-200 shadow-sm shadow-sky-100'}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${hasConsented ? 'bg-green-100 text-green-600' : 'bg-sky-100 text-sky-600'}`}>
-                      {hasConsented ? <CheckCircle2 className="w-6 h-6" /> : <ShieldAlert className="w-6 h-6 animate-pulse" />}
-                    </div>
-                    <div className="text-sm">
-                      <p className="font-bold text-slate-900">Informativa Privacy v1.0</p>
-                      <p className={`${hasConsented ? 'text-slate-500' : 'text-sky-700 font-medium'}`}>
-                        {hasConsented ? 'Accettata correttamente' : 'In attesa di accettazione'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant={hasConsented ? "outline" : "default"}
-                    size="sm" 
-                    className={hasConsented 
-                      ? "border-slate-200 text-slate-600 hover:bg-slate-100" 
-                      : "bg-sky-600 hover:bg-sky-700 text-white shadow-md shadow-sky-200"}
-                    onClick={() => setShowPrivacyModal(true)}
-                  >
-                    {hasConsented ? 'Rivedi' : 'Accetta ora'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Change Password */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Cambia Password
-            </CardTitle>
-            <CardDescription>Aggiorna la password del tuo account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nuova Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Minimo 6 caratteri"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Conferma Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Ripeti la nuova password"
-                />
-              </div>
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Aggiornamento..." : "Aggiorna Password"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {role === "admin" && (
-          <>
-
-            {/* Email Notifications Settings */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Notifiche Email
-                </CardTitle>
-                <CardDescription>Gestisci l'invio automatico delle email durante l'iscrizione</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notify-athletes">Notifiche Atleti</Label>
-                    <p className="text-sm text-muted-foreground">Invia email di conferma agli atleti iscritti</p>
-                  </div>
-                  <Switch
-                    id="notify-athletes"
-                    checked={emailSettings.athletes}
-                    onCheckedChange={(checked) => handleUpdateEmailSetting("athletes", checked)}
-                    disabled={updatingSettings}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notify-instructors">Notifiche Istruttori</Label>
-                    <p className="text-sm text-muted-foreground">Invia email di conferma all'istruttore della coppia</p>
-                  </div>
-                  <Switch
-                    id="notify-instructors"
-                    checked={emailSettings.instructors}
-                    onCheckedChange={(checked) => handleUpdateEmailSetting("instructors", checked)}
-                    disabled={updatingSettings}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Test Email */}
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Test Invio Email
-                </CardTitle>
-                <CardDescription>Verifica che il sistema di notifiche email funzioni correttamente</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="testEmailTo">Indirizzo email destinatario</Label>
-                  <Input
-                    id="testEmailTo"
-                    type="email"
-                    placeholder="es. tua@email.com"
-                    value={testEmailTo}
-                    onChange={(e) => setTestEmailTo(e.target.value)}
-                  />
-                </div>
-                <Button
-                  onClick={handleTestEmail}
-                  disabled={testingEmail}
-                  className="w-full gap-2"
-                  variant="outline"
-                >
-                  <Mail className="w-4 h-4" />
-                  {testingEmail ? "Invio in corso..." : "Invia Email di Test"}
-                </Button>
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

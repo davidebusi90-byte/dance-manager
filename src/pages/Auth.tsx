@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock, Loader2, Sparkles, ShieldCheck } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type AuthMode = "login" | "otp_request" | "otp_verify" | "reset_request" | "reset_password";
 
@@ -170,155 +172,203 @@ export default function Auth() {
   const showBackButton = mode === "otp_request" || mode === "otp_verify" || mode === "reset_request";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md animate-fade-in bg-sky-50 border-sky-200">
-        <CardHeader className="text-center relative">
-          {showBackButton && (
-            <button
-              type="button"
-              onClick={handleBackToLogin}
-              className="absolute left-4 top-4 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-          <div className="mx-auto w-16 h-16 flex items-center justify-center mb-4">
-            <img src="/logo.png" alt="Dance Manager Logo" className="w-full h-full object-contain" />
-          </div>
-          <CardTitle className="text-2xl font-display">Dance Manager</CardTitle>
-          <CardDescription>{getTitle()}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            {(mode === "login" || mode === "otp_request" || mode === "reset_request") && (
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-
-            {mode === "otp_verify" && (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  Abbiamo inviato un codice a 6 cifre a <strong>{email}</strong>
-                </p>
-                <div className="flex justify-center">
-                  <InputOTP
-                    value={otpCode}
-                    onChange={setOtpCode}
-                    maxLength={6}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-            )}
-
-            {mode === "login" && (
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <button
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/20 blur-[120px] rounded-full animate-pulse delay-700" />
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
+      >
+        <Card className="rounded-[2.5rem] glass border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] overflow-hidden">
+          <CardHeader className="text-center p-8 pt-12 relative">
+            <AnimatePresence>
+              {showBackButton && (
+                <motion.button
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
                   type="button"
-                  onClick={() => setMode("reset_request")}
-                  className="text-sm text-accent hover:underline"
+                  onClick={handleBackToLogin}
+                  className="absolute left-6 top-6 w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/10 text-muted-foreground hover:text-foreground transition-all active:scale-90"
                 >
-                  Password dimenticata?
-                </button>
-              </div>
-            )}
-
-            {mode === "reset_password" && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Nuova Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    placeholder="Minimo 6 caratteri"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Conferma Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    placeholder="Ripeti la nuova password"
-                  />
-                </div>
-              </>
-            )}
-
-            {mode === "reset_request" && (
-              <p className="text-sm text-muted-foreground">
-                Inserisci la tua email e ti invieremo un link per reimpostare la password.
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || (mode === "otp_verify" && otpCode.length !== 6)}
+                  <ArrowLeft className="w-5 h-5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+            
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="mx-auto w-24 h-24 mb-8 bg-gradient-to-br from-primary to-accent rounded-[2rem] p-5 flex items-center justify-center shadow-2xl shadow-primary/20 rotate-3 hover:rotate-0 transition-transform duration-500"
             >
-              {getButtonText()}
-            </Button>
-          </form>
+              <img src="/logo.png" alt="Dance Manager Logo" className="w-full h-full object-contain brightness-0 invert" />
+            </motion.div>
+            
+            <CardTitle className="text-3xl font-display font-black tracking-tight uppercase mb-2">Dance Manager</CardTitle>
+            <CardDescription className="text-muted-foreground font-medium">{getTitle()}</CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-8 pt-0">
+            <form onSubmit={handleAuth} className="space-y-6">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={mode}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  {(mode === "login" || mode === "otp_request" || mode === "reset_request") && (
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6 text-lg focus:ring-primary/20 transition-all"
+                        placeholder="nome@esempio.it"
+                      />
+                    </div>
+                  )}
 
+                  {mode === "otp_verify" && (
+                    <div className="space-y-6">
+                      <p className="text-sm text-muted-foreground font-medium text-center">
+                        Codice inviato a <strong className="text-foreground">{email}</strong>
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          value={otpCode}
+                          onChange={setOtpCode}
+                          maxLength={6}
+                        >
+                          <InputOTPGroup className="gap-2">
+                            {[0, 1, 2, 3, 4, 5].map((idx) => (
+                              <InputOTPSlot 
+                                key={idx} 
+                                index={idx} 
+                                className="w-12 h-14 rounded-xl border-white/20 bg-white/50 dark:bg-black/20 text-xl font-bold shadow-sm" 
+                              />
+                            ))}
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                    </div>
+                  )}
 
+                  {mode === "login" && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between ml-1">
+                        <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Password</Label>
+                        <button
+                          type="button"
+                          onClick={() => setMode("reset_request")}
+                          className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+                        >
+                          Dimenticata?
+                        </button>
+                      </div>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6 text-lg focus:ring-primary/20 transition-all"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  )}
 
-          {mode === "otp_verify" && (
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Non hai ricevuto il codice?{" "}
-              <button
-                onClick={() => setMode("otp_request")}
-                className="text-accent hover:underline font-medium"
+                  {mode === "reset_password" && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Nuova Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          className="h-14 rounded-2xl"
+                          placeholder="Minimo 6 caratteri"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Conferma Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          required
+                          minLength={6}
+                          className="h-14 rounded-2xl"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              <Button
+                type="submit"
+                disabled={loading || (mode === "otp_verify" && otpCode.length !== 6)}
+                className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-lg font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 group"
               >
-                Invia di nuovo
-              </button>
-            </p>
-          )}
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <span className="flex items-center gap-2">
+                    {getButtonText()}
+                    <Sparkles className="w-4 h-4 group-hover:scale-125 transition-transform" />
+                  </span>
+                )}
+              </Button>
+            </form>
 
-          {mode === "reset_request" && (
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Preferisci accedere con un codice?{" "}
-              <button
-                onClick={() => setMode("otp_request")}
-                className="text-accent hover:underline font-medium"
-              >
-                Accedi con OTP
-              </button>
+            <div className="mt-8 text-center">
+              {mode === "login" && (
+                <button
+                  onClick={() => setMode("otp_request")}
+                  className="text-sm font-semibold text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Oppure accedi con codice via email
+                </button>
+              )}
+              
+              {mode === "otp_verify" && (
+                <p className="text-sm text-muted-foreground font-medium">
+                  Non hai ricevuto nulla?{" "}
+                  <button
+                    onClick={() => setMode("otp_request")}
+                    className="text-primary hover:underline font-bold"
+                  >
+                    Riprova
+                  </button>
+                </p>
+              )}
+            </div>
+          </CardContent>
+          
+          <div className="bg-primary/5 p-4 text-center border-t border-white/5">
+            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground/40">
+              © 2026 Dance Manager • Premium Professional Edition
             </p>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 }

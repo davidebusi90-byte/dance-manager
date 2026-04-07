@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/use-user-role";
 import { Athlete, Couple, Profile } from "@/types/dashboard";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CoupleAnomaly {
   couple: Couple;
@@ -175,95 +176,188 @@ export default function Anomalies() {
   const athleteIsolated = athleteAnomalies.filter(a => a.type === "isolated");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-                <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-3">
-               <AlertTriangle className="w-6 h-6 text-warning" />
-               <h1 className="text-xl font-display font-bold">Integrità Dati & Anomalie</h1>
+    <>
+      <main className="container mx-auto px-4 py-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
+        >
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 bg-amber-500/10 dark:bg-amber-500/20 rounded-3xl flex items-center justify-center shadow-xl shadow-amber-500/10 border border-amber-500/20">
+              <AlertTriangle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-display font-bold tracking-tight">Integrità Dati & Anomalie</h1>
+              <p className="text-muted-foreground font-medium">Monitoraggio automatico della coerenza dei dati</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Badge variant="destructive">{coupleAnomalies.length} Coppie</Badge>
-            <Badge variant="outline">{athleteAnomalies.length} Atleti</Badge>
+          
+          <div className="flex gap-4">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="px-6 py-3 glass rounded-2xl flex flex-col items-center min-w-[120px]"
+            >
+              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-[0.2em] mb-1">Coppie</span>
+              <span className="text-2xl font-display font-bold text-rose-700 dark:text-rose-300">{coupleAnomalies.length}</span>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="px-6 py-3 glass rounded-2xl flex flex-col items-center min-w-[120px]"
+            >
+              <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-[0.2em] mb-1">Atleti</span>
+              <span className="text-2xl font-display font-bold text-neutral-700 dark:text-neutral-300">{athleteAnomalies.length}</span>
+            </motion.div>
           </div>
-        </div>
-      </header>
+        </motion.div>
 
-      <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="couples" className="space-y-6">
-          <TabsList className="bg-sky-50 p-1 border border-sky-100">
-            <TabsTrigger value="couples">Anomalie Coppie ({coupleAnomalies.length})</TabsTrigger>
-            <TabsTrigger value="athletes">Anomalie Atleti ({athleteAnomalies.length})</TabsTrigger>
+        <Tabs defaultValue="couples" className="space-y-8">
+          <TabsList className="glass p-1 border-white/10">
+            <TabsTrigger value="couples" className="px-6 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">
+              Anomalie Coppie ({coupleAnomalies.length})
+            </TabsTrigger>
+            <TabsTrigger value="athletes" className="px-6 rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">
+              Anomalie Atleti ({athleteAnomalies.length})
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="couples" className="space-y-4">
-            {coupleAnomalies.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">Tutte le coppie sono conformi.</div>
-            ) : (
-                coupleAnomalies.map((ca, i) => (
-                    <Card key={i} className="border-l-4 border-l-destructive">
-                        <CardHeader className="py-3">
-                            <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                <Users className="w-4 h-4 text-sky-600" />
-                                {ca.athlete1.first_name} {ca.athlete1.last_name} & {ca.athlete2.first_name} {ca.athlete2.last_name}
-                            </CardTitle>
+          <AnimatePresence mode="wait">
+            <TabsContent value="couples" key="couples" className="outline-none">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {coupleAnomalies.length === 0 ? (
+                  <div className="col-span-full py-20 text-center glass rounded-3xl">
+                    <p className="text-muted-foreground font-medium">Tutte le coppie sono conformi.</p>
+                  </div>
+                ) : (
+                  coupleAnomalies.map((ca, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className="h-full border-l-4 border-l-destructive hover:shadow-xl transition-all glass-card group overflow-hidden">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Users className="w-12 h-12 rotate-12" />
+                        </div>
+                        <CardHeader className="py-4">
+                          <CardTitle className="text-base font-bold flex items-center gap-3">
+                            <span className="p-2 bg-sky-500/10 rounded-xl">
+                              <Users className="w-5 h-5 text-sky-600" />
+                            </span>
+                            <span className="truncate">
+                              {ca.athlete1.first_name} {ca.athlete1.last_name} & {ca.athlete2.first_name} {ca.athlete2.last_name}
+                            </span>
+                          </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                            {ca.categoryIssue && <p className="text-destructive font-medium">⚠️ {ca.categoryIssue}</p>}
-                            {ca.certificateIssues.map((ci, j) => <p key={j} className="text-orange-600">📋 {ci}</p>)}
+                        <CardContent className="space-y-3 pb-6">
+                          {ca.categoryIssue && (
+                            <div className="p-3 bg-destructive/5 dark:bg-destructive/10 rounded-xl border border-destructive/10">
+                              <p className="text-destructive text-sm font-semibold flex items-start gap-2">
+                                <span className="mt-0.5">⚠️</span> 
+                                {ca.categoryIssue}
+                              </p>
+                            </div>
+                          )}
+                          {ca.certificateIssues.map((ci, j) => (
+                            <div key={j} className="p-3 bg-orange-500/5 dark:bg-orange-500/10 rounded-xl border border-orange-500/10">
+                              <p className="text-orange-600 dark:text-orange-400 text-sm font-medium flex items-start gap-2">
+                                <span className="mt-0.5">📋</span> 
+                                {ci}
+                              </p>
+                            </div>
+                          ))}
                         </CardContent>
-                    </Card>
-                ))
-            )}
-          </TabsContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                )}
+              </motion.div>
+            </TabsContent>
 
-          <TabsContent value="athletes" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <Card className="bg-orange-50/30 border-orange-200">
-                  <CardHeader className="py-3">
-                     <CardTitle className="text-sm font-bold flex items-center gap-2 text-orange-800">
-                        <UserMinus className="w-4 h-4" />
-                        Sospetti Duplicati ({athleteDuplicates.length})
-                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                     {athleteDuplicates.length === 0 ? <p className="text-xs text-muted-foreground">Nessun duplicato sospetto.</p> :
-                        athleteDuplicates.map((a, i) => (
-                           <div key={i} className="text-xs p-2 bg-white rounded border border-orange-100">
-                              <strong>{a.athlete.first_name} {a.athlete.last_name}</strong> - CID: {a.athlete.code}
-                              <p className="text-muted-foreground italic">{a.issue}</p>
-                           </div>
-                        ))
-                     }
-                  </CardContent>
-               </Card>
+            <TabsContent value="athletes" key="athletes" className="outline-none">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-8"
+              >
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold flex items-center gap-2 text-orange-800 dark:text-orange-400 px-1">
+                    <UserMinus className="w-5 h-5" />
+                    Sospetti Duplicati ({athleteDuplicates.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {athleteDuplicates.length === 0 ? (
+                      <div className="p-8 text-center glass rounded-2xl">
+                        <p className="text-sm text-muted-foreground">Nessun duplicato sospetto.</p>
+                      </div>
+                    ) : (
+                      athleteDuplicates.map((a, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="p-4 glass-card rounded-2xl border-orange-200/20 group hover:bg-orange-500/5 transition-colors"
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-bold text-sm">{a.athlete.first_name} {a.athlete.last_name}</span>
+                            <Badge variant="outline" className="text-[10px] font-mono bg-orange-500/5 border-orange-500/20">
+                              CID: {a.athlete.code}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground italic leading-relaxed">
+                            {a.issue}
+                          </p>
+                        </motion.div>
+                      ))
+                    )}
+                  </div>
+                </div>
 
-               <Card className="bg-slate-50/30 border-slate-200">
-                  <CardHeader className="py-3">
-                     <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800">
-                        <UserCheck className="w-4 h-4" />
-                        Atleti Isolati ({athleteIsolated.length})
-                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                     {athleteIsolated.length === 0 ? <p className="text-xs text-muted-foreground">Nessun atleta isolato.</p> :
-                        athleteIsolated.map((a, i) => (
-                           <div key={i} className="text-xs p-2 bg-white rounded border border-slate-100">
-                              <strong>{a.athlete.first_name} {a.athlete.last_name}</strong> - CID: {a.athlete.code}
-                           </div>
-                        ))
-                     }
-                  </CardContent>
-               </Card>
-            </div>
-          </TabsContent>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-400 px-1">
+                    <UserCheck className="w-5 h-5" />
+                    Atleti Isolati ({athleteIsolated.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {athleteIsolated.length === 0 ? (
+                      <div className="p-8 text-center glass rounded-2xl">
+                        <p className="text-sm text-muted-foreground">Nessun atleta isolato.</p>
+                      </div>
+                    ) : (
+                      athleteIsolated.map((a, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="p-4 glass-card rounded-2xl border-slate-200/20 group hover:bg-sky-500/5 transition-colors"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-sm">{a.athlete.first_name} {a.athlete.last_name}</span>
+                            <Badge variant="outline" className="text-[10px] font-mono bg-slate-500/5 border-slate-500/20">
+                              CID: {a.athlete.code}
+                            </Badge>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </TabsContent>
+          </AnimatePresence>
         </Tabs>
       </main>
-    </div>
+    </>
   );
 }

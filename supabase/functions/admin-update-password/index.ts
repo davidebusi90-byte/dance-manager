@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.90.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,95 +6,101 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-type Body = {
-  user_id: string;
-  new_password: string;
-};
-
-serve(async (req) => {
+Deno.serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    console.log("[admin-update-password] starting request processing...");
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-      return new Response(JSON.stringify({ error: "Missing backend configuration" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      console.error("[admin-update-password] Missing environment variables");
+      throw new Error("Missing backend configuration");
     }
 
-    const authHeader = req.headers.get("Authorization") ?? "";
+    // Parse body early
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error("[admin-update-password] Failed to parse JSON body");
+      throw new Error("Invalid JSON body");
+    }
+
+    const { user_id, new_password } = body;
+    if (!user_id || !new_password) {
+      throw new Error("Missing user_id or new_password");
+    }
+
+    if (new_password.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
+
+    // Auth verification
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("[admin-update-password] Missing Authorization header");
+      throw new Error("No authorization header provided");
+    }
+
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Check if the requester is logged in
-    const {
-      data: { user: requester },
-      error: userError,
-    } = await userClient.auth.getUser();
-
+    const { data: { user: requester }, error: userError } = await userClient.auth.getUser();
     if (userError || !requester) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      console.error("[admin-update-password] Auth error:", userError?.message);
+      throw new Error("Unauthorized: " + (userError?.message || "Invalid session"));
     }
 
-    // Check if requester is admin
+    // Role verification (Admin only)
+    console.log(`[admin-update-password] Verifying admin role for: ${requester.email}`);
     const { data: isAdmin, error: roleError } = await userClient.rpc("has_role", {
       _user_id: requester.id,
       _role: "admin",
     });
 
-    if (roleError || !isAdmin) {
-      return new Response(JSON.stringify({ error: "Forbidden: Admin role required" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    if (roleError) {
+      console.error("[admin-update-password] Role check RPC error:", roleError.message);
+      throw new Error("Error verifying user roles");
     }
 
-    const body = (await req.json()) as Body;
-    if (!body?.user_id || !body?.new_password) {
-      return new Response(JSON.stringify({ error: "Missing required fields (user_id, new_password)" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+    if (!isAdmin) {
+      console.warn(`[admin-update-password] Access denied for user: ${requester.email}`);
+      throw new Error("Forbidden: Admin role required");
     }
 
-    if (body.new_password.length < 6) {
-      return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
+    // Password Update using Service Role
+    console.log(`[admin-update-password] Updating password for target user_id: ${user_id}`);
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Update user password
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(body.user_id, {
-      password: body.new_password,
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(user_id, {
+      password: new_password,
     });
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("[admin-update-password] Admin update error:", updateError.message);
+      throw updateError;
+    }
 
-    console.log(`Password updated successfully for user ${body.user_id}`);
-
-    return new Response(JSON.stringify({ success: true, message: "Password updated successfully" }), {
+    console.log("[admin-update-password] Password successfully updated");
+    return new Response(JSON.stringify({ success: true, message: "Password updated" }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error: unknown) {
-    console.error("admin-update-password error:", error);
-    return new Response(JSON.stringify({ error: (error instanceof Error ? error.message : String(error)) || "Unknown error" }), {
-      status: 200,
+
+  } catch (error: any) {
+    console.error("[admin-update-password] Caught error:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }

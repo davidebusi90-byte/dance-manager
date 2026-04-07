@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
 import EditCompetitionDialog from "@/components/EditCompetitionDialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 import { Competition } from "@/types/dashboard";
 
@@ -412,80 +414,94 @@ export default function CompetitionEnrollments() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-              <Settings className="w-5 h-5 text-accent" />
+    <>
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8"
+        >
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 bg-accent/10 dark:bg-accent/20 rounded-3xl flex items-center justify-center shadow-xl shadow-accent/10 border border-accent/20">
+              <Trophy className="w-8 h-8 text-accent" />
             </div>
-            <h1 className="text-xl font-display font-bold">Iscrizioni Gara</h1>
+            <div>
+              <h1 className="text-3xl font-display font-bold tracking-tight">Gestione Gare</h1>
+              <p className="text-muted-foreground font-medium">Configura regolamenti e classi per le competizioni</p>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+          
+          <div className="flex flex-wrap items-center gap-4">
             {isAdmin && <AddCompetitionDialog onSuccess={handleCompetitionAdded} />}
-            {isAdmin && pendingEventChanges.size > 0 && (
-              <Button onClick={saveAllChanges} disabled={saving} className="gap-2 w-full sm:w-auto">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                Salva ({pendingEventChanges.size})
-              </Button>
-            )}
+            <AnimatePresence>
+              {isAdmin && pendingEventChanges.size > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <Button 
+                    size="lg"
+                    onClick={saveAllChanges} 
+                    disabled={saving} 
+                    className="rounded-2xl shadow-xl hover:shadow-2xl transition-all gap-3 bg-primary"
+                  >
+                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                    <span>Salva Modifiche ({pendingEventChanges.size})</span>
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+        </motion.div>
         {!isAdmin && (
           <div className="mb-6 p-4 bg-warning/10 border border-warning/30 rounded-lg">
             <p className="text-sm text-warning">Solo gli amministratori possono modificare le regole delle classi.</p>
           </div>
-        )}
-
-        {competitions.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Trophy className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Nessuna competizione</h3>
-              <p className="text-muted-foreground">Inizia aggiungendo una nuova competizione tramite il pulsante "+" in alto.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-accent" />
-                  Tipi di Gara per Competizione
+        )}        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="glass border-white/10 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-3 font-display">
+                  <Settings className="w-5 h-5 text-accent" />
+                  Regole Globali
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Configura quali tipi di gara sono disponibili per ogni competizione (es. Adult Open, Rising Star, ecc.).
-                  Ogni tipo ha restrizioni di classe e di età predefinite.
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Configura quali tipi di gara sono disponibili per ogni competizione.
+                  Ogni tipo ha restrizioni di classe e di età predefinite che puoi personalizzare globalmente.
                 </p>
               </CardContent>
             </Card>
+          </motion.div>
+        )}
 
-            {competitions.map(competition => {
+        {competitions.length === 0 ? (
+          <div className="py-20 text-center glass rounded-3xl">
+            <Trophy className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+            <h3 className="text-xl font-display font-bold mb-2">Nessuna competizione</h3>
+            <p className="text-muted-foreground">Inizia aggiungendo una nuova competizione tramite il pulsante "+" in alto.</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {competitions.map((competition, idx) => {
               const compEvents = getCompetitionEventTypes(competition.id);
               const isExpanded = selectedCompetitionForEvents === competition.id;
-
-              // Current selected classes for this competition (stays even if no races)
               const activeClasses = competitionClasses.get(competition.id) || new Set<string>();
 
               const toggleGlobalClass = (targetClass: string) => {
                 if (!isAdmin) return;
-                
                 const classGroup: string[] = [];
                 if (targetClass === "B") classGroup.push("B", "B1", "B2", "B3");
                 else if (targetClass === "A") classGroup.push("A", "A1", "A2");
                 else classGroup.push(targetClass);
 
                 const isAdding = !activeClasses.has(targetClass);
-
-                // Update local competition classes state immediately
                 setCompetitionClasses(prev => {
                   const next = new Map(prev);
                   const currentCompSet = new Set(next.get(competition.id) || []);
@@ -495,7 +511,6 @@ export default function CompetitionEnrollments() {
                   return next;
                 });
 
-                // Update all currently active events of this competition in the eventTypes state
                 const updatedEventTypes = eventTypes.map(e => {
                   if (e.competition_id !== competition.id) return e;
                   const currentAllowed = new Set(e.allowed_classes || []);
@@ -505,206 +520,208 @@ export default function CompetitionEnrollments() {
                 });
                 setEventTypes(updatedEventTypes);
 
-                // Mark all events as modified for saving
                 setPendingEventChanges(prev => {
                   const next = new Map(prev);
                   compEvents.forEach(e => {
                     const key = makeEventKey(competition.id, e.event_name);
-                    next.set(key, true); // Keep active
+                    next.set(key, true);
                   });
                   return next;
                 });
               };
 
               return (
-                <Card key={competition.id}>
-                  <CardHeader
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
-                  >
-                    <CardTitle className="text-base flex flex-col gap-4">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex flex-col md:flex-row md:items-center gap-4 flex-1">
-                          <div className="flex flex-col gap-1 min-w-[200px]">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-lg">{competition.name}</span>
+                <motion.div
+                  key={competition.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <Card className="overflow-hidden glass-card transition-all hover:shadow-xl border-white/10">
+                    <CardHeader
+                      className="cursor-pointer group py-6 px-8"
+                      onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-6 flex-1">
+                          <div className="flex flex-col gap-1 min-w-[240px]">
+                            <div className="flex items-center gap-3">
+                              <span className="font-display font-bold text-xl tracking-tight leading-none group-hover:text-primary transition-colors">
+                                {competition.name}
+                              </span>
                               {isAdmin && (
-                                <EditCompetitionDialog 
-                                  competition={competition} 
-                                  onSuccess={() => fetchData(true)} 
-                                />
+                                <div onClick={e => e.stopPropagation()}>
+                                  <EditCompetitionDialog 
+                                    competition={competition} 
+                                    onSuccess={() => fetchData(true)} 
+                                  />
+                                </div>
                               )}
                             </div>
-                            <span className="text-sm text-muted-foreground">{formatDate(competition.date, competition.end_date)}</span>
+                            <span className="text-sm font-medium text-muted-foreground">{formatDate(competition.date, competition.end_date)}</span>
                           </div>
 
                           {isAdmin && (
-                            <div className="flex flex-wrap items-center gap-3 bg-muted/30 p-1.5 rounded-2xl border border-border/50 shadow-sm">
-                              <div className="flex items-center gap-1 border-r border-border/50 pr-3">
-                                <span className="text-[9px] uppercase font-black text-muted-foreground/60 mr-1 px-1 tracking-wider">Classi:</span>
+                            <div className="flex flex-wrap items-center gap-2 bg-black/5 dark:bg-white/5 p-2 rounded-2xl border border-white/10 overflow-x-auto print:hidden" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center gap-1.5 border-r border-white/10 pr-3 mr-1">
                                 {["D", "C", "B", "A", "AS", "MASTER"].map(cls => (
                                   <Button
                                     key={cls}
                                     variant={activeClasses.has(cls) ? "default" : "outline"}
                                     size="sm"
-                                    className={`
-                                      h-7 px-2.5 text-[10px] font-bold transition-all rounded-lg border shadow-sm
-                                      ${activeClasses.has(cls) 
-                                        ? (cls === "D" ? "bg-slate-600 border-slate-700 text-white shadow-slate-200" : 
-                                           cls === "C" ? "bg-blue-600 border-blue-700 text-white shadow-blue-200" :
-                                           cls === "B" ? "bg-purple-600 border-purple-700 text-white shadow-purple-200" :
-                                           cls === "A" ? "bg-green-600 border-green-700 text-white shadow-green-200" :
-                                           cls === "AS" ? "bg-amber-600 border-amber-700 text-white shadow-amber-200" :
-                                           "bg-red-600 border-red-700 text-white shadow-red-200")
-                                        : (cls === "D" ? "border-slate-200 text-slate-500 hover:bg-slate-50" : 
-                                           cls === "C" ? "border-blue-200 text-blue-500 hover:bg-blue-50" :
-                                           cls === "B" ? "border-purple-200 text-purple-500 hover:bg-purple-50" :
-                                           cls === "A" ? "border-green-200 text-green-500 hover:bg-green-50" :
-                                           cls === "AS" ? "border-amber-200 text-amber-500 hover:bg-amber-50" :
-                                           "border-red-200 text-red-500 hover:bg-red-50")
-                                      }
-                                    `}
-                                    onClick={(e) => { e.stopPropagation(); toggleGlobalClass(cls); }}
+                                    className={cn(
+                                      "h-8 px-3 text-[11px] font-bold transition-all rounded-xl border-transparent",
+                                      activeClasses.has(cls) 
+                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                                        : "bg-transparent text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 border-white/10"
+                                    )}
+                                    onClick={() => toggleGlobalClass(cls)}
                                   >
                                     {cls}
                                   </Button>
                                 ))}
                               </div>
                               
-                              <div className="flex items-center gap-1.5 overflow-x-auto">
+                              <div className="flex items-center gap-2">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 px-3 text-[10px] font-bold bg-[#f1f5f9] hover:bg-[#e2e8f0] text-[#475569] border border-[#cbd5e1]/50 rounded-full transition-all"
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    DISCIPLINES.forEach(d => toggleAllEvents(competition.id, d)); 
-                                  }}
+                                  className="h-8 px-4 text-[10px] uppercase font-bold tracking-widest bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-400 rounded-xl transition-all"
+                                  onClick={() => DISCIPLINES.forEach(d => toggleAllEvents(competition.id, d))}
                                 >
-                                  Championship
+                                  Tutte
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 px-3 text-[10px] font-bold bg-[#faf5ff] hover:bg-[#f3e8ff] text-[#9333ea] border border-[#e9d5ff]/50 rounded-full transition-all"
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    // Star Cup: Solo Standard e Latino, usando la nuova logica Star Cup
-                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleStarCupEvents(competition.id, d)); 
-                                  }}
+                                  className="h-8 px-4 text-[10px] uppercase font-bold tracking-widest bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl transition-all"
+                                  onClick={() => DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleStarCupEvents(competition.id, d))}
                                 >
                                   Star Cup
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 px-3 text-[10px] font-bold bg-[#eff6ff] hover:bg-[#dbeafe] text-[#2563eb] border border-[#bfdbfe]/50 rounded-full transition-all"
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    // Syllabus: Solo Standard e Latino
-                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleSyllabusEvents(competition.id, d)); 
-                                  }}
+                                  className="h-8 px-4 text-[10px] uppercase font-bold tracking-widest bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 rounded-xl transition-all"
+                                  onClick={() => DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleSyllabusEvents(competition.id, d))}
                                 >
                                   Syllabus
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 px-3 text-[10px] font-bold bg-[#f0fdf4] hover:bg-[#dcfce7] text-[#16a34a] border border-[#bbf7d0]/50 rounded-full transition-all"
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    // Gara di Ballo: Solo Standard e Latino
-                                    DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleSyllabusEvents(competition.id, d)); 
-                                  }}
-                                >
-                                  Gara di Ballo
                                 </Button>
                               </div>
                             </div>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <Badge count={compEvents.length} />
-                          </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                          <CustomBadge count={compEvents.length} />
+                          <motion.div
+                            animate={{ rotate: isExpanded ? 180 : 0 }}
+                            className="text-muted-foreground group-hover:text-primary transition-colors"
+                          >
+                            <Settings className="w-5 h-5" />
+                          </motion.div>
                         </div>
                       </div>
-                    </CardTitle>
-                  </CardHeader>
-                  {isExpanded && (
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {DISCIPLINES.map(discipline => (
-                          <div key={discipline} className="space-y-4">
-                            <div className="flex items-center justify-between border-b pb-2">
-                              <h3 className="font-semibold">{discipline}</h3>
-                            </div>
-                            <div className="space-y-2">
-                              {getEventsForDiscipline(discipline).map(preset => {
-                                const fullEventName = `${discipline} - ${preset.name}`;
-                                const isActive = getEventActive(competition.id, fullEventName);
-                                const pendingKey = makeEventKey(competition.id, fullEventName);
-                                const isPending = pendingEventChanges.has(pendingKey);
-                                
-                                // Find current event data if it exists in DB or state
-                                const existingEvent = eventTypes.find(e => e.competition_id === competition.id && e.event_name === fullEventName);
-                                const classesToShow = existingEvent ? existingEvent.allowed_classes : preset.classes;
-
-                                return (
-                                  <div
-                                    key={fullEventName}
-                                    className={`
-                                      flex items-start gap-3 p-3 rounded-lg border transition-colors
-                                      ${isActive ? "bg-primary/5 border-primary/20" : "bg-card border-border hover:border-primary/20"}
-                                    `}
-                                  >
-                                    <Checkbox
-                                      id={`${competition.id}-${fullEventName}`}
-                                      checked={isActive}
-                                      onCheckedChange={() => toggleEventType(competition.id, fullEventName)}
-                                      disabled={!isAdmin}
-                                      className={isPending ? "ring-2 ring-primary mt-1" : "mt-1"}
-                                    />
-                                    <div className="space-y-1">
-                                      <label
-                                        htmlFor={`${competition.id}-${fullEventName}`}
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                      >
-                                        {preset.name}
-                                      </label>
-                                      <p className="text-xs text-muted-foreground">
-                                        Classi: {classesToShow.join(", ")}
-                                      </p>
-                                      {(preset.minAge || preset.maxAge) && (
-                                        <p className="text-xs text-muted-foreground">
-                                          Età: {preset.minAge ? `${preset.minAge}+` : ""}{preset.minAge && preset.maxAge ? " - " : ""}{preset.maxAge ? `max ${preset.maxAge}` : ""}
-                                        </p>
-                                      )}
-                                    </div>
+                    </CardHeader>
+                    
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        >
+                          <CardContent className="pt-0 pb-8 px-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-6 border-t border-white/5">
+                              {DISCIPLINES.map(discipline => (
+                                <div key={discipline} className="space-y-4">
+                                  <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+                                    <h3 className="font-display font-bold text-lg tracking-tight">{discipline}</h3>
                                   </div>
-                                );
-                              })}
+                                  <div className="grid gap-3">
+                                    {getEventsForDiscipline(discipline).map(preset => {
+                                      const fullEventName = `${discipline} - ${preset.name}`;
+                                      const isActive = getEventActive(competition.id, fullEventName);
+                                      const pendingKey = makeEventKey(competition.id, fullEventName);
+                                      const isPending = pendingEventChanges.has(pendingKey);
+                                      const existingEvent = eventTypes.find(e => e.competition_id === competition.id && e.event_name === fullEventName);
+                                      const classesToShow = existingEvent ? existingEvent.allowed_classes : preset.classes;
+
+                                      return (
+                                        <motion.div
+                                          key={fullEventName}
+                                          whileHover={{ x: 4 }}
+                                          className={cn(
+                                            "flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group/event",
+                                            isActive 
+                                              ? "bg-primary/5 border-primary/20 shadow-sm" 
+                                              : "bg-black/5 dark:bg-white/5 border-transparent hover:border-white/10"
+                                          )}
+                                          onClick={() => toggleEventType(competition.id, fullEventName)}
+                                        >
+                                          {isActive && (
+                                            <motion.div 
+                                              layoutId={`active-bg-${competition.id}-${fullEventName}`}
+                                              className="absolute inset-0 bg-primary/5 pointer-events-none" 
+                                            />
+                                          )}
+                                          <Checkbox
+                                            id={`${competition.id}-${fullEventName}`}
+                                            checked={isActive}
+                                            className={cn(
+                                              "mt-1 rounded-md transition-all",
+                                              isPending ? "ring-2 ring-primary ring-offset-2" : ""
+                                            )}
+                                            onClick={e => e.stopPropagation()}
+                                          />
+                                          <div className="space-y-1.5 relative z-10">
+                                            <span className="text-sm font-bold leading-none block group-hover/event:text-primary transition-colors">
+                                              {preset.name}
+                                            </span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {classesToShow.map(c => (
+                                                <span key={c} className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-muted-foreground">
+                                                  {c}
+                                                </span>
+                                              ))}
+                                            </div>
+                                            {(preset.minAge || preset.maxAge) && (
+                                              <p className="text-[11px] font-medium text-muted-foreground/60 flex items-center gap-1">
+                                                <Settings className="w-3 h-3" />
+                                                Età: {preset.minAge ? `${preset.minAge}+` : ""}{preset.minAge && preset.maxAge ? " - " : ""}{preset.maxAge ? `max ${preset.maxAge}` : ""}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
+                          </CardContent>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Card>
+                </motion.div>
               );
             })}
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }
 
-function Badge({ count }: { count: number }) {
+function CustomBadge({ count }: { count: number }) {
   return (
-    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-      {count} {count === 1 ? "tipo" : "tipi"}
-    </span>
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-xl border border-primary/10">
+      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+      <span className="text-xs font-bold text-primary tracking-tight">
+        {count} {count === 1 ? "Evento Configurato" : "Eventi Configurati"}
+      </span>
+    </div>
   );
 }

@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, CheckCircle, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, KeyRound, ShieldCheck, Shield } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type Instructor = {
   profile_id: string;
@@ -603,338 +605,296 @@ export default function Instructors() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}
-            aria-label="Torna alla dashboard"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
-              <Users className="w-5 h-5 text-accent" />
+    <>
+      <main className="container mx-auto px-4 py-8 space-y-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8"
+        >
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 bg-primary dark:bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-primary/20 dark:shadow-white/10">
+              <Users className="w-8 h-8 text-white dark:text-primary" />
             </div>
-            <h1 className="text-xl font-display font-bold">Istruttori</h1>
+            <div>
+              <h1 className="text-3xl font-display font-bold tracking-tight">Istruttori</h1>
+              <p className="text-muted-foreground font-medium">Gestisci i membri del tuo team e i permessi</p>
+            </div>
           </div>
-          <div className="ml-auto flex gap-2">
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Aggiungi Istruttore
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Nuovo Istruttore</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome Completo</Label>
-                    <Input
-                      id="name"
-                      placeholder="Mario Rossi"
-                      value={newInstructorName}
-                      onChange={(e) => setNewInstructorName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="mario@example.com"
-                      value={newInstructorEmail}
-                      onChange={(e) => setNewInstructorEmail(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Minimo 6 caratteri"
-                      value={newInstructorPassword}
-                      onChange={(e) => setNewInstructorPassword(e.target.value)}
-                    />
-                  </div>
+          
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="rounded-2xl shadow-xl hover:shadow-2xl transition-all gap-3 bg-primary hover:bg-primary/90">
+                <Plus className="w-5 h-5" />
+                <span>Nuovo Istruttore</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-3xl glass border-white/10 max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-display font-bold">Aggiungi Istruttore</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-5 py-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-bold uppercase tracking-wider ml-1">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    placeholder="E es. Mario Rossi"
+                    value={newInstructorName}
+                    onChange={(e) => setNewInstructorName(e.target.value)}
+                    className="rounded-xl h-12 bg-white/50 dark:bg-black/20"
+                  />
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddOpen(false)}>
-                    Annulla
-                  </Button>
-                  <Button onClick={handleCreateInstructor} disabled={isAdding}>
-                    {isAdding ? "Creazione..." : "Crea Istruttore"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </header>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-bold uppercase tracking-wider ml-1">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="mario@example.com"
+                    value={newInstructorEmail}
+                    onChange={(e) => setNewInstructorEmail(e.target.value)}
+                    className="rounded-xl h-12 bg-white/50 dark:bg-black/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-bold uppercase tracking-wider ml-1">Password Temporanea</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Almeno 6 caratteri"
+                    value={newInstructorPassword}
+                    onChange={(e) => setNewInstructorPassword(e.target.value)}
+                    className="rounded-xl h-12 bg-white/50 dark:bg-black/20"
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-3">
+                <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="rounded-xl h-12">
+                  Annulla
+                </Button>
+                <Button onClick={handleCreateInstructor} disabled={isAdding} className="rounded-xl h-12 px-8 bg-primary">
+                  {isAdding ? "Creazione..." : "Crea Account"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </motion.div>
 
-      <main className="container mx-auto px-4 py-8 space-y-6">
         {/* Pending Users Section */}
-        {pendingUsers.length > 0 && (
-          <Card className="border-warning/50">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-warning" />
-                Utenti in attesa di approvazione
-                <Badge variant="secondary">{pendingUsers.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="data-table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>Email</th>
-                      <th>Data registrazione</th>
-                      <th>Azioni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pendingUsers.map((u) => (
-                      <tr key={u.user_id}>
-                        <td className="font-medium">{u.full_name}</td>
-                        <td>{u.email ?? "-"}</td>
-                        <td>{new Date(u.created_at).toLocaleDateString("it-IT")}</td>
-                        <td>
-                          <Button
-                            size="sm"
-                            onClick={() => handlePromote(u)}
-                            disabled={promotingId === u.user_id}
+        <AnimatePresence>
+          {pendingUsers.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <Card className="border-warning/30 bg-warning/5 dark:bg-warning/10 overflow-hidden shadow-lg shadow-warning/5">
+                <CardHeader className="border-b border-warning/10 pb-4">
+                  <CardTitle className="text-xl flex items-center gap-3 text-warning font-display">
+                    <UserPlus className="w-6 h-6" />
+                    Richieste di Registrazione
+                    <Badge variant="secondary" className="bg-amber-500 text-white ml-auto">{pendingUsers.length}</Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="data-table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr className="bg-warning/5">
+                          <th>Nome</th>
+                          <th>Email</th>
+                          <th>Data registrazione</th>
+                          <th className="text-right">Azione</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingUsers.map((u, idx) => (
+                          <motion.tr 
+                            key={u.user_id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.1 }}
                           >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            {promotingId === u.user_id ? "Promozione..." : "Promuovi a Istruttore"}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                            <td className="font-bold">{u.full_name}</td>
+                            <td className="text-muted-foreground">{u.email ?? "-"}</td>
+                            <td>{new Date(u.created_at).toLocaleDateString("it-IT")}</td>
+                            <td className="text-right">
+                              <Button
+                                size="sm"
+                                onClick={() => handlePromote(u)}
+                                disabled={promotingId === u.user_id}
+                                className="rounded-xl bg-warning text-warning-foreground hover:bg-warning/90 shadow-md"
+                              >
+                                {promotingId === u.user_id ? "Promozione..." : "Approva come Istruttore"}
+                              </Button>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <div className="w-8 h-8 bg-accent/10 rounded-xl flex items-center justify-center">
-                <Users className="w-4 h-4 text-accent" />
+        <Card className="shadow-2xl shadow-primary/5 dark:shadow-none border-white/5 glass">
+          <CardHeader className="pb-8 border-b border-white/10">
+            <CardTitle className="text-2xl flex items-center gap-4 font-display">
+              <div className="w-10 h-10 bg-primary/5 dark:bg-white/10 rounded-2xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-primary dark:text-white" />
               </div>
-              Elenco istruttori ({filtered.length})
+              Istruttori Attivi ({filtered.length})
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {loading ? (
-              <div className="text-muted-foreground">Caricamento...</div>
+              <div className="py-20 text-center">
+                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground font-medium">Caricamento istruttori...</p>
+              </div>
             ) : filtered.length === 0 ? (
-              <div className="text-muted-foreground">Nessun istruttore trovato.</div>
+              <div className="py-20 text-center">
+                <Users className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground font-medium">Nessun istruttore trovato.</p>
+              </div>
             ) : (
               <div className="data-table-container">
                 <table className="data-table">
                   <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>Azioni</th>
+                    <tr className="bg-muted/50 dark:bg-white/5">
+                      <th className="pl-8">Dettagli Istruttore</th>
+                      <th>Ruolo & Permessi</th>
+                      <th className="pr-8 text-right">Azioni</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((i) => (
-                      <tr key={i.user_id}>
-                        <td>
-                          {editingId === i.user_id ? (
-                            <div className="space-y-1">
-                              <Input
-                                value={editingName}
-                                onChange={(e) => setEditingName(e.target.value)}
-                                placeholder="Nome completo"
-                                className="max-w-md"
-                              />
-                              <p className="text-xs text-muted-foreground">
-                                Modifica il nome completo dell'istruttore
-                              </p>
-                            </div>
-                          ) : (
-                            <div>
-                              <div className="font-medium">{i.full_name}</div>
-                              {editingEmailId === i.user_id ? (
-                                <div className="space-y-1 mt-1">
-                                  <Input
-                                    value={newEmail}
-                                    onChange={(e) => setNewEmail(e.target.value)}
-                                    placeholder="Nuova email"
-                                    className="max-w-md h-8 text-sm"
-                                  />
+                    {filtered.map((i, idx) => (
+                      <motion.tr 
+                        key={i.user_id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="group hover:bg-neutral-100/50 dark:hover:bg-white/5 transition-colors"
+                      >
+                        <td className="pl-8 py-6">
+                          <AnimatePresence mode="wait">
+                            {editingId === i.user_id ? (
+                              <motion.div 
+                                key="edit-name"
+                                initial={{ opacity: 0, y: -5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex items-center gap-2 max-w-md"
+                              >
+                                <Input
+                                  value={editingName}
+                                  onChange={(e) => setEditingName(e.target.value)}
+                                  className="rounded-xl bg-white dark:bg-black/20"
+                                  autoFocus
+                                />
+                                <Button size="icon" onClick={() => handleSaveName(i.user_id)} className="shrink-0 bg-primary rounded-xl">
+                                  <Save className="w-4 h-4" />
+                                </Button>
+                                <Button size="icon" variant="ghost" onClick={handleCancelEdit} className="shrink-0 rounded-xl">
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </motion.div>
+                            ) : (
+                              <motion.div 
+                                key="view-name"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                              >
+                                <div className="flex items-center gap-2 group/name">
+                                  <span className="font-bold text-lg">{i.full_name}</span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="w-6 h-6 opacity-0 group-hover/name:opacity-100 transition-opacity"
+                                    onClick={() => handleEditName(i)}
+                                  >
+                                    <Edit2 className="w-3 h-3 text-muted-foreground" />
+                                  </Button>
                                 </div>
-                              ) : (
-                                <div className="text-sm text-muted-foreground">{i.email ?? "-"}</div>
-                              )}
-                            </div>
-                          )}
+                                <div className="flex items-center gap-2 group/email">
+                                  {editingEmailId === i.user_id ? (
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Input
+                                        value={newEmail}
+                                        onChange={(e) => setNewEmail(e.target.value)}
+                                        className="rounded-xl h-8 text-xs bg-white dark:bg-black/20 w-64"
+                                      />
+                                      <Button size="icon" variant="ghost" onClick={handleUpdateEmail} className="h-8 w-8 text-primary">
+                                        <CheckCircle className="h-4 w-4" />
+                                      </Button>
+                                      <Button size="icon" variant="ghost" onClick={handleCancelEmailEdit} className="h-8 w-8">
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <span className="text-sm text-muted-foreground font-medium">{i.email ?? "-"}</span>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="w-6 h-6 opacity-0 group-hover/email:opacity-100 transition-opacity"
+                                        onClick={() => handleEditEmail(i)}
+                                      >
+                                        <Mail className="w-3 h-3 text-muted-foreground" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </td>
                         <td>
-                          <div className="flex items-center gap-2">
-                            {editingId === i.user_id ? (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleSaveName(i.user_id)}
-                                  className="text-success hover:bg-success/10"
-                                >
-                                  <Save className="w-4 h-4 mr-1" />
-                                  Salva
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={handleCancelEdit}
-                                >
-                                  <X className="w-4 h-4 mr-1" />
-                                  Annulla
-                                </Button>
-                              </>
-                            ) : editingEmailId === i.user_id ? (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={handleUpdateEmail}
-                                  className="text-success hover:bg-success/10"
-                                  disabled={emailSaving}
-                                >
-                                  {emailSaving ? (
-                                    <span className="w-4 h-4 spinner" />
-                                  ) : (
-                                    <Save className="w-4 h-4 mr-1" />
-                                  )}
-                                  Salva
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={handleCancelEmailEdit}
-                                  disabled={emailSaving}
-                                >
-                                  <X className="w-4 h-4 mr-1" />
-                                  Annulla
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEditName(i)}
-                                >
-                                  <Edit2 className="w-4 h-4 mr-1" />
-                                  Nome
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEditEmail(i)}
-                                >
-                                  <Mail className="w-4 h-4 mr-1" />
-                                  Email
-                                </Button>
-                                {i.email && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${i.email}`;
-                                      const accountChooserUrl = `https://accounts.google.com/AccountChooser?service=mail&continue=${encodeURIComponent(gmailUrl)}`;
-                                      window.open(accountChooserUrl, '_blank');
-                                    }}
-                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                    title="Invia email con Gmail"
-                                  >
-                                    <Mail className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                <Dialog
-                                  open={selected?.user_id === i.user_id}
-                                  onOpenChange={(open) => {
-                                    setSelected(open ? i : null);
-                                    if (!open) setNewPassword("");
-                                  }}
-                                >
-                                  <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                      <KeyRound className="w-4 h-4 mr-1" />
-                                      Password
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader>
-                                      <DialogTitle>Modifica password</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-2">
-                                      <Label>Nuova password per</Label>
-                                      <div className="text-sm text-muted-foreground">{i.full_name} ({i.email ?? "-"})</div>
-                                      <Input
-                                        type="password"
-                                        minLength={6}
-                                        placeholder="Minimo 6 caratteri"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                      />
-                                    </div>
-                                    <DialogFooter>
-                                      <Button onClick={handleUpdatePassword} disabled={saving}>
-                                        {saving ? "Aggiornamento..." : "Aggiorna"}
-                                      </Button>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </Dialog>
-                                <Button
-                                  variant={i.is_supervisor ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => handleToggleSupervisor(i)}
-                                  disabled={togglingRoleId === i.user_id}
-                                  className={i.is_supervisor ? "bg-accent hover:bg-accent/90" : ""}
-                                  title={i.is_supervisor ? "Rimuovi accesso sola lettura" : "Promuovi a supervisore (accesso globale sola lettura)"}
-                                >
-                                  {togglingRoleId === i.user_id ? (
-                                    <span className="w-4 h-4 spinner" />
-                                  ) : i.is_supervisor ? (
-                                    <>
-                                      <ShieldCheck className="w-4 h-4 mr-1" />
-                                      Admin (Sola Lettura)
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Shield className="w-4 h-4 mr-1" />
-                                      Rendi Admin (SL)
-                                    </>
-                                  )}
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive hover:bg-destructive/10"
-                                  onClick={() => handleDeleteInstructor(i)}
-                                  disabled={deletingId === i.user_id}
-                                >
-                                  {deletingId === i.user_id ? (
-                                    <span className="w-4 h-4 spinner" />
-                                  ) : (
-                                    <Trash2 className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              </>
-                            )}
+                          <div className="flex items-center gap-3">
+                            <Badge variant={i.is_supervisor ? "default" : "outline"} className={cn(
+                              "px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                              i.is_supervisor ? "bg-accent text-accent-foreground shadow-lg shadow-accent/20" : "text-muted-foreground border-muted-foreground/30"
+                            )}>
+                              {i.is_supervisor ? "Supervisore" : "Istruttore Standard"}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={cn(
+                                "rounded-xl h-8 px-3 text-[10px] uppercase font-bold tracking-wider hover:bg-accent/10 active:scale-95 transition-all",
+                                i.is_supervisor ? "text-muted-foreground" : "text-accent"
+                              )}
+                              onClick={() => handleToggleSupervisor(i)}
+                              disabled={togglingRoleId === i.user_id}
+                            >
+                              {i.is_supervisor ? "Rimuovi Supervisione" : "Rendi Supervisore"}
+                            </Button>
                           </div>
                         </td>
-                      </tr>
+                        <td className="pr-8 py-6 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={saving && selected?.user_id === i.user_id}
+                              onClick={() => setSelected(i)}
+                              className="rounded-xl border-white/10 hover:bg-white dark:hover:bg-white/10 transition-all font-bold text-xs gap-2"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                              Reset Password
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              disabled={deletingId === i.user_id}
+                              onClick={() => handleDeleteInstructor(i)}
+                              className="rounded-xl shadow-lg hover:shadow-destructive/20 active:scale-90 transition-all"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
@@ -942,7 +902,42 @@ export default function Instructors() {
             )}
           </CardContent>
         </Card>
-      </main >
-    </div >
+
+        {/* Password Reset Modal - Refined */}
+        <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+          <DialogContent className="rounded-3xl glass border-white/10 max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-display font-bold flex items-center gap-3">
+                <KeyRound className="w-5 h-5 text-primary" />
+                Sicurezza Account
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Stai reimpostando la password per <span className="font-bold text-foreground">{selected?.full_name}</span>.
+              </p>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Nuova Password</Label>
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Inserisci nuova password"
+                  className="rounded-xl h-11 bg-white/50 dark:bg-black/20"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-3">
+              <Button variant="ghost" onClick={() => setSelected(null)} className="rounded-xl w-full">
+                Annulla
+              </Button>
+              <Button onClick={handleUpdatePassword} disabled={saving} className="rounded-xl w-full bg-primary">
+                {saving ? "Aggiornamento..." : "Salva Nuova Password"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </main>
+    </>
   );
 }
