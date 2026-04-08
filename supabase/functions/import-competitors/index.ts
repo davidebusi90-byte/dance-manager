@@ -110,6 +110,45 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Action: Special Cleanup for Luca Benetti duplicates
+  if (req.method === "GET" && req.url.includes("action=delete-luca-benetti")) {
+    console.log(`[${requestId}] Running special cleanup for Luca Benetti`);
+    
+    // Find all records for Luca Benetti
+    const { data: lucas, error: lucaError } = await adminClient
+      .from("athletes")
+      .select("id, code, is_deleted, created_at")
+      .ilike("first_name", "Luca")
+      .ilike("last_name", "Benetti");
+
+    if (lucaError) throw lucaError;
+
+    if (lucas && lucas.length > 1) {
+      // Sort by created_at descending (keep the newest) or keep the non-deleted one
+      const sorted = lucas.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const toKeep = sorted.find(a => !a.is_deleted) || sorted[0];
+      const toDelete = sorted.filter(a => a.id !== toKeep.id);
+
+      if (toDelete.length > 0) {
+        const { error: deleteError } = await adminClient
+          .from("athletes")
+          .delete()
+          .in("id", toDelete.map(d => d.id));
+        if (deleteError) throw deleteError;
+        
+        return new Response(JSON.stringify({ message: "Duplicate Luca Benetti records removed", removed_count: toDelete.length }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
+    return new Response(JSON.stringify({ message: "No duplicates found for Luca Benetti" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }
+
   // Action: Standard Import (POST)
   if (req.method === "POST") {
     try {
