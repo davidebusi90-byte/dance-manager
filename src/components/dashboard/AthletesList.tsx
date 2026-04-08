@@ -112,17 +112,6 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
     return deduped;
   }, [uniqueAthletes, validCouples, athleteIdsInCouples]);
 
-  const uniqueDeactivatedAthletes = useMemo(() => {
-    const activeNames = new Set(
-      athletes.map(a => `${a.first_name.trim()} ${a.last_name.trim()}`.toLowerCase())
-    );
-
-    return deactivatedAthletes.filter(a => {
-      const name = `${a.first_name.trim()} ${a.last_name.trim()}`.toLowerCase();
-      return !activeNames.has(name);
-    });
-  }, [deactivatedAthletes, athletes]);
-
   const filteredSortedAthletes = useMemo(() => {
     if (!searchQuery) return sortedAthletes;
     const words = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
@@ -389,10 +378,10 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-orange-100/50">
-                      {(searchQuery ? uniqueDeactivatedAthletes.filter(a => 
+                      {(searchQuery ? deactivatedAthletes.filter(a => 
                         `${a.first_name} ${a.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         a.code.includes(searchQuery)
-                      ) : uniqueDeactivatedAthletes).map((a) => {
+                      ) : deactivatedAthletes).map((a) => {
                         const certStatus = getCertificateStatus(a.medical_certificate_expiry);
                         
                         // Heuristic cleanup: only show if data matches expected type
