@@ -168,6 +168,7 @@ Deno.serve(async (req) => {
           category: athlete.category,
           class: (athlete.class || "D").toUpperCase(),
           discipline_info: discInfo,
+          partner_code: athlete.partner_code || null,
           is_deleted: false,
         }, { onConflict: "code" });
 
