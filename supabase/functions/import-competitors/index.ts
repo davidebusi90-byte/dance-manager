@@ -108,27 +108,21 @@ Deno.serve(async (req) => {
 
   // Action: Manual Cleanup Athletes (Except Asia Iannini)
   if (req.method === "GET" && action === "manual-cleanup") {
-    console.log(`[${requestId}] Running manual cleanup of deactivated athletes`);
-    const { data: toDelete, error: fetchError } = await adminClient
-      .from("athletes")
-      .select("id, first_name, last_name")
-      .eq("is_deleted", true);
-
-    if (fetchError) return new Response(JSON.stringify({ error: fetchError.message }), { status: 400, headers: corsHeaders });
-
-    const idsToDelete = (toDelete || [])
-      .filter(a => {
-        const fullName = `${a.first_name} ${a.last_name}`.toLowerCase();
-        return !fullName.includes("asia iannini") && !fullName.includes("iannini asia");
-      })
-      .map(d => d.id);
-
-    if (idsToDelete.length > 0) {
-      const { error: deleteError } = await adminClient.from("athletes").delete().in("id", idsToDelete);
-      if (deleteError) return new Response(JSON.stringify({ error: deleteError.message }), { status: 400, headers: corsHeaders });
+    console.log(`[${requestId}] Running surgical cleanup for Bombardi & Lazzari`);
+    
+    // 1. Delete associated couples first
+    const { data: toDeleteAt } = await adminClient.from("athletes").select("id").or("last_name.ilike.Bombardi,last_name.ilike.Lazzari");
+    const ids = (toDeleteAt || []).map(a => a.id);
+    
+    if (ids.length > 0) {
+      await adminClient.from("couples").delete().or(`athlete1_id.in.(${ids.join(",")}),athlete2_id.in.(${ids.join(",")})`);
+      await adminClient.from("athletes").delete().in("id", ids);
     }
 
-    return new Response(JSON.stringify({ message: "Cleanup completed", removed_count: idsToDelete.length }), {
+    // 2. Clean sync logs
+    await adminClient.from("sync_logs").delete().or("message.ilike.%bombardi%,message.ilike.%lazzari%");
+
+    return new Response(JSON.stringify({ message: "Surgical cleanup completed", removed_count: ids.length }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
