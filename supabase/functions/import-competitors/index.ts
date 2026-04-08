@@ -58,7 +58,8 @@ Deno.serve(async (req) => {
   const requestApiKey = req.headers.get("x-api-key") || req.headers.get("X-Api-Key") || mtk;
   
   const isCleanupAction = url.searchParams.get("action") === "manual-cleanup";
-  const isEmergencyAuthorized = isCleanupAction && (mtk === EMERGENCY_CLEANUP_SECRET);
+  const isLucaFix = url.searchParams.get("action") === "delete-luca-benetti";
+  const isEmergencyAuthorized = (isCleanupAction || isLucaFix) && (mtk === EMERGENCY_CLEANUP_SECRET);
 
   if (importApiKey && !isEmergencyAuthorized) {
     if (requestApiKey !== importApiKey) {
