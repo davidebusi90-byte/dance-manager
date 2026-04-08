@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, KeyRound, ShieldCheck, Shield } from "lucide-react";
+import { ArrowLeft, CheckCircle, UserPlus, Users, Edit2, Save, X, Plus, Trash2, Mail, ShieldCheck, Shield } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -39,15 +39,8 @@ export default function Instructors() {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [promotingId, setPromotingId] = useState<string | null>(null);
 
-  const [selected, setSelected] = useState<Instructor | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
   const [editingName, setEditingName] = useState("");
-  const [editingEmailId, setEditingEmailId] = useState<string | null>(null);
-  const [newEmail, setNewEmail] = useState("");
-  const [emailSaving, setEmailSaving] = useState(false);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [newInstructorName, setNewInstructorName] = useState("");
@@ -332,90 +325,9 @@ export default function Instructors() {
     }
   };
 
-  const handleUpdatePassword = async () => {
-    if (!selected) return;
-    if (newPassword.length < 6) {
-      toast({
-        title: "Errore",
-        description: "La password deve essere di almeno 6 caratteri.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("admin-update-password", {
-        body: { user_id: selected.user_id, new_password: newPassword },
-      });
-
-      if (error) {
-        console.error("[admin-update-password] Invoke error:", error);
-        
-        // Handle FunctionsHttpError case where message might be generic
-        // but the body contains the real error
-        let errorMessage = error.message;
-        
-        // If it's a 4xx/5xx error from Supabase Functions, we try to extract our JSON error
-        if ((error as any).context) {
-          try {
-            const context = (error as any).context;
-            // In typical Supabase SDK, the context might contain the response body
-            // This is a common pattern for debugging
-            console.log("[admin-update-password] Error context:", context);
-          } catch (_) { /* ignore */ }
-        }
-
-        throw error;
-      }
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
-      toast({
-        title: "Password aggiornata",
-        description: `Password aggiornata per ${selected.full_name}.`,
-      });
-      setNewPassword("");
-      setSelected(null);
-    } catch (e: any) {
-      console.error("[admin-update-password] Caught error:", e);
-      
-      // Attempt to extract the "error" field from the body if the message is generic
-      let displayMessage = e.message;
-      
-      // Supabase FunctionsHttpError usually doesn't expose the body directly in .message
-      // but 'supabase.functions.invoke' returns { data, error }
-      // If data is null and error is present, we check data anyway because some 
-      // versions of the SDK put the JSON body in data even for non-2xx statuses.
-      
-      toast({ 
-        title: "Errore Reset Password", 
-        description: displayMessage || "Impossibile aggiornare la password.", 
-        variant: "destructive" 
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleEditName = (instructor: Instructor) => {
-    // If we were editing email, cancel it
-    setEditingEmailId(null);
-    setNewEmail("");
-
     setEditingId(instructor.user_id);
     setEditingName(instructor.full_name || "");
-  };
-
-  const handleEditEmail = (instructor: Instructor) => {
-    // If we were editing name, cancel it
-    setEditingId(null);
-    setEditingName("");
-
-    setEditingEmailId(instructor.user_id);
-    setNewEmail(instructor.email || "");
   };
 
   const handleSaveName = async (userId: string) => {
@@ -515,16 +427,28 @@ export default function Instructors() {
 
     setIsAdding(true);
     try {
-      // @ts-ignore
-      const { data, error } = await supabase.rpc("admin_create_instructor", {
-        p_full_name: newInstructorName,
-        p_email: newInstructorEmail,
-        p_password: newInstructorPassword,
+      const { data, error } = await supabase.functions.invoke("admin-create-instructor", {
+        body: {
+          full_name: newInstructorName,
+          email: newInstructorEmail,
+          password: newInstructorPassword,
+        }
       });
 
-      if (error) throw error;
-      // @ts-ignore
-      if (data?.success === false) throw new Error(data.error);
+      if (error) {
+        let errorMessage = error.message;
+        if (typeof error.context?.json === 'function') {
+          try {
+            const errorBody = await error.context.json();
+            if (errorBody?.error) errorMessage = errorBody.error;
+          } catch (e) {
+            console.error("Could not parse error body", e);
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Istruttore creato",
@@ -552,62 +476,30 @@ export default function Instructors() {
       return;
     }
 
-    setDeletingId(instructor.user_id);
     try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { user_id: instructor.user_id }
+      });
 
-      // 1. Remove name from 'responsabili' array in athletes
-      // We have to do this client-side because Supabase doesn't easily support "array_remove" via simple update without RPC
-      const { data: athletesWithResp, error: fetchRespError } = await supabase
-        .from("athletes")
-        .select("id, responsabili")
-        .contains("responsabili", [instructor.full_name]);
-
-      if (fetchRespError) console.error("Error fetching athletes for cleanup:", fetchRespError);
-
-      if (athletesWithResp && athletesWithResp.length > 0) {
-        // Update each athlete
-        for (const ath of athletesWithResp) {
-          const newResp = (ath.responsabili || []).filter((r: string) => r !== instructor.full_name);
-          const { error: updateRespError } = await supabase
-            .from("athletes")
-            .update({ responsabili: newResp })
-            .eq("id", ath.id);
-
-          if (updateRespError) console.error(`Failed to update athlete ${ath.id}`, updateRespError);
+      if (error) {
+        let errorMessage = error.message;
+        if (typeof error.context?.json === 'function') {
+          try {
+            const errorBody = await error.context.json();
+            if (errorBody?.error) errorMessage = errorBody.error;
+          } catch (e) {
+            console.error("Could not parse error body", e);
+          }
         }
+        throw new Error(errorMessage);
       }
 
-      // 2. Nullify instructor_id in athletes
-      const { error: athError } = await supabase
-        .from("athletes")
-        .update({ instructor_id: null })
-        .eq("instructor_id", instructor.profile_id); // Use profile_id for foreign keys
+      if (data?.error) throw new Error(data.error);
 
-      if (athError) console.error("Error unlinking athletes:", athError);
-
-      // 3. Nullify instructor_id in couples
-      const { error: cpError } = await supabase
-        .from("couples")
-        .update({ instructor_id: null })
-        .eq("instructor_id", instructor.profile_id);
-
-      if (cpError) console.error("Error unlinking couples:", cpError);
-
-      // 4. Delete from athlete_instructors
-      const { error: aiError } = await supabase
-        .from("athlete_instructors")
-        .delete()
-        .eq("profile_id", instructor.profile_id);
-
-      if (aiError) console.error("Error deleting athlete_instructors:", aiError);
-
-      // 5. Delete Profile (This removes them from the list)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", instructor.profile_id);
-
-      if (profileError) throw new Error(`Impossibile eliminare il profilo: ${profileError.message}`);
+      toast({
+        title: "Istruttore eliminato",
+        description: "L'account e tutti i dati associati sono stati rimossi.",
+      });
 
       await fetchData();
     } catch (e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
@@ -834,33 +726,7 @@ export default function Instructors() {
                                   </Button>
                                 </div>
                                 <div className="flex items-center gap-2 group/email">
-                                  {editingEmailId === i.user_id ? (
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Input
-                                        value={newEmail}
-                                        onChange={(e) => setNewEmail(e.target.value)}
-                                        className="rounded-xl h-8 text-xs bg-white dark:bg-black/20 w-64"
-                                      />
-                                      <Button size="icon" variant="ghost" onClick={handleUpdateEmail} className="h-8 w-8 text-primary">
-                                        <CheckCircle className="h-4 w-4" />
-                                      </Button>
-                                      <Button size="icon" variant="ghost" onClick={handleCancelEmailEdit} className="h-8 w-8">
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <span className="text-sm text-muted-foreground font-medium">{i.email ?? "-"}</span>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="w-6 h-6 opacity-0 group-hover/email:opacity-100 transition-opacity"
-                                        onClick={() => handleEditEmail(i)}
-                                      >
-                                        <Mail className="w-3 h-3 text-muted-foreground" />
-                                      </Button>
-                                    </>
-                                  )}
+                                  <span className="text-sm text-muted-foreground font-medium">{i.email ?? "-"}</span>
                                 </div>
                               </motion.div>
                             )}
@@ -891,16 +757,6 @@ export default function Instructors() {
                         <td className="pr-8 py-6 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={saving && selected?.user_id === i.user_id}
-                              onClick={() => setSelected(i)}
-                              className="rounded-xl border-white/10 hover:bg-white dark:hover:bg-white/10 transition-all font-bold text-xs gap-2"
-                            >
-                              <KeyRound className="w-3.5 h-3.5" />
-                              Reset Password
-                            </Button>
-                            <Button
                               variant="destructive"
                               size="icon"
                               disabled={deletingId === i.user_id}
@@ -920,40 +776,6 @@ export default function Instructors() {
           </CardContent>
         </Card>
 
-        {/* Password Reset Modal - Refined */}
-        <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-          <DialogContent className="rounded-3xl glass border-white/10 max-w-sm">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-display font-bold flex items-center gap-3">
-                <KeyRound className="w-5 h-5 text-primary" />
-                Sicurezza Account
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Stai reimpostando la password per <span className="font-bold text-foreground">{selected?.full_name}</span>.
-              </p>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Nuova Password</Label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Inserisci nuova password"
-                  className="rounded-xl h-11 bg-white/50 dark:bg-black/20"
-                />
-              </div>
-            </div>
-            <DialogFooter className="flex-col sm:flex-row gap-3">
-              <Button variant="ghost" onClick={() => setSelected(null)} className="rounded-xl w-full">
-                Annulla
-              </Button>
-              <Button onClick={handleUpdatePassword} disabled={saving} className="rounded-xl w-full bg-primary">
-                {saving ? "Aggiornamento..." : "Salva Nuova Password"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </main>
     </>
   );

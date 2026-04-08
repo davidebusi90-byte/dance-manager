@@ -12,15 +12,16 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] admin-update-email: Request received`);
+
   try {
-    console.log("[admin-update-email] starting request processing...");
-    
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-      console.error("[admin-update-email] Missing environment variables");
+      console.error(`[${requestId}] admin-update-email: Missing environment variables`);
       throw new Error("Missing backend configuration");
     }
 
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
     try {
       body = await req.json();
     } catch (e) {
-      console.error("[admin-update-email] Failed to parse JSON body");
+      console.error(`[${requestId}] admin-update-email: Failed to parse JSON body`);
       throw new Error("Invalid JSON body");
     }
 
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
     // Auth verification
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      console.error("[admin-update-email] Missing Authorization header");
+      console.error(`[${requestId}] admin-update-email: Missing Authorization header`);
       throw new Error("No authorization header provided");
     }
 
@@ -56,29 +57,29 @@ Deno.serve(async (req) => {
 
     const { data: { user: requester }, error: userError } = await userClient.auth.getUser();
     if (userError || !requester) {
-      console.error("[admin-update-email] Auth error:", userError?.message);
+      console.error(`[${requestId}] admin-update-email: Auth error:`, userError?.message);
       throw new Error("Unauthorized: " + (userError?.message || "Invalid session"));
     }
 
     // Role verification (Admin only)
-    console.log(`[admin-update-email] Verifying admin role for: ${requester.email}`);
+    console.log(`[${requestId}] admin-update-email: Verifying admin role for: ${requester.email}`);
     const { data: isAdmin, error: roleError } = await userClient.rpc("has_role", {
       _user_id: requester.id,
       _role: "admin",
     });
 
     if (roleError) {
-      console.error("[admin-update-email] Role check RPC error:", roleError.message);
+      console.error(`[${requestId}] admin-update-email: Role check RPC error:`, roleError.message);
       throw new Error("Error verifying user roles");
     }
 
     if (!isAdmin) {
-      console.warn(`[admin-update-email] Access denied for user: ${requester.email}`);
+      console.warn(`[${requestId}] admin-update-email: Access denied for user: ${requester.email}`);
       throw new Error("Forbidden: Admin role required");
     }
 
     // Email Update using Service Role
-    console.log(`[admin-update-email] Updating email for target user_id: ${user_id}`);
+    console.log(`[${requestId}] admin-update-email: Updating email for target user_id: ${user_id}`);
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -90,7 +91,7 @@ Deno.serve(async (req) => {
     });
 
     if (updateError) {
-      console.error("[admin-update-email] Admin update error:", updateError.message);
+      console.error(`[${requestId}] admin-update-email: Admin update error:`, updateError.message);
       throw updateError;
     }
 
@@ -101,19 +102,23 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id);
 
     if (profileError) {
-      console.warn("[admin-update-email] Could not update profile email:", profileError);
+      console.warn(`[${requestId}] admin-update-email: Could not update profile email:`, profileError);
     }
 
-    console.log("[admin-update-email] Email successfully updated");
+    console.log(`[${requestId}] admin-update-email: Email successfully updated`);
     return new Response(JSON.stringify({ success: true, message: "Email updated" }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
 
   } catch (error: any) {
-    console.error("[admin-update-email] Caught error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
+    const errorMsg = error.message || "Internal server error";
+    console.error(`[${requestId}] admin-update-email: Caught error:`, errorMsg);
+    return new Response(JSON.stringify({ 
+      error: errorMsg,
+      requestId 
+    }), {
+      status: error.status || 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }

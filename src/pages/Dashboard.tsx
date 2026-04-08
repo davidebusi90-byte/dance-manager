@@ -15,9 +15,9 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { motion, AnimatePresence } from "framer-motion";
 import { Athlete } from "@/types/dashboard";
 import { useDashboardSummary } from "@/hooks/use-queries";
+import { formatCategoryDisplay } from "@/lib/category-validation";
 import { toast } from "sonner";
-import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
-import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
+import { isCidAndCategorySwapped, detectFieldType, smartRemapAthlete } from "@/lib/athlete-utils";
 
 type ActiveView = "none" | "athletes" | "couples" | "competitions";
 
@@ -175,7 +175,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <PrivacyConsentModal />
       <main className="container mx-auto px-4 py-8">
         <motion.div 
           initial="hidden"
@@ -215,7 +214,7 @@ export default function Dashboard() {
               }}
               whileHover={{ y: -4, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => navigate("/competition-enrollments")}
+              onClick={() => navigate("/enroll")}
               className="stat-card cursor-pointer group relative overflow-hidden bg-card hover:shadow-lg transition-all"
             >
               <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-accent blur-3xl opacity-5 group-hover:opacity-10 transition-opacity" />
@@ -224,7 +223,7 @@ export default function Dashboard() {
                   <ClipboardList className="w-6 h-6 text-accent" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">Classi</p>
+                  <p className="text-2xl font-bold">Gestione Classi</p>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Iscrizioni Gara</p>
                 </div>
               </div>
@@ -410,13 +409,27 @@ export default function Dashboard() {
                               rowColor = "hover:bg-gray-800";
                             }
 
+                            const smartData = smartRemapAthlete(athlete);
+
                             return (
                               <tr key={athlete.id} className={`${rowColor} transition-colors duration-300`}>
-                                <td className="font-mono text-sm">{displayCode}</td>
-                                <td className="font-medium">{athlete.first_name} {athlete.last_name}</td>
-                                <td>{displayCategory}</td>
-                                <td>{athlete.class}</td>
-                                <td>
+                                <td className="py-2 px-4">
+                                  <div className="flex flex-col">
+                                    {smartData.cid && <span className="font-mono text-sm font-bold text-blue-600">{smartData.cid}</span>}
+                                    {smartData.cf && <span className="font-mono text-[9px] text-orange-500 uppercase">{smartData.cf}</span>}
+                                    {!smartData.cid && !smartData.cf && <span className="text-muted-foreground/30">-</span>}
+                                  </div>
+                                </td>
+                                <td className="font-medium py-2 px-4">{athlete.first_name} {athlete.last_name}</td>
+                                <td className="py-2 px-4">
+                                  <div className="flex flex-col">
+                                    {smartData.place && <span className="text-emerald-600 font-medium">{smartData.place}</span>}
+                                    {smartData.category && <span className="text-sm font-medium text-primary/70">{formatCategoryDisplay(smartData.category)}</span>}
+                                    {!smartData.place && !smartData.category && <span className="text-muted-foreground/30">-</span>}
+                                  </div>
+                                </td>
+                                <td className="py-2 px-4">{athlete.class}</td>
+                                <td className="py-2 px-4">
                                   {athlete.medical_certificate_expiry ? (
                                     new Date(athlete.medical_certificate_expiry) < new Date() ? (
                                       <span className="status-badge status-badge-error">Scaduto</span>
@@ -427,10 +440,17 @@ export default function Dashboard() {
                                     <span className="status-badge status-badge-warning">Mancante</span>
                                   )}
                                 </td>
-                                <td className="text-sm">
-                                  {athlete.responsabili && athlete.responsabili.length > 0
-                                    ? athlete.responsabili.join(", ")
-                                    : "-"}
+                                <td className="text-sm py-2 px-4">
+                                  <div className="flex flex-col gap-1">
+                                    {smartData.instructors.length > 0 && <span>{smartData.instructors.join(", ")}</span>}
+                                    {smartData.contacts.length > 0 && (
+                                      <div className="flex flex-wrap gap-1">
+                                        {smartData.contacts.map((c, i) => (
+                                          <span key={i} className="text-[9px] text-blue-500/70 border border-blue-100 px-1 rounded bg-blue-50/30">{c}</span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             );

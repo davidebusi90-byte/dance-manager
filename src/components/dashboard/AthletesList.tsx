@@ -12,7 +12,7 @@ import { validateCategoryMatch, formatCategoryDisplay, getSportsAge } from "@/li
 import AthleteDetailModal from "./AthleteDetailModal";
 
 import { Athlete, Couple, Profile } from "@/types/dashboard";
-import { isCidAndCategorySwapped } from "@/lib/athlete-utils";
+import { isCidAndCategorySwapped, detectFieldType, smartRemapAthlete } from "@/lib/athlete-utils";
 
 interface AthletesListProps {
   athletes: Athlete[];
@@ -111,6 +111,17 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
 
     return deduped;
   }, [uniqueAthletes, validCouples, athleteIdsInCouples]);
+
+  const uniqueDeactivatedAthletes = useMemo(() => {
+    const activeNames = new Set(
+      athletes.map(a => `${a.first_name.trim()} ${a.last_name.trim()}`.toLowerCase())
+    );
+
+    return deactivatedAthletes.filter(a => {
+      const name = `${a.first_name.trim()} ${a.last_name.trim()}`.toLowerCase();
+      return !activeNames.has(name);
+    });
+  }, [deactivatedAthletes, athletes]);
 
   const filteredSortedAthletes = useMemo(() => {
     if (!searchQuery) return sortedAthletes;
@@ -378,28 +389,23 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-orange-100/50">
-                      {deactivatedAthletes.map((a) => {
+                      {(searchQuery ? uniqueDeactivatedAthletes.filter(a => 
+                        `${a.first_name} ${a.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        a.code.includes(searchQuery)
+                      ) : uniqueDeactivatedAthletes).map((a) => {
                         const certStatus = getCertificateStatus(a.medical_certificate_expiry);
                         
-                        // Apply swap heuristic for display
-                        const isSwapped = isCidAndCategorySwapped(a.code, a.category);
-                        const displayCode = isSwapped ? a.category : a.code;
-                        const rawCategory = isSwapped ? a.code : a.category;
-
-                        const categoryCheck = validateCategoryMatch({
-                          storedCategory: rawCategory,
-                          birthDateISO: a.birth_date,
-                          couples: couples,
-                          athleteId: a.id
-                        });
-                        const categoryDisplay = formatCategoryDisplay(categoryCheck.ok ? categoryCheck.expected : rawCategory);
+                        // Heuristic cleanup: only show if data matches expected type
+                        const isCid = detectFieldType(a.code) === 'cid';
+                        const isCategory = detectFieldType(a.category) === 'category';
+                        const resps = a.responsabili?.filter(r => detectFieldType(r) === 'name') || [];
 
                         return (
                           <tr key={a.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20 transition-colors">
-                            <td className="px-4 py-2 font-mono text-[10px]">{displayCode}</td>
+                            <td className="px-4 py-2 font-mono text-[10px]">{isCid ? a.code : "-"}</td>
                             <td className="px-4 py-2 font-semibold">{a.first_name} {a.last_name}</td>
                             <td className="px-4 py-2">
-                              {a.email ? (
+                              {a.email && detectFieldType(a.email) === 'contact' ? (
                                 <div className="flex items-center gap-1 truncate max-w-[120px]" title={a.email}>
                                   <Mail className="w-3 h-3 shrink-0 opacity-50" />
                                   <span className="truncate">{a.email}</span>
@@ -407,10 +413,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                               ) : "-"}
                             </td>
                             <td className="px-4 py-2">
-                              <div className="flex items-center gap-1">
-                                <span>{categoryDisplay}</span>
-                                {!categoryCheck.ok && <span className="text-destructive font-black">!</span>}
-                              </div>
+                              {isCategory ? formatCategoryDisplay(a.category) : "-"}
                             </td>
                             <td className="px-4 py-2">{formatDate(a.birth_date)}</td>
                             <td className="px-4 py-2">
@@ -419,9 +422,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                               </span>
                             </td>
                             <td className="px-4 py-2 max-w-[150px] truncate">
-                              {a.responsabili?.length ? (
-                                <span className="text-[10px]">{a.responsabili.join(", ")}</span>
-                              ) : "-"}
+                              {resps.length ? resps.join(", ") : "-"}
                             </td>
                           </tr>
                         );

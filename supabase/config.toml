@@ -1,5 +1,14 @@
 project_id = "kymoxuucjfgotjlhkfua"
 
+[functions.import-competitors]
+verify_jwt = false
+
+[functions.enrollment-data]
+verify_jwt = false
+
+[functions.verify-athlete]
+verify_jwt = false
+
 [functions.send-test-email]
 verify_jwt = false
 

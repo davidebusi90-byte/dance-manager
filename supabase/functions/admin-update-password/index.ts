@@ -126,9 +126,13 @@ Deno.serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error(`[${requestId}] admin-update-password: Caught error:`, error.message);
-    return new Response(JSON.stringify({ error: error.message || "Internal server error" }), {
-      status: 500,
+    const errorMsg = error.message || "Internal server error";
+    console.error(`[${requestId}] admin-update-password: Caught error:`, errorMsg);
+    return new Response(JSON.stringify({ 
+      error: errorMsg,
+      requestId 
+    }), {
+      status: error.status || 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }

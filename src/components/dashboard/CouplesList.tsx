@@ -13,6 +13,7 @@ import { resolveDisciplineClass } from "@/lib/discipline-utils";
 import { useMemo, useState } from "react";
 
 import { Athlete, Couple, Profile } from "@/types/dashboard";
+import { detectFieldType, smartRemapAthlete } from "@/lib/athlete-utils";
 
 interface CouplesListProps {
   couples: Couple[];
@@ -354,7 +355,16 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
 
                         return (
                           <tr key={c.id} className="text-muted-foreground/70 odd:bg-orange-50/5 hover:bg-orange-50/20 transition-colors">
-                            <td className="px-3 py-2 font-mono">{a1?.code || "-"}</td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-col">
+                                {a1 ? (
+                                  <>
+                                    {smartRemapAthlete(a1).cid && <span className="font-mono text-[10px] text-blue-600 font-bold">{smartRemapAthlete(a1).cid}</span>}
+                                    {smartRemapAthlete(a1).cf && <span className="font-mono text-[8px] text-orange-500 uppercase">{smartRemapAthlete(a1).cf}</span>}
+                                  </>
+                                ) : "-"}
+                              </div>
+                            </td>
                             <td className="px-3 py-2 font-bold">{a1 ? `${a1.first_name} ${a1.last_name}` : "-"}</td>
                             <td className="px-3 py-2">
                               {a1?.email ? (
@@ -364,7 +374,16 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
                                 </div>
                               ) : "-"}
                             </td>
-                            <td className="px-3 py-2 font-mono">{a2?.code || "-"}</td>
+                            <td className="px-3 py-2">
+                              <div className="flex flex-col">
+                                {a2 ? (
+                                  <>
+                                    {smartRemapAthlete(a2).cid && <span className="font-mono text-[10px] text-blue-600 font-bold">{smartRemapAthlete(a2).cid}</span>}
+                                    {smartRemapAthlete(a2).cf && <span className="font-mono text-[8px] text-orange-500 uppercase">{smartRemapAthlete(a2).cf}</span>}
+                                  </>
+                                ) : "-"}
+                              </div>
+                            </td>
                             <td className="px-3 py-2 font-bold">{a2 ? `${a2.first_name} ${a2.last_name}` : "-"}</td>
                             <td className="px-3 py-2">
                               {a2?.email ? (

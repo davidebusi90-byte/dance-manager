@@ -110,6 +110,11 @@ export default function Settings() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
   const handleTestEmail = async () => {
     if (!testEmailTo) {
       toast({ title: "Errore", description: "Inserisci un indirizzo email di destinazione", variant: "destructive" });
@@ -395,6 +400,37 @@ export default function Settings() {
                 </Card>
               </motion.div>
             )}
+
+            {/* Session Management - For all users */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="rounded-[2.5rem] glass border-red-500/20 shadow-2xl overflow-hidden mb-12">
+                <CardHeader className="p-8">
+                  <CardTitle className="text-xl font-display font-bold flex items-center gap-3 text-red-500">
+                    <LogOut className="w-5 h-5" />
+                    Gestione Sessione
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-8 pt-0">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-red-500/5 border border-red-500/10">
+                    <div>
+                      <p className="font-bold text-lg">Disconnetti Account</p>
+                      <p className="text-sm text-muted-foreground">Termina la sessione corrente su questo dispositivo</p>
+                    </div>
+                    <Button
+                      onClick={handleLogout}
+                      variant="destructive"
+                      className="w-full sm:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-red-500/20 transition-all active:scale-95"
+                    >
+                      Logout
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>
