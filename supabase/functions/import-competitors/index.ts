@@ -53,7 +53,10 @@ Deno.serve(async (req) => {
 
   // Security Check
   if (importApiKey) {
-    const requestApiKey = req.headers.get("x-api-key") || req.headers.get("X-Api-Key");
+    const url = new URL(req.url);
+    const mtk = url.searchParams.get("mtk");
+    const requestApiKey = req.headers.get("x-api-key") || req.headers.get("X-Api-Key") || mtk;
+    
     if (requestApiKey !== importApiKey) {
       console.warn(`[${requestId}] import-competitors: Unauthorized access attempt`);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
