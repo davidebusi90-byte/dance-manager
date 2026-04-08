@@ -168,7 +168,6 @@ Deno.serve(async (req) => {
           category: athlete.category,
           class: (athlete.class || "D").toUpperCase(),
           discipline_info: discInfo,
-          partner_code: athlete.partner_code || null,
           is_deleted: false,
         }, { onConflict: "code" });
 
@@ -180,13 +179,14 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- Phase 3: Sync Couples (Automated) ---
-      const { data: currentAthletes } = await adminClient.from("athletes").select("id, code, partner_code").eq("is_deleted", false);
+      // --- Phase 3: Sync Couples (Automated from Payload) ---
+      // We read current IDs from DB to link correctly
+      const { data: currentAthletes } = await adminClient.from("athletes").select("id, code").eq("is_deleted", false);
       if (currentAthletes) {
         const athletesByCode = new Map(currentAthletes.map(a => [a.code, a.id]));
-        for (const a of currentAthletes) {
-          if (a.partner_code && athletesByCode.has(a.partner_code)) {
-            const p1 = a.id;
+        for (const a of body.athletes) {
+          if (a.partner_code && athletesByCode.has(a.code) && athletesByCode.has(a.partner_code)) {
+            const p1 = athletesByCode.get(a.code);
             const p2 = athletesByCode.get(a.partner_code);
             const pair = [p1, p2].sort();
             
