@@ -14,9 +14,24 @@ export function usePrivacyConsent(consentType: ConsentType = 'privacy_policy', v
       return;
     }
 
+    // First get the profile for this user to filter consent specifically for them
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      console.warn("No profile found for user, cannot check privacy consent");
+      setHasConsented(false);
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from('user_consents')
       .select('is_accepted')
+      .eq('profile_id', profile.id)
       .eq('consent_type', consentType)
       .eq('version', version)
       .maybeSingle();
