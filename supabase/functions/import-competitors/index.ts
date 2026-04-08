@@ -144,7 +144,48 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ message: "No duplicates found for Luca Benetti" }), {
+    // Also check for duplicate COUPLES for this specific pair
+    console.log(`[${requestId}] Checking for duplicate couple records for Luca & Vanessa`);
+    const { data: athletes, error: aErr } = await adminClient
+      .from("athletes")
+      .select("id, code")
+      .or(`and(first_name.ilike.Luca,last_name.ilike.Benetti),and(first_name.ilike.Vanessa,last_name.ilike.Bosco)`);
+
+    if (aErr) throw aErr;
+    
+    const lucaId = athletes?.find(a => a.code === "100195")?.id || athletes?.find(a => a.code.includes("Luca"))?.id;
+    const vanessaId = athletes?.find(a => a.code === "108324")?.id || athletes?.find(a => a.code.includes("Vanessa"))?.id;
+
+    if (lucaId && vanessaId) {
+      const { data: dupeCouples, error: dcErr } = await adminClient
+        .from("couples")
+        .select("id, created_at")
+        .or(`and(athlete1_id.eq.${lucaId},athlete2_id.eq.${vanessaId}),and(athlete1_id.eq.${vanessaId},athlete2_id.eq.${lucaId})`);
+
+      if (dcErr) throw dcErr;
+
+      if (dupeCouples && dupeCouples.length > 1) {
+        const sortedCouples = dupeCouples.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const couplesToDelete = sortedCouples.slice(1); // Keep the newest one
+
+        const { error: delCouplesErr } = await adminClient
+          .from("couples")
+          .delete()
+          .in("id", couplesToDelete.map(c => c.id));
+        
+        if (delCouplesErr) throw delCouplesErr;
+
+        return new Response(JSON.stringify({ 
+          message: "Duplicate Couple record removed for Luca & Vanessa", 
+          removed_couples_count: couplesToDelete.length 
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    }
+
+    return new Response(JSON.stringify({ message: "No duplicates found for Luca Benetti & Vanessa Bosco" }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
