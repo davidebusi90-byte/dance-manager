@@ -179,6 +179,16 @@ Deno.serve(async (req) => {
         if (error) results.failed++; else results.successful++;
       }
 
+      await adminClient.from("sync_logs").insert({
+        status: "success",
+        message: `Sincronizzazione completata: ${results.successful} atleti processati.`,
+        results: {
+          successful: results.successful,
+          failed: results.failed,
+          removed: []
+        }
+      });
+
       return new Response(JSON.stringify({ message: "Import completed", results }), { status: 200, headers: corsHeaders });
     } catch (e: any) {
       return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders });
