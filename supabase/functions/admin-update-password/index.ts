@@ -12,16 +12,20 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID();
+  console.log(`[${requestId}] admin-update-password: Request received`);
+
   try {
-    console.log("[admin-update-password] starting request processing...");
-    
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-      console.error("[admin-update-password] Missing environment variables");
-      throw new Error("Missing backend configuration");
+      console.error(`[${requestId}] admin-update-password: Missing environment variables`);
+      return new Response(JSON.stringify({ error: "Missing backend configuration" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // Parse body early
@@ -29,24 +33,36 @@ Deno.serve(async (req) => {
     try {
       body = await req.json();
     } catch (e) {
-      console.error("[admin-update-password] Failed to parse JSON body");
-      throw new Error("Invalid JSON body");
+      console.error(`[${requestId}] admin-update-password: Failed to parse JSON body`);
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     const { user_id, new_password } = body;
     if (!user_id || !new_password) {
-      throw new Error("Missing user_id or new_password");
+      return new Response(JSON.stringify({ error: "Missing user_id or new_password" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     if (new_password.length < 6) {
-      throw new Error("Password must be at least 6 characters");
+      return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // Auth verification
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      console.error("[admin-update-password] Missing Authorization header");
-      throw new Error("No authorization header provided");
+      console.warn(`[${requestId}] admin-update-password: Missing Authorization header`);
+      return new Response(JSON.stringify({ error: "No authorization header provided" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -55,29 +71,38 @@ Deno.serve(async (req) => {
 
     const { data: { user: requester }, error: userError } = await userClient.auth.getUser();
     if (userError || !requester) {
-      console.error("[admin-update-password] Auth error:", userError?.message);
-      throw new Error("Unauthorized: " + (userError?.message || "Invalid session"));
+      console.warn(`[${requestId}] admin-update-password: Auth error:`, userError?.message);
+      return new Response(JSON.stringify({ error: "Unauthorized: " + (userError?.message || "Invalid session") }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // Role verification (Admin only)
-    console.log(`[admin-update-password] Verifying admin role for: ${requester.email}`);
+    console.log(`[${requestId}] admin-update-password: Verifying admin role for: ${requester.email}`);
     const { data: isAdmin, error: roleError } = await userClient.rpc("has_role", {
       _user_id: requester.id,
       _role: "admin",
     });
 
     if (roleError) {
-      console.error("[admin-update-password] Role check RPC error:", roleError.message);
-      throw new Error("Error verifying user roles");
+      console.error(`[${requestId}] admin-update-password: Role check RPC error:`, roleError.message);
+      return new Response(JSON.stringify({ error: "Error verifying user roles" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     if (!isAdmin) {
-      console.warn(`[admin-update-password] Access denied for user: ${requester.email}`);
-      throw new Error("Forbidden: Admin role required");
+      console.warn(`[${requestId}] admin-update-password: Access denied for user: ${requester.email}`);
+      return new Response(JSON.stringify({ error: "Forbidden: Admin role required" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
     // Password Update using Service Role
-    console.log(`[admin-update-password] Updating password for target user_id: ${user_id}`);
+    console.log(`[${requestId}] admin-update-password: Updating password for target user_id: ${user_id}`);
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
@@ -87,20 +112,23 @@ Deno.serve(async (req) => {
     });
 
     if (updateError) {
-      console.error("[admin-update-password] Admin update error:", updateError.message);
-      throw updateError;
+      console.error(`[${requestId}] admin-update-password: Admin update error:`, updateError.message);
+      return new Response(JSON.stringify({ error: updateError.message }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
 
-    console.log("[admin-update-password] Password successfully updated");
+    console.log(`[${requestId}] admin-update-password: Password successfully updated`);
     return new Response(JSON.stringify({ success: true, message: "Password updated" }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
 
   } catch (error: any) {
-    console.error("[admin-update-password] Caught error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
+    console.error(`[${requestId}] admin-update-password: Caught error:`, error.message);
+    return new Response(JSON.stringify({ error: error.message || "Internal server error" }), {
+      status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }

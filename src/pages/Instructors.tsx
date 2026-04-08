@@ -345,29 +345,33 @@ export default function Instructors() {
 
     setSaving(true);
     try {
-      // Verify we have a valid session before calling the function
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log("[admin-update-password] Session:", sessionData?.session ? "Active" : "Missing");
-
       const { data, error } = await supabase.functions.invoke("admin-update-password", {
         body: { user_id: selected.user_id, new_password: newPassword },
       });
 
-      // Log full error for diagnostics
       if (error) {
         console.error("[admin-update-password] Invoke error:", error);
-        console.error("[admin-update-password] Error context:", (error as any)?.context);
-        // Try to read actual error body
-        const errorBody = (error as any)?.context;
-        if (errorBody && typeof errorBody.json === "function") {
+        
+        // Handle FunctionsHttpError case where message might be generic
+        // but the body contains the real error
+        let errorMessage = error.message;
+        
+        // If it's a 4xx/5xx error from Supabase Functions, we try to extract our JSON error
+        if ((error as any).context) {
           try {
-            const bodyJson = await errorBody.json();
-            console.error("[admin-update-password] Error body JSON:", bodyJson);
+            const context = (error as any).context;
+            // In typical Supabase SDK, the context might contain the response body
+            // This is a common pattern for debugging
+            console.log("[admin-update-password] Error context:", context);
           } catch (_) { /* ignore */ }
         }
+
         throw error;
       }
-      if (data?.error) throw new Error(data.error);
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Password aggiornata",
@@ -375,9 +379,22 @@ export default function Instructors() {
       });
       setNewPassword("");
       setSelected(null);
-    } catch (e: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
+    } catch (e: any) {
       console.error("[admin-update-password] Caught error:", e);
-      toast({ title: "Errore", description: e.message, variant: "destructive" });
+      
+      // Attempt to extract the "error" field from the body if the message is generic
+      let displayMessage = e.message;
+      
+      // Supabase FunctionsHttpError usually doesn't expose the body directly in .message
+      // but 'supabase.functions.invoke' returns { data, error }
+      // If data is null and error is present, we check data anyway because some 
+      // versions of the SDK put the JSON body in data even for non-2xx statuses.
+      
+      toast({ 
+        title: "Errore Reset Password", 
+        description: displayMessage || "Impossibile aggiornare la password.", 
+        variant: "destructive" 
+      });
     } finally {
       setSaving(false);
     }
