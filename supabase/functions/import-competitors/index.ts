@@ -142,13 +142,13 @@ Deno.serve(async (req) => {
       let maxNumericCode = 100000;
       allAthletes?.forEach(a => { if (/^\d+$/.test(a.code)) { const n = parseInt(a.code); if (n > maxNumericCode) maxNumericCode = n; } });
 
+      // --- Phase 1: Sync Athletes ---
       for (const athlete of body.athletes) {
         if (!athlete.code || athlete.code === "undefined") {
           maxNumericCode++;
           athlete.code = String(maxNumericCode);
         }
         
-        const disciplines: any[] = [];
         const discInfo: any = {};
         for(let i=1; i<=6; i++) {
           const d = (athlete as any)[`disc${i}`];
@@ -164,23 +164,47 @@ Deno.serve(async (req) => {
           first_name: athlete.first_name,
           last_name: athlete.last_name,
           birth_date: athlete.birth_date || null,
+          gender: athlete.gender || null,
           category: athlete.category,
           class: (athlete.class || "D").toUpperCase(),
           discipline_info: discInfo,
           is_deleted: false,
         }, { onConflict: "code" });
 
-        if (error) results.failed++; else results.successful++;
+        if (error) {
+          results.errors.push({ athlete: athlete.code, error: error.message });
+          results.failed++;
+        } else {
+          results.successful++;
+        }
+      }
+
+      // --- Phase 3: Sync Couples (Automated) ---
+      const { data: currentAthletes } = await adminClient.from("athletes").select("id, code, partner_code").eq("is_deleted", false);
+      if (currentAthletes) {
+        const athletesByCode = new Map(currentAthletes.map(a => [a.code, a.id]));
+        for (const a of currentAthletes) {
+          if (a.partner_code && athletesByCode.has(a.partner_code)) {
+            const p1 = a.id;
+            const p2 = athletesByCode.get(a.partner_code);
+            const pair = [p1, p2].sort();
+            
+            await adminClient.from("couples").upsert({
+              athlete1_id: pair[0],
+              athlete2_id: pair[1],
+              is_active: true,
+              is_deleted: false
+            }, { onConflict: "athlete1_id, athlete2_id" });
+            results.couples_synced++;
+          }
+        }
       }
 
       await adminClient.from("sync_logs").insert({
         status: "success",
-        message: `Sincronizzazione completata: ${results.successful} atleti processati.`,
-        results: {
-          successful: results.successful,
-          failed: results.failed,
-          removed: []
-        }
+        message: `Sincronizzazione completata: ${results.successful} atleti e ${results.couples_synced} coppie processate.`,
+        raw_payload: body.athletes,
+        results: results
       });
 
       return new Response(JSON.stringify({ message: "Import completed", results }), { status: 200, headers: corsHeaders });
