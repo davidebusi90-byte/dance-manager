@@ -16,7 +16,11 @@ interface CoupleAnomaly {
   certificateIssues: string[];
 }
 
+<<<<<<< HEAD
+export default function Anomalies() {
+=======
 export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean }) {
+>>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
   const [coupleAnomalies, setCoupleAnomalies] = useState<CoupleAnomaly[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -111,12 +115,20 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
   }, [fetchAnomalies]);
 
   if (loading) {
+<<<<<<< HEAD
+    return <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">Caricamento...</div>;
+=======
     return <div className={`${isEmbedded ? 'py-20' : 'min-h-screen flex items-center justify-center bg-background'} text-muted-foreground`}>Caricamento...</div>;
+>>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
   }
 
   return (
-    <div className={isEmbedded ? "" : "min-h-screen bg-neutral-50/50 dark:bg-neutral-950/50"}>
+    <>
+<<<<<<< HEAD
+      <main className="container mx-auto px-4 py-8">
+=======
       <main className={isEmbedded ? "" : "container mx-auto px-4 py-8"}>
+>>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,7 +147,7 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
           <div className="flex gap-4">
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="px-6 py-3 bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm flex flex-col items-center min-w-[150px]"
+              className="px-6 py-3 glass rounded-2xl flex flex-col items-center min-w-[150px]"
             >
               <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-[0.2em] mb-1">Coppie da Verificare</span>
               <span className="text-2xl font-display font-bold text-rose-700 dark:text-rose-300">{coupleAnomalies.length}</span>
@@ -152,7 +164,7 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {coupleAnomalies.length === 0 ? (
-              <div className="col-span-full py-20 text-center bg-white/50 dark:bg-black/20 rounded-3xl border border-dashed border-neutral-200 dark:border-neutral-800">
+              <div className="col-span-full py-20 text-center glass rounded-3xl">
                 <p className="text-muted-foreground font-medium text-lg">Ottimo lavoro! Tutte le coppie sono conformi.</p>
               </div>
             ) : (
@@ -163,14 +175,14 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card className="h-full border-l-4 border-l-rose-500 hover:shadow-xl transition-all bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm group overflow-hidden rounded-3xl border-neutral-200 dark:border-neutral-800">
+                  <Card className="h-full border-l-4 border-l-destructive hover:shadow-xl transition-all glass-card group overflow-hidden">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                       <Users className="w-12 h-12 rotate-12" />
                     </div>
                     <CardHeader className="py-4">
                       <CardTitle className="text-base font-bold flex items-center gap-3">
-                        <span className="p-2 bg-blue-500/10 rounded-xl">
-                          <Users className="w-5 h-5 text-blue-600" />
+                        <span className="p-2 bg-sky-500/10 rounded-xl">
+                          <Users className="w-5 h-5 text-sky-600" />
                         </span>
                         <span className="truncate">
                           {ca.athlete1.first_name} {ca.athlete1.last_name} & {ca.athlete2.first_name} {ca.athlete2.last_name}
@@ -202,6 +214,6 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
           </motion.div>
         </AnimatePresence>
       </main>
-    </div>
+    </>
   );
 }
