@@ -91,11 +91,11 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-500;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-500;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -110,8 +110,29 @@
 }
 
 @layer components {
+  .glass-card {
+    @apply bg-card/70 backdrop-blur-md border border-border/50 shadow-sm;
+  }
+
+  .glass-sidebar {
+    @apply bg-sidebar-background/60 backdrop-blur-xl border-r border-sidebar-border;
+  }
+
+  .btn-gradient {
+    @apply bg-gradient-to-br from-accent via-accent to-orange-500 text-white shadow-md transition-all duration-300 hover:shadow-lg hover:brightness-110 active:scale-95 border-none;
+  }
+
+  .btn-gradient-secondary {
+    @apply bg-gradient-to-br from-primary via-primary to-slate-700 text-white shadow-md transition-all duration-300 hover:shadow-lg hover:brightness-110 active:scale-95 border-none;
+  }
+
   .stat-card {
-    @apply bg-card rounded-xl p-6 shadow-sm border border-border/50 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+    @apply glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-accent/30 relative overflow-hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    @apply absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-16 -mt-16 transition-colors duration-500;
   }
 
   .stat-value {

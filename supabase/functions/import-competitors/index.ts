@@ -132,85 +132,244 @@ Deno.serve(async (req) => {
   if (req.method === "POST") {
     try {
       const body = (await req.json()) as Body;
-      // ... same logic as before, just kept correctly scoped ...
-      const results = { successful: 0, failed: 0, couples_synced: 0, removed: [] as string[], errors: [] as any[] };
-      
-      const { data: allAthletes } = await adminClient.from("athletes").select("code, first_name, last_name, is_deleted");
-      const incomingCodes = new Set(body.athletes.map(a => String(a.code)));
-      
-      // Auto-assign CID if missing
+
+      if (!body || !body.athletes || !Array.isArray(body.athletes)) {
+          return new Response(JSON.stringify({ error: "Invalid payload format. Expected { athletes: [...] }" }), {
+              status: 400,
+              headers: { "Content-Type": "application/json", ...corsHeaders },
+          });
+      }
+
+      // --- Save raw payload to Storage as a log file ---
+      try {
+          const { data: bucket } = await adminClient.storage.getBucket('api-logs');
+          if (!bucket) {
+              await adminClient.storage.createBucket('api-logs', { public: false });
+          }
+          
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const logFilename = `sync_${timestamp}.json`;
+          
+          await adminClient.storage.from('api-logs').upload(
+              logFilename, 
+              JSON.stringify(body, null, 2),
+              { contentType: 'application/json' }
+          );
+          console.log(`Saved API payload to bucket api-logs as ${logFilename}`);
+      } catch (storageErr: any) {
+          console.error("Failed to save API log to storage:", storageErr);
+      }
+      // -------------------------------------------------
+
+      const results = {
+          successful: 0,
+          failed: 0,
+          couples_synced: 0,
+          removed: [] as { code: string; first_name: string; last_name: string }[],
+          deactivated_couples: 0,
+          errors: [] as any[],
+      };
+
+      // Fetch ALL athletes (including deleted) to perform name matching and find max numeric CID
+      const { data: allAthletes, error: fetchAllError } = await adminClient
+          .from("athletes")
+          .select("code, first_name, last_name, is_deleted");
+
       let maxNumericCode = 100000;
-      allAthletes?.forEach(a => { if (/^\d+$/.test(a.code)) { const n = parseInt(a.code); if (n > maxNumericCode) maxNumericCode = n; } });
+      const nameToCodeMap = new Map<string, string>();
 
-      // --- Phase 1: Sync Athletes ---
+      if (allAthletes) {
+          allAthletes.forEach(a => {
+              if (/^\d+$/.test(a.code)) {
+                  const num = parseInt(a.code, 10);
+                  if (num > maxNumericCode) maxNumericCode = num;
+              }
+              const key = `${a.first_name.trim()}-${a.last_name.trim()}`.toLowerCase();
+              if (!nameToCodeMap.has(key) || !a.is_deleted) {
+                  nameToCodeMap.set(key, a.code);
+              }
+          });
+      }
+
+      // Pre-process payload to assign fallback CIDs if missing
       for (const athlete of body.athletes) {
-        if (!athlete.code || athlete.code === "undefined") {
-          maxNumericCode++;
-          athlete.code = String(maxNumericCode);
-        }
-        
-        const discInfo: any = {};
-        for(let i=1; i<=6; i++) {
-          const d = (athlete as any)[`disc${i}`];
-          const c = (athlete as any)[`class${i}`];
-          if(d && c) {
-            const k = d.toLowerCase().includes("latino") ? "latino" : d.toLowerCase().includes("standard") ? "standard" : "combinata";
-            discInfo[k] = discInfo[k] ? getBestClass(discInfo[k], c) : c.toUpperCase();
+          let code = athlete.code ? String(athlete.code).trim() : "";
+          const firstName = athlete.first_name ? String(athlete.first_name).trim() : "";
+          const lastName = athlete.last_name ? String(athlete.last_name).trim() : "";
+
+          if (!code || code.toLowerCase() === "undefined") {
+              if (firstName && lastName) {
+                  const key = `${firstName}-${lastName}`.toLowerCase();
+                  if (nameToCodeMap.has(key)) {
+                      code = nameToCodeMap.get(key)!;
+                  } else {
+                      maxNumericCode++;
+                      code = String(maxNumericCode);
+                      nameToCodeMap.set(key, code);
+                  }
+              }
+              athlete.code = code;
+          } else {
+              if (firstName && lastName) {
+                  const key = `${firstName}-${lastName}`.toLowerCase();
+                  nameToCodeMap.set(key, code);
+              }
+              if (/^\d+$/.test(code)) {
+                  const num = parseInt(code, 10);
+                  if (num > maxNumericCode) maxNumericCode = num;
+              }
           }
-        }
-
-        const { error } = await adminClient.from("athletes").upsert({
-          code: String(athlete.code),
-          first_name: athlete.first_name,
-          last_name: athlete.last_name,
-          birth_date: athlete.birth_date || null,
-          gender: athlete.gender || null,
-          category: athlete.category,
-          class: (athlete.class || "D").toUpperCase(),
-          discipline_info: discInfo,
-          is_deleted: false,
-        }, { onConflict: "code" });
-
-        if (error) {
-          results.errors.push({ athlete: athlete.code, error: error.message });
-          results.failed++;
-        } else {
-          results.successful++;
-        }
       }
 
-      // --- Phase 3: Sync Couples (Automated from Payload) ---
-      // We read current IDs from DB to link correctly
-      const { data: currentAthletes } = await adminClient.from("athletes").select("id, code").eq("is_deleted", false);
-      if (currentAthletes) {
-        const athletesByCode = new Map(currentAthletes.map(a => [a.code, a.id]));
-        for (const a of body.athletes) {
-          if (a.partner_code && athletesByCode.has(a.code) && athletesByCode.has(a.partner_code)) {
-            const p1 = athletesByCode.get(a.code);
-            const p2 = athletesByCode.get(a.partner_code);
-            const pair = [p1, p2].sort();
-            
-            await adminClient.from("couples").upsert({
-              athlete1_id: pair[0],
-              athlete2_id: pair[1],
-              is_active: true,
-              is_deleted: false
-            }, { onConflict: "athlete1_id, athlete2_id" });
-            results.couples_synced++;
+      // Identify potential removals (missing from payload)
+      const incomingCodes = new Set(body.athletes.map(a => a.code));
+      if (!fetchAllError && allAthletes) {
+          const currentActiveAthletes = allAthletes.filter(a => !a.is_deleted);
+          const missingAthletes = currentActiveAthletes.filter(a => !incomingCodes.has(a.code));
+          
+          if (missingAthletes.length > 0) {
+              const missingCodes = missingAthletes.map(a => a.code);
+              for (let i = 0; i < missingCodes.length; i += 100) {
+                  const batch = missingCodes.slice(i, i + 100);
+                  await adminClient
+                      .from("athletes")
+                      .update({ is_deleted: true } as any)
+                      .in("code", batch);
+              }
+              results.removed = missingAthletes;
           }
-        }
       }
 
+      // 1. Process Athletes
+      for (const athlete of body.athletes) {
+          if (!athlete.code || !athlete.first_name || !athlete.last_name || !athlete.category) {
+              results.failed++;
+              results.errors.push({ code: athlete.code, error: "Missing required fields" });
+              continue;
+          }
+
+          const disciplineInfo: Record<string, string> = {};
+          let bestClass = athlete.class || "D";
+
+          for (let i = 1; i <= 6; i++) {
+              const disc = (athlete as any)[`disc${i}`];
+              const cls = (athlete as any)[`class${i}`];
+              if (disc && cls) {
+                  const discName = disc.toLowerCase();
+                  let key = discName;
+                  if (discName.includes("combinata")) key = "combinata";
+                  else if (discName.includes("latino")) key = "latino";
+                  else if (discName.includes("standard")) key = "standard";
+                  
+                  disciplineInfo[key] = cls.toUpperCase();
+                  if (i === 1 && !athlete.class) bestClass = cls;
+              }
+          }
+
+          const responsabili = [athlete.resp1, athlete.resp2, athlete.resp3, athlete.resp4]
+              .filter(r => r && r.trim() !== "");
+
+          const { error } = await adminClient
+              .from("athletes")
+              .upsert({
+                  code: athlete.code,
+                  first_name: athlete.first_name,
+                  last_name: athlete.last_name,
+                  birth_date: athlete.birth_date || null,
+                  gender: (athlete.gender || "M").toUpperCase(),
+                  email: athlete.email || null,
+                  phone: athlete.phone || null,
+                  category: athlete.category,
+                  class: bestClass.toUpperCase(),
+                  discipline_info: disciplineInfo,
+                  medical_certificate_expiry: athlete.medical_certificate_expiry || null,
+                  responsabili: responsabili.length > 0 ? responsabili : null,
+                  notes: athlete.notes || null,
+                  qr_code: athlete.qr_code || null,
+                  is_deleted: false,
+              }, { onConflict: "code" });
+
+          if (error) {
+              results.failed++;
+              results.errors.push({ code: athlete.code, error: error.message });
+          } else {
+              results.successful++;
+          }
+      }
+
+      // 2. Sync Couples
+      const activeAthletesMap = new Map<string, string>();
+      const { data: athletesDb } = await adminClient.from("athletes").select("id, code").eq("is_deleted", false);
+      athletesDb?.forEach(a => activeAthletesMap.set(a.code, a.id));
+
+      const couplesToUpsert: any[] = [];
+      const processedPairs = new Set<string>();
+
+      for (const athlete of body.athletes) {
+          if (athlete.partner_code && athlete.partner_code !== athlete.code) {
+              const a1Id = activeAthletesMap.get(athlete.code);
+              const a2Id = activeAthletesMap.get(athlete.partner_code);
+              if (a1Id && a2Id) {
+                  const pairKey = [athlete.code, athlete.partner_code].sort().join("-");
+                  if (!processedPairs.has(pairKey)) {
+                      processedPairs.add(pairKey);
+                      
+                      const discInfo: Record<string, string> = {};
+                      let bestCls = "D";
+                      const discs = new Set<string>();
+
+                      for (let i = 1; i <= 6; i++) {
+                        const d = (athlete as any)[`disc${i}`];
+                        const c = (athlete as any)[`class${i}`];
+                        if (d && c) {
+                          const k = d.toLowerCase().includes("latino") ? "latino" : d.toLowerCase().includes("standard") ? "standard" : "combinata";
+                          discInfo[k] = c.toUpperCase();
+                          discs.add(k);
+                          if (bestCls === "D") bestCls = c.toUpperCase();
+                        }
+                      }
+
+                      couplesToUpsert.push({
+                          athlete1_id: a1Id,
+                          athlete2_id: a2Id,
+                          category: athlete.category,
+                          class: bestCls,
+                          disciplines: Array.from(discs),
+                          discipline_info: discInfo,
+                          is_active: true,
+                      });
+                  }
+              }
+          }
+      }
+
+      if (couplesToUpsert.length > 0) {
+          // Deactivate old couples not in payload
+          const { data: existingActive } = await adminClient.from("couples").select("id, athlete1_id, athlete2_id").eq("is_active", true);
+          if (existingActive) {
+              const newPairs = new Set(couplesToUpsert.map(c => `${c.athlete1_id}-${c.athlete2_id}`));
+              const toDeactivate = existingActive.filter(c => !newPairs.has(`${c.athlete1_id}-${c.athlete2_id}`)).map(c => c.id);
+              if (toDeactivate.length > 0) {
+                  await adminClient.from("couples").update({ is_active: false } as any).in("id", toDeactivate);
+                  results.deactivated_couples = toDeactivate.length;
+              }
+          }
+          await adminClient.from("couples").upsert(couplesToUpsert, { onConflict: "athlete1_id,athlete2_id" });
+          results.couples_synced = couplesToUpsert.length;
+      }
+
+      // Log Sync Result
+      const { failed: logFailed, successful: logSuccess, couples_synced: logCouples } = results;
       await adminClient.from("sync_logs").insert({
-        status: "success",
-        message: `Sincronizzazione completata: ${results.successful} atleti e ${results.couples_synced} coppie processate.`,
-        raw_payload: body.athletes,
-        results: results
+          status: logFailed > 0 ? "warning" : "success",
+          message: `Sincronizzazione completata: ${logSuccess} atleti, ${logCouples} coppie.`,
+          results: results
       });
 
       return new Response(JSON.stringify({ message: "Import completed", results }), { status: 200, headers: corsHeaders });
+
     } catch (e: any) {
-      return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
     }
   }
 

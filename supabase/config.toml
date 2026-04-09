@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-competition-report]
 verify_jwt = false
+
+[functions.import-competitors]
+verify_jwt = false

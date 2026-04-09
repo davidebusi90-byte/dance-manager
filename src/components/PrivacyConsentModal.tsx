@@ -44,13 +44,20 @@ export function PrivacyConsentModal({ isOpen, onClose, isReviewMode = false }: P
 
   const handleAccept = async (e?: React.MouseEvent) => {
     if (e && e.preventDefault) e.preventDefault();
-    if (!accepted) return;
+    if (!accepted || isAcceptingRef.current) return;
+    
     setIsSubmitting(true);
     isAcceptingRef.current = true;
-    await saveConsent(true);
-    setIsSubmitting(false);
-    if (onClose) onClose();
-    setInternalOpen(false);
+    try {
+      await saveConsent(true);
+      setInternalOpen(false);
+      if (onClose) onClose();
+    } catch (error) {
+      console.error("Error saving consent:", error);
+    } finally {
+      setIsSubmitting(false);
+      isAcceptingRef.current = false;
+    }
   };
 
   const handleCancel = (e?: React.MouseEvent) => {
@@ -66,115 +73,105 @@ export function PrivacyConsentModal({ isOpen, onClose, isReviewMode = false }: P
   };
 
   if (loading && !isReviewMode) return null;
-  // If not in review mode and already consented, don't show automatically
   if (hasConsented === true && !isReviewMode && isOpen === undefined) return null;
 
   return (
     <AlertDialog open={open} onOpenChange={(val) => {
       if (!val) handleCancel();
     }}>
-      <AlertDialogContent className="max-w-2xl bg-white border-sky-100 overflow-hidden p-0">
-        <div className="bg-sky-600 p-6 text-white">
+      <AlertDialogContent className="max-w-2xl bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 overflow-hidden p-0 rounded-[2.5rem] shadow-2xl">
+        <div className="bg-primary p-8 text-white relative">
+          <div className="absolute top-0 right-0 p-8 opacity-10">
+            <ShieldCheck className="w-24 h-24" />
+          </div>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-display font-bold flex items-center gap-2 text-white">
-              <ShieldCheck className="w-6 h-6" />
-              Informativa sulla Privacy e GDPR
+            <AlertDialogTitle className="text-3xl font-display font-black tracking-tight flex items-center gap-3 text-white uppercase">
+              <ShieldCheck className="w-8 h-8" />
+              Privacy & GDPR
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sky-100 italic">
+            <AlertDialogDescription className="text-primary-foreground/80 font-medium text-base">
               {isReviewMode 
-                ? "Stai visualizzando la versione corrente dell'informativa."
-                : "Per continuare a utilizzare Dance Manager, è necessario leggere e accettare la nostra informativa sul trattamento dei dati personali."}
+                ? "Revisione dell'informativa corrente."
+                : "Per procedere è necessario accettare il trattamento dei dati personali."}
             </AlertDialogDescription>
           </AlertDialogHeader>
         </div>
 
-        <div className="p-6 pt-4">
-          <ScrollArea className="h-[350px] w-full rounded-lg border border-sky-100 p-6 bg-slate-50/50 text-sm leading-relaxed text-slate-700">
+        <div className="p-8">
+          <ScrollArea className="h-[350px] w-full rounded-3xl border border-neutral-100 dark:border-neutral-800 p-6 bg-neutral-50/50 dark:bg-black/20 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
             <div className="space-y-6">
               <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">1</div>
-                  <h4 className="font-bold text-sky-900">Titolare del Trattamento</h4>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-black">1</div>
+                  <h4 className="font-bold text-neutral-900 dark:text-white uppercase tracking-wider text-xs">Titolare del Trattamento</h4>
                 </div>
-                <p className="pl-8">Il titolare del trattamento dei dati è l'Associazione Sportiva / Gestore del sistema Dance Manager.</p>
+                <p className="pl-10">Il titolare del trattamento dei dati è l'Associazione Sportiva / Gestore del sistema Dance Manager.</p>
               </section>
               
               <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">2</div>
-                  <h4 className="font-bold text-sky-900">Tipologia di Dati Trattati</h4>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-black">2</div>
+                  <h4 className="font-bold text-neutral-900 dark:text-white uppercase tracking-wider text-xs">Tipologia di Dati Trattati</h4>
                 </div>
-                <p className="pl-8">Raccogliamo dati identificativi degli atleti (nome, cognome, data di nascita, codice atleta), dati di contatto (email, telefono) e dati relativi alla salute (scadenza certificato medico agonistico) necessari per la partecipazione alle competizioni di danza sportiva.</p>
+                <p className="pl-10">Raccogliamo dati identificativi degli atleti (nome, cognome, data di nascita, codice atleta), dati di contatto (email, telefono) e dati relativi alla salute (scadenza certificato medico agonistico) necessari per la partecipazione alle competizioni di danza sportiva.</p>
               </section>
 
               <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">3</div>
-                  <h4 className="font-bold text-sky-900">Finalità del Trattamento</h4>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-black">3</div>
+                  <h4 className="font-bold text-neutral-900 dark:text-white uppercase tracking-wider text-xs">Finalità del Trattamento</h4>
                 </div>
-                <p className="pl-8">I dati vengono trattati esclusivamente per la gestione delle iscrizioni alle gare, la verifica dell'idoneità sportiva e la comunicazione di informazioni tecniche relative agli eventi.</p>
+                <p className="pl-10">I dati vengono trattati esclusivamente per la gestione delle iscrizioni alle gare, la verifica dell'idoneità sportiva e la comunicazione di informazioni tecniche relative agli eventi.</p>
               </section>
 
               <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">4</div>
-                  <h4 className="font-bold text-sky-900">Sicurezza e Row Level Security</h4>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-black">4</div>
+                  <h4 className="font-bold text-neutral-900 dark:text-white uppercase tracking-wider text-xs">Sicurezza (Supabase RLS)</h4>
                 </div>
-                <p className="pl-8">Il sistema utilizza tecnologie avanzate di protezione (Supabase RLS) per garantire che i dati degli atleti siano visibili solo ai rispettivi istruttori autorizzati e agli amministratori di sistema.</p>
+                <p className="pl-10">Il sistema utilizza tecnologie avanzate di protezione (Supabase Row Level Security) per garantire che i dati degli atleti siano visibili solo ai rispettivi istruttori autorizzati e agli amministratori di sistema.</p>
               </section>
 
               <section>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold">5</div>
-                  <h4 className="font-bold text-sky-900">Diritti dell'Interessato</h4>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-black">5</div>
+                  <h4 className="font-bold text-neutral-900 dark:text-white uppercase tracking-wider text-xs">I Tuoi Diritti</h4>
                 </div>
-                <p className="pl-8">Ai sensi del GDPR, hai il diritto di accedere ai tuoi dati, chiederne la rettifica o la cancellazione ("diritto all'oblio") inviando una richiesta tramite il sistema o contattando l'amministratore.</p>
+                <p className="pl-10">Ai sensi del GDPR, hai il diritto di accedere ai tuoi dati, chiederne la rettifica o la cancellazione ("diritto all'oblio") inviando una richiesta tramite il sistema o contattando l'amministratore.</p>
               </section>
             </div>
           </ScrollArea>
 
-          <div className="flex items-center space-x-3 py-6 px-2">
+          <div className="flex items-center space-x-4 py-8 px-2">
             <Checkbox 
               id="terms" 
               checked={accepted} 
               onCheckedChange={(checked) => setAccepted(checked as boolean)}
-              className="w-5 h-5 border-sky-300 data-[state=checked]:bg-sky-600 transition-colors"
+              className="w-6 h-6 border-neutral-300 data-[state=checked]:bg-primary transition-all rounded-lg"
               disabled={isReviewMode && hasConsented === true}
             />
-            <Label htmlFor="terms" className="text-sm font-medium leading-tight cursor-pointer text-slate-700">
+            <Label htmlFor="terms" className="text-sm font-bold leading-tight cursor-pointer text-neutral-700 dark:text-neutral-300">
               Dichiaro di aver letto l'informativa e acconsento al trattamento dei dati personali.
             </Label>
           </div>
 
-          <AlertDialogFooter className="bg-slate-50 -mx-6 -mb-6 p-6 border-t border-sky-50">
+          <AlertDialogFooter className="bg-neutral-50 dark:bg-black/20 -mx-8 -mb-8 p-8 border-t border-neutral-100 dark:border-neutral-800">
             <AlertDialogCancel 
               onClick={handleCancel} 
-              className="border-sky-200 hover:bg-sky-50 transition-all"
+              className="border-neutral-200 dark:border-neutral-700 hover:bg-white dark:hover:bg-neutral-800 transition-all rounded-xl h-12 px-6 font-bold"
             >
               {isReviewMode ? "Chiudi" : "Esci"}
             </AlertDialogCancel>
-            {!isReviewMode && (
-              <AlertDialogAction 
-                onClick={handleAccept} 
-                disabled={!accepted || isSubmitting}
-                className="bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-200 transition-all px-8"
-              >
-                {isSubmitting ? "Salvataggio..." : "Accetta e Continua"}
-              </AlertDialogAction>
-            )}
-            {isReviewMode && !hasConsented && (
-               <AlertDialogAction 
-                  onClick={handleAccept} 
-                  disabled={!accepted || isSubmitting}
-                  className="bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-200 transition-all px-8"
-               >
-                 {isSubmitting ? "Salvando..." : "Accetta e Salva"}
-               </AlertDialogAction>
-            )}
+            <AlertDialogAction 
+              onClick={handleAccept} 
+              disabled={!accepted || isSubmitting}
+              className="bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all px-10 h-12 rounded-xl font-bold"
+            >
+              {isSubmitting ? "Salvataggio..." : (isReviewMode && hasConsented ? "Conferma" : "Accetta e Continua")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </div>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-

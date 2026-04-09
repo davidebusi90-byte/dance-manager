@@ -11,7 +11,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
 import { usePrivacyConsent } from "@/hooks/usePrivacyConsent";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2 } from "lucide-react";
+import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2, ArrowLeft } from "lucide-react";
 import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
 import Layout from "@/components/layout/Layout";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +21,6 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [testEmailTo, setTestEmailTo] = useState("");
   const [testingEmail, setTestingEmail] = useState(false);
   const [emailSettings, setEmailSettings] = useState({
@@ -32,18 +31,10 @@ export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { role, userId } = useUserRole();
+  const { role, userId, userEmail } = useUserRole();
   const { refresh } = useDashboardData(role, userId);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUserEmail(session.user.email ?? null);
-    };
     const fetchSettings = async () => {
       const { data, error } = await (supabase
         .from("system_settings" as any) as any)
@@ -59,9 +50,10 @@ export default function Settings() {
       }
     };
 
-    checkAuth();
-    fetchSettings();
-  }, [navigate]);
+    if (userId) {
+      fetchSettings();
+    }
+  }, [userId]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,7 +114,6 @@ export default function Settings() {
     }
     setTestingEmail(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("send-test-email", {
         body: { to: testEmailTo },
       });
@@ -177,25 +168,25 @@ export default function Settings() {
 
   return (
     <Layout>
-      <PrivacyConsentModal 
-        isOpen={showPrivacyModal} 
-        onClose={() => setShowPrivacyModal(false)}
-        isReviewMode={true}
-      />
       <div className="min-h-[80vh] py-8">
         <div className="container mx-auto px-4 max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-8 flex items-center justify-between"
           >
-            <h1 className="text-4xl font-display font-black tracking-tight uppercase flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                <SettingsIcon className="w-6 h-6" />
-              </div>
-              Impostazioni
-            </h1>
-            <p className="text-muted-foreground font-medium mt-2">Gestisci il tuo profilo e le preferenze del sistema</p>
+            <div>
+              <h1 className="text-4xl font-display font-black tracking-tight uppercase flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <SettingsIcon className="w-6 h-6" />
+                </div>
+                Impostazioni
+              </h1>
+              <p className="text-muted-foreground font-medium mt-2">Gestisci il tuo profilo e le preferenze del sistema</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full h-12 w-12 hover:bg-primary/5">
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
           </motion.div>
 
           <div className="grid gap-8">
@@ -259,6 +250,11 @@ export default function Settings() {
                           </p>
                         </div>
                       </div>
+                      <PrivacyConsentModal 
+                        isOpen={showPrivacyModal} 
+                        onClose={() => setShowPrivacyModal(false)}
+                        isReviewMode={true}
+                      />
                       <Button 
                         variant={hasConsented ? "ghost" : "default"}
                         onClick={() => setShowPrivacyModal(true)}

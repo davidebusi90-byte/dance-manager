@@ -1,66 +1,114 @@
 import { getCategoryMaxAge, getCategoryMinAge, getSportsAge, normalizeCategory, CATEGORY_RULES, getMinYoungerAgeForRule } from "./category-validation";
 import { resolveDisciplineClass } from "./discipline-utils";
+import { getBestClass } from "./class-utils";
 
 /**
- * --- EVENT NAME & DISCIPLINE UTILS ---
+ * --- FORMATTING UTILITIES ---
  */
 
 export const getEventDiscipline = (eventName: string): string | null => {
-    const name = eventName.toLowerCase();
-    if (name.includes("standard") || name.startsWith("st ") || name.includes(" st ")) return "standard";
-    if (name.includes("latino") || name.startsWith("la ") || name.includes(" la ")) return "latino";
-    if (name.includes("combinata") || name.startsWith("c ") || name.includes(" c ")) return "combinata";
+    const lowerName = eventName.toLowerCase();
+    if (lowerName.includes("standard") || /\bst\b/i.test(lowerName) || lowerName.startsWith("st ") || lowerName.includes(" st ")) return "standard";
+    if (
+        lowerName.includes("latino") || 
+        lowerName.includes("latini") || 
+        lowerName.includes("latin") || 
+        /\bla\b/i.test(lowerName) || 
+        lowerName.startsWith("la ") || 
+        lowerName.includes(" la ")
+    ) return "latino";
+    if (lowerName.includes("combinata") || lowerName.startsWith("c ") || lowerName.includes(" c ")) return "combinata";
     return null;
 };
 
-export const formatEventName = (name: string, effectiveClass?: string | null, category?: string | null): string => {
+/**
+ * Formatta i nomi delle gare aggiungendo classe e categoria dove richiesto.
+ */
+export const formatEventName = (name: string, effectiveClass?: string | null, coupleCategory?: string | null): string => {
+    if (!name) return "";
+    let formatted = name;
+    
+    // Normalizzazione: Open Classe A -> Adult Open
+    if (/open\s+classe\s+a/gi.test(formatted)) {
+        const disc = getEventDiscipline(formatted);
+        if (disc === "latino") formatted = "Adult Open Latini";
+        else if (disc === "standard") formatted = "Adult Open Standard";
+        else formatted = "Adult Open";
+    }
+    
+    const lowerName = formatted.toLowerCase();
+    
+    // Pulizia nomi Over: rimuove classi superflue prima del prefisso Over
+    if (lowerName.includes("over")) {
+        formatted = formatted.replace(/(?:classe\s+)?\b(AS|QS|A1|A2|A|B1|B2|B3|B|C|D)\b\s+(-?\s*over)/i, "$2");
+        formatted = formatted.replace(/\s{2,}/g, " ").trim();
+    }
+
+    // Pulizia generica ST/LA/C all'inizio
+    formatted = formatted
+        .replace(/^(ST|LA|C|Danze (Standard|Latino Americane|Latino-Americane))\s*[-–:]*\s*/gi, "")
+        .replace(/ \(\d+[/-]\d+\)/g, "") // Rimuove (6/9), (6-9) etc.
+        .trim();
+
+    const isUnder16 = formatted.toLowerCase().includes("under 16");
+    if (isUnder16) {
+        formatted = formatted.replace(/\s*\(\d+[/-]\d+\)/gi, "").trim();
+    }
+
+    const isOpenType = formatted.toLowerCase().includes("open") || formatted.toLowerCase().includes("rising star") || formatted.toLowerCase().includes("amator open a");
+    
+    // Aggiunta classe fissa per gare non Open/Over/Under
+    if (effectiveClass && !isOpenType && !formatted.toLowerCase().includes("over") && !isUnder16) {
+        const classPattern = new RegExp(`\\b${effectiveClass}\\b`, "i");
+        if (!classPattern.test(formatted)) {
+            formatted = `${formatted} ${effectiveClass.toUpperCase()}`;
+        }
+    }
+
+    // Aggiunta categoria della coppia alla fine per gare Open e simili
+    if (coupleCategory && !isUnder16) {
+        const catPattern = new RegExp(`\\b${coupleCategory.replace('-', '\\-')}\\b`, "i");
+        if (!catPattern.test(formatted)) {
+            formatted = `${formatted} (${coupleCategory})`;
+        }
+    }
+    
+    // Prepende la disciplina abbreviata
     const discipline = getEventDiscipline(name);
     let discAbbr = "";
     if (discipline === "standard") discAbbr = "ST";
     else if (discipline === "latino") discAbbr = "LA";
     else if (discipline === "combinata") discAbbr = "C";
 
-    let baseName = name
-        .replace(/^(ST|LA|C|Danze (Standard|Latino Americane|Latino-Americane))\s*[-–:]*\s*/gi, "")
-        .replace(/ \(\d+[/-]\d+\)/g, "") // Removes (6/9), (6-9), etc.
-        .trim();
-    
-    const isUnder16 = baseName.toLowerCase().includes("under 16");
-    if (isUnder16) {
-        // Specifically for Under 16, strip any remaining age indicators if present
-        baseName = baseName.replace(/\s*\(\d+[/-]\d+\)/gi, "").trim();
-    }
-    
-    let result = baseName;
-    const prefix = discAbbr ? `${discAbbr} ` : "";
-    const isOpenRace = result.toLowerCase().includes("open");
-    
-    // Se l'età (categoria) è presente nel nome ma senza parentesi, proviamo a metterla tra parentesi
-    // Non aggiungiamo l'età se è una gara Under 16
-    if (category && !isUnder16) {
-        const ageRangeRegex = new RegExp(`\\b${category.replace('-', '\\-')}\\b(?!\\))`, 'gi');
-        if (ageRangeRegex.test(result)) {
-            result = result.replace(ageRangeRegex, `(${category})`);
-        } else if (!result.toLowerCase().includes(`(${category.toLowerCase()})`)) {
-            // Se non c'è proprio, la aggiungiamo alla fine (prima della classe se presente)
-            result += ` (${category})`;
-        }
-    }
-
-    // Aggiungi Classe se non già presente nel nome E non è una gara Open o Under 16
-    if (!isOpenRace && !isUnder16 && effectiveClass && !result.toLowerCase().includes(`classe ${effectiveClass.toLowerCase()}`) && !result.toLowerCase().includes(` ${effectiveClass.toLowerCase()}`)) {
-        result += ` ${effectiveClass.toUpperCase()}`;
-    }
-    
-    return `${prefix}${result}`;
+    return discAbbr ? `${discAbbr} ${formatted}` : formatted;
 };
 
 export const getEffectClassForCouple = (couple: any, eventName: string): string => {
     const discipline = getEventDiscipline(eventName);
-    if (!discipline) return (couple.class || "D").toUpperCase();
     
-    // Resolve the class considering athletes' specific discipline info
-    return resolveDisciplineClass(discipline, couple.athlete1, couple.athlete2, couple);
+    // Normalizzazione B -> B1 come da specifica utente
+    const normalize = (c: string) => (c?.trim().toUpperCase() === "B") ? "B1" : c?.toUpperCase();
+
+    if (!discipline) return normalize(couple.class || "D");
+    
+    // Se abbiamo info specifiche per disciplina negli atleti, usiamo resolveDisciplineClass
+    if (couple.athlete1?.discipline_info || couple.athlete2?.discipline_info || couple.discipline_info) {
+        const discInfo = couple.discipline_info || {};
+        if (discipline === "latino") return normalize(discInfo["latino"] || couple.class);
+        if (discipline === "standard") return normalize(discInfo["standard"] || couple.class);
+        if (discipline === "combinata") {
+            const latClass = discInfo["latino"];
+            const stdClass = discInfo["standard"];
+            const combClass = discInfo["combinata"] || couple.class;
+            let resolved = combClass;
+            if (latClass) resolved = getBestClass(resolved, latClass);
+            if (stdClass) resolved = getBestClass(resolved, stdClass);
+            return normalize(resolved);
+        }
+    }
+
+    // Fallback alla classe di coppia standard
+    return normalize(couple.class);
 };
 
 /**
@@ -70,31 +118,39 @@ export const getEffectClassForCouple = (couple: any, eventName: string): string 
 export const isEventAllowedByAge = (
     et: any,
     category: string,
-    athlete1BirthDate?: string,
-    athlete2BirthDate?: string
+    athlete1BirthDate?: string | null,
+    athlete2BirthDate?: string | null
 ): boolean => {
     let minAge = et.min_age;
     let maxAge = et.max_age;
 
-    // Se non ci sono restrizioni in DB, proviamo a estrarle dal nome (es. "Juvenile 1 (6/9)")
-    if (minAge === null && maxAge === null) {
-        const name = et.event_name.toLowerCase();
-        // Cerca pattern tipo (6/9), (10/11), (12/13), (14/15), (16/18), (19/34), (35/44)
-        const match = name.match(/\((\d+)\/(\d+)\)/);
-        if (match) {
-            minAge = parseInt(match[1]);
-            maxAge = parseInt(match[2]);
-        } else if (name.includes("over 35")) { minAge = 35; }
-          else if (name.includes("over 45")) { minAge = 45; }
-          else if (name.includes("over 55")) { minAge = 55; }
-          else if (name.includes("under 21")) { minAge = 16; maxAge = 20; }
-          else if (name.includes("under 16")) { minAge = 6; maxAge = 15; }
+    // FALLBACK: Estrazione età dal nome evento
+    if (minAge === null && maxAge === null && et.event_name) {
+        const nameNorm = et.event_name.toLowerCase();
+        for (const rule of CATEGORY_RULES) {
+            const labelNorm = rule.label.toLowerCase();
+            const codeNorm = rule.displayCode.replace(/[/-]/g, "");
+            if (nameNorm.includes(labelNorm) || nameNorm.includes(codeNorm)) {
+                minAge = rule.minAge;
+                maxAge = rule.maxAge;
+                break;
+            }
+        }
+        if (minAge === null && (nameNorm.includes("rising star") || nameNorm.includes("amator open a"))) {
+            if (!nameNorm.includes("master")) minAge = 16;
+            maxAge = null;
+        }
+        if (minAge === null) {
+            const overMatch = nameNorm.match(/over\s*(\d+)/i);
+            if (overMatch) minAge = parseInt(overMatch[1]);
+        }
+        if (maxAge === null) {
+            const underMatch = nameNorm.match(/under\s*(\d+)/i);
+            if (underMatch) maxAge = parseInt(underMatch[1]);
+        }
     }
 
-    // Se ancora non ci sono restrizioni, permettiamo tutto
-    if (minAge === null && maxAge === null) return true;
-
-    // Use precise sports age if birth dates are available
+    // Check preciso con date di nascita
     if (athlete1BirthDate && athlete2BirthDate) {
         const refDate = new Date();
         const age1 = getSportsAge(athlete1BirthDate, refDate);
@@ -102,47 +158,33 @@ export const isEventAllowedByAge = (
         const coupleMinAge = Math.min(age1, age2);
         const coupleMaxAge = Math.max(age1, age2);
 
-        const eventRule = CATEGORY_RULES.find(r => r.minAge === minAge && r.maxAge === maxAge);
-        const allowedYoungerMin = minAge !== null ? getMinYoungerAgeForRule(minAge, eventRule?.label) : null;
-
-
         if (maxAge !== null && coupleMaxAge > maxAge) return false;
-        
-        // Il partner più anziano deve ALMENO soddisfare l'età minima della categoria
         if (minAge !== null && coupleMaxAge < minAge) return false;
         
-        // Il partner più giovane non deve essere sotto la soglia di tolleranza
+        const eventRule = CATEGORY_RULES.find(r => r.minAge === minAge && r.maxAge === maxAge);
+        const allowedYoungerMin = minAge !== null ? getMinYoungerAgeForRule(minAge, eventRule?.label) : null;
         if (allowedYoungerMin !== null && coupleMinAge < allowedYoungerMin) return false;
+        
         return true;
     }
 
-    // Fallback to category-based logic if birth dates are missing
+    // Check basato su categoria nominale
     const coupleMinAge = getCategoryMinAge(category);
-    const coupleMaxAge = getCategoryMaxAge(category); // null means no upper bound (e.g. Senior 5, Adult)
+    const coupleMaxAge = getCategoryMaxAge(category);
 
     if (maxAge !== null) {
         if (coupleMaxAge === null) return false;
-        
-        // If it's an "Under X" event, we are more lenient: if the category's MINIMUM 
-        // age fits, we allow it (the user is responsible for ensuring the specific athletes fit).
         const isUnderEvent = et.event_name.toLowerCase().includes("under");
         if (isUnderEvent) {
             if (coupleMinAge > maxAge) return false;
         } else {
-            // Standard behavior for Senior classes etc: the category must fit.
             if (coupleMaxAge > maxAge) return false;
         }
     }
-
-    // If the event has a minimum age, ensure the couple's category minimum age meets it.
     if (minAge !== null) {
+        if (coupleMaxAge !== null && coupleMaxAge < minAge) return false;
         const eventRule = CATEGORY_RULES.find(r => r.minAge === minAge && r.maxAge === maxAge);
         const allowedYoungerMin = getMinYoungerAgeForRule(minAge, eventRule?.label);
-        
-        // La massima età della categoria della coppia deve poter raggiungere l'età minima della gara
-        if (coupleMaxAge !== null && coupleMaxAge < minAge) return false;
-        
-        // La minima età della categoria non deve scendere sotto la soglia di tolleranza
         if (coupleMinAge < allowedYoungerMin) return false;
     }
 
@@ -159,8 +201,8 @@ export const isEventMatchingCoupleDiscipline = (eventName: string, coupleDiscipl
     if (!eventDiscipline) return true;
 
     const normalizedCoupleDisciplines = coupleDisciplines.map(d => d.toLowerCase());
-    const isLatino = normalizedCoupleDisciplines.includes("latino") || normalizedCoupleDisciplines.includes("danze latino americane");
-    const isStandard = normalizedCoupleDisciplines.includes("standard") || normalizedCoupleDisciplines.includes("danze standard");
+    const isLatino = normalizedCoupleDisciplines.some(d => d.includes("latino") || d.includes("latini") || d.includes("latin"));
+    const isStandard = normalizedCoupleDisciplines.some(d => d.includes("standard"));
     const isCombinata = normalizedCoupleDisciplines.includes("combinata");
 
     if (eventDiscipline === "latino" && isLatino) return true;
@@ -171,17 +213,17 @@ export const isEventMatchingCoupleDiscipline = (eventName: string, coupleDiscipl
 };
 
 export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
-    // 1. Check età prioritario
+    // 1. Età
     if (!isEventAllowedByAge(et, couple.category, couple.athlete1?.birth_date, couple.athlete2?.birth_date)) return false;
 
-    // 2. Check disciplina
+    // 2. Disciplina
     if (!isEventMatchingCoupleDiscipline(et.event_name, couple.disciplines || [])) return false;
 
-    // 3. Calcolo classe effettiva (gestione ST/LA/Comb)
+    // 3. Classe Effettiva
     const effectiveClass = getEffectClassForCouple(couple, et.event_name);
     let isRaceAllowed = (et.allowed_classes || []).includes(effectiveClass);
     
-    // 4. Compatibilità classi storiche (B -> B1, B2, B3)
+    // 4. Compatibilità classi storiche
     if (!isRaceAllowed) {
         if (effectiveClass === "A") {
             isRaceAllowed = (et.allowed_classes || []).includes("A1") || (et.allowed_classes || []).includes("A2");
@@ -191,91 +233,62 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     }
 
     const nameNorm = et.event_name.toLowerCase();
-    const nameFormattedNorm = formatEventName(et.event_name).toLowerCase();
-    const c = couple.class.toUpperCase();
+    const formattedNameNorm = formatEventName(et.event_name).toLowerCase();
+    const baseClass = (couple.class || "D").toUpperCase();
     
-    // 5. REGOLA MASTER: Esclusività classe MASTER
-    const isMasterRace = nameFormattedNorm.includes("master");
+    // 5. MASTER esclusivo
+    const isMasterRace = formattedNameNorm.includes("master");
     if (effectiveClass === "MASTER") {
         if (!isMasterRace) return false;
     } else if (isMasterRace) {
         return false;
     }
 
-    // 6. REGOLA AS: Solo eventi Open
-    if (c === "AS" && !nameFormattedNorm.includes("open")) return false;
+    // 6. AS -> Solo Open
+    if (baseClass === "AS" && !formattedNameNorm.includes("open")) return false;
 
-    // 7. REGOLA OVER: Esclusione incrociata Over 35/45/55
+    // 7. Esclusione incrociata Over
     if (nameNorm.includes("over 35")) {
         const age1 = couple.athlete1?.birth_date ? getSportsAge(couple.athlete1.birth_date, new Date()) : null;
         const age2 = couple.athlete2?.birth_date ? getSportsAge(couple.athlete2.birth_date, new Date()) : null;
-        const effectiveMaxAge = (age1 !== null && age2 !== null) ? Math.max(age1, age2) : getCategoryMinAge(couple.category);
-
-        if (effectiveMaxAge !== null && effectiveMaxAge >= 55) return false;
+        const maxAgeFound = (age1 !== null && age2 !== null) ? Math.max(age1, age2) : getCategoryMinAge(couple.category);
+        if (maxAgeFound !== null && maxAgeFound >= 55) return false;
     }
 
-    // REGOLA ESCLUSIONE YOUTH: Se la coppia è Youth, non partecipa a gare Adult o Under 21 (richiesta specifica)
+    // 8. Youth Exclusion
     if (normalizeCategory(couple.category) === "youth") {
-        if (nameNorm.includes("adult") || nameNorm.includes("under 21")) {
-            return false;
-        }
+        if (nameNorm.includes("adult") || nameNorm.includes("under 21")) return false;
     }
 
-    // 8. REGOLE OPEN & RISING STAR: Accesso basato su età e classi alte
+    // 9. Rising Star / Open
     if (nameNorm.includes("youth open") && normalizeCategory(couple.category) === "youth") {
-        const isAllowedClass = ["B", "B1", "B2", "B3", "A", "A1", "A2", "AS"].includes(effectiveClass);
-        if (isAllowedClass) isRaceAllowed = true;
+        if (["B", "B1", "B2", "B3", "A", "A1", "A2", "AS"].includes(effectiveClass)) isRaceAllowed = true;
     }
     if (nameNorm.includes("rising star")) {
-        const allowsAdultTiers = (et.allowed_classes || []).some(cls => ["A", "A1", "A2"].includes(cls));
-        if (isRaceAllowed || allowsAdultTiers) isRaceAllowed = true;
+        if ((et.allowed_classes || []).some((cls: string) => ["A", "A1", "A2"].includes(cls))) isRaceAllowed = true;
     }
 
-    // 9. REGOLA CLASSE C/D: Accesso a Open B e Open C
-    if (effectiveClass === "D" || effectiveClass === "C") {
-        const isOpenBC = /\b(open\s+(?:classe\s+)?b|b\s+open|open\s+(?:classe\s+)?c|c\s+open)\b/i.test(nameNorm);
+    // 10. Open B/C per classi basse
+    if (baseClass === "D" || baseClass === "C") {
+        const isOpenBC = /\b(open\s+b|b\s+open|open\s+c|c\s+open)\b/i.test(nameNorm);
         if (isOpenBC) return true;
     }
 
-    // 10. REGOLE SPECIFICHE CLASSE D
-    if (c === "D") {
-        const nameUpper = et.event_name.toUpperCase();
-        
-        // Blocchi classi alte
-        if (nameUpper.includes("CLASSE A") || nameUpper.includes("ADULT OPEN") || /\bA[12]\b/.test(nameUpper) || /\bAS\b/.test(nameUpper) || nameUpper.includes("MASTER")) return false;
-
-        // Blocco Under 21
+    // 11. Specifiche Classe D
+    if (baseClass === "D") {
+        const upper = et.event_name.toUpperCase();
+        if (upper.includes("CLASSE A") || upper.includes("ADULT OPEN") || /\bA[12]\b/.test(upper) || /\bAS\b/.test(upper) || upper.includes("MASTER")) return false;
         if (nameNorm.includes("under 21")) return false;
-
-        // Blocco selettivo Adult/Youth (tranne gare D o Youth Open)
+        
         const isDRace = nameNorm.includes("classe d") || (et.allowed_classes || []).includes("D");
         const isYouthOpen = nameNorm.includes("youth open");
         if (!isDRace && !isYouthOpen && (nameNorm.includes("adult") || nameNorm.includes("youth"))) return false;
 
-        // Under 16: Solo fino a 14/15
         if (nameNorm.includes("under 16")) {
             const coupleMaxAge = getCategoryMaxAge(couple.category);
             return coupleMaxAge !== null && coupleMaxAge <= 15;
         }
-
-        // Senior 35+: Abilitazione Over
-        if (getCategoryMinAge(couple.category) >= 35 && nameNorm.includes("over")) {
-            isRaceAllowed = true;
-        }
-    }
-
-    // 11. REGOLA B1: Nelle gare Syllabus per fascia d'età NON partecipa la classe B1
-    //     (deve usare solo la B Open). B2 e B3 possono ancora gareggiare nelle loro
-    //     categorie per età. La regola NON si applica a: Over, Under, Open, Rising Star, Master.
-    //     L'effectiveClass è già calcolato per disciplina.
-    const isRegularAgeCategory =
-        !nameNorm.includes("open") &&
-        !nameNorm.includes("rising star") &&
-        !nameNorm.includes("master") &&
-        !nameNorm.includes("over") &&
-        !nameNorm.includes("under");
-    if (["B", "B1"].includes(effectiveClass) && isRegularAgeCategory) {
-        return false;
+        if (getCategoryMinAge(couple.category) >= 35 && nameNorm.includes("over")) return true;
     }
 
     return isRaceAllowed;
