@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { useState, useEffect, useRef } from "react";
-=======
-import { useState, useEffect } from "react";
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +26,7 @@ export function PrivacyConsentModal({ isOpen, onClose, isReviewMode = false }: P
   const [internalOpen, setInternalOpen] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-<<<<<<< HEAD
   const isAcceptingRef = useRef(false);
-=======
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
 
   const open = isOpen !== undefined ? isOpen : internalOpen;
 
@@ -49,31 +42,20 @@ export function PrivacyConsentModal({ isOpen, onClose, isReviewMode = false }: P
     }
   }, [hasConsented]);
 
-<<<<<<< HEAD
   const handleAccept = async (e?: React.MouseEvent) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!accepted) return;
     setIsSubmitting(true);
     isAcceptingRef.current = true;
-=======
-  const handleAccept = async () => {
-    if (!accepted) return;
-    setIsSubmitting(true);
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
     await saveConsent(true);
     setIsSubmitting(false);
     if (onClose) onClose();
     setInternalOpen(false);
   };
 
-<<<<<<< HEAD
   const handleCancel = (e?: React.MouseEvent) => {
     if (e && e.preventDefault) e.preventDefault();
     if (isAcceptingRef.current) return;
-    
-=======
-  const handleCancel = () => {
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
     if (isReviewMode) {
       if (onClose) onClose();
       setInternalOpen(false);

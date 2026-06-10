@@ -16,11 +16,7 @@ interface CoupleAnomaly {
   certificateIssues: string[];
 }
 
-<<<<<<< HEAD
-export default function Anomalies() {
-=======
 export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean }) {
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
   const [coupleAnomalies, setCoupleAnomalies] = useState<CoupleAnomaly[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -115,20 +111,12 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
   }, [fetchAnomalies]);
 
   if (loading) {
-<<<<<<< HEAD
-    return <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">Caricamento...</div>;
-=======
     return <div className={`${isEmbedded ? 'py-20' : 'min-h-screen flex items-center justify-center bg-background'} text-muted-foreground`}>Caricamento...</div>;
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
   }
 
   return (
     <>
-<<<<<<< HEAD
-      <main className="container mx-auto px-4 py-8">
-=======
       <main className={isEmbedded ? "" : "container mx-auto px-4 py-8"}>
->>>>>>> 58f4189 (feat: All-in-One Dashboard (SPA) integration & UI refinements)
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

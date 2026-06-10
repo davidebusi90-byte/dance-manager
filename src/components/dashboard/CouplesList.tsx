@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { validateCoupleCategory, getSportsAge, CATEGORY_RULES, normalizeCategory } from "@/lib/category-validation";
+import { validateCoupleCategory, getSportsAge, CATEGORY_RULES, normalizeCategory, getCategorySortRank } from "@/lib/category-validation";
 import { getBestClass } from "@/lib/class-utils";
 import { useMemo, useState } from "react";
 
@@ -94,22 +94,15 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
     });
 
     return filtered.sort((a, b) => {
-      const getAgeInfo = (ath1Id: string, ath2Id: string) => {
-        const ath1 = athleteMap.get(ath1Id);
-        const ath2 = athleteMap.get(ath2Id);
-        const age1 = ath1?.birth_date ? getSportsAge(ath1.birth_date, referenceDate) : null;
-        const age2 = ath2?.birth_date ? getSportsAge(ath2.birth_date, referenceDate) : null;
-        if (age1 === null && age2 === null) return null;
-        const validAges = [age1, age2].filter((age): age is number => age !== null);
-        return { primary: Math.min(...validAges), secondary: Math.max(...validAges) };
-      };
+      const rankA = getCategorySortRank(a.category);
+      const rankB = getCategorySortRank(b.category);
+      if (rankA !== rankB) return rankA - rankB;
 
-      const ageA = getAgeInfo(a.athlete1_id, a.athlete2_id);
-      const ageB = getAgeInfo(b.athlete1_id, b.athlete2_id);
-      if (!ageA && !ageB) return 0;
-      if (!ageA) return 1;
-      if (!ageB) return -1;
-      return ageA.primary !== ageB.primary ? ageA.primary - ageB.primary : ageA.secondary - ageB.secondary;
+      const athA1 = athleteMap.get(a.athlete1_id);
+      const athB1 = athleteMap.get(b.athlete1_id);
+      const nameA = athA1 ? `${athA1.last_name} ${athA1.first_name}`.toLowerCase() : "";
+      const nameB = athB1 ? `${athB1.last_name} ${athB1.first_name}`.toLowerCase() : "";
+      return nameA.localeCompare(nameB);
     });
   }, [couples, athleteMap, searchQuery]);
 

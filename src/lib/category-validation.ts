@@ -198,6 +198,30 @@ export function normalizeCategoryLabel(label: CategoryLabel): string {
   return normalizeCategory(label);
 }
 
+const CATEGORY_ORDER = [
+  "juvenile1",
+  "juvenile2",
+  "junior1",
+  "junior2",
+  "youth",
+  "under21",
+  "adult",
+  "senior1",
+  "senior2",
+  "senior3a",
+  "senior3b",
+  "senior4a",
+  "senior4b",
+  "senior5"
+];
+
+export function getCategorySortRank(category: string): number {
+  if (!category) return 999;
+  const norm = normalizeCategory(category);
+  const index = CATEGORY_ORDER.indexOf(norm);
+  return index === -1 ? 999 : index;
+}
+
 /**
  * Returns a formatted category display string like "6/9 (Juvenile 1)"
  */

@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
-import { validateCategoryMatch, formatCategoryDisplay, getSportsAge } from "@/lib/category-validation";
+import { validateCategoryMatch, formatCategoryDisplay, getSportsAge, getCategorySortRank } from "@/lib/category-validation";
 import AthleteDetailModal from "./AthleteDetailModal";
 
 import { Athlete, Couple, Profile } from "@/types/dashboard";
@@ -73,8 +73,6 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
       const a2 = athleteMap.get(couple.athlete2_id);
       if (!a1 || !a2) return null;
 
-      const age1 = getAge(a1.birth_date);
-      const age2 = getAge(a2.birth_date);
       const isA1Male = (a1.gender || "").toUpperCase() === 'M';
       const isA2Male = (a2.gender || "").toUpperCase() === 'M';
 
@@ -85,12 +83,15 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
 
       return {
         pair: orderedPair,
-        sortKey: Math.min(age1, age2),
-        secondarySortKey: Math.max(age1, age2)
+        categoryRank: getCategorySortRank(couple.category),
+        lastName: orderedPair[0]?.last_name || ""
       };
-    }).filter((x): x is { pair: Athlete[], sortKey: number, secondarySortKey: number } => x !== null);
+    }).filter((x): x is { pair: Athlete[], categoryRank: number, lastName: string } => x !== null);
 
-    coupledPairs.sort((a, b) => a.sortKey !== b.sortKey ? a.sortKey - b.sortKey : a.secondarySortKey - b.secondarySortKey);
+    coupledPairs.sort((a, b) => {
+      if (a.categoryRank !== b.categoryRank) return a.categoryRank - b.categoryRank;
+      return a.lastName.localeCompare(b.lastName);
+    });
     const sortedCoupledAthletes = coupledPairs.flatMap(cp => cp.pair);
 
     const singleAthletes = uniqueAthletes.filter(a => !athleteIdsInCouples.has(a.id));
