@@ -27,7 +27,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { isAdmin } = useIsAdmin();
+  const { isAdmin, isSupervisor } = useIsAdmin();
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,13 +47,13 @@ export default function Layout({ children }: LayoutProps) {
       label: "Anomalie", 
       path: "/anomalies", 
       icon: FileWarning,
-      roles: ["admin"]
+      roles: ["admin", "supervisor"]
     },
     { 
       label: "Iscrizioni Gare", 
       path: "/enroll", 
       icon: ClipboardList,
-      roles: ["admin"] 
+      roles: ["admin", "supervisor"] 
     },
     { 
       label: "Istruttori", 
@@ -69,9 +69,12 @@ export default function Layout({ children }: LayoutProps) {
     },
   ];
 
-  const filteredNavItems = navItems.filter(item => 
-    item.roles.includes("admin") ? isAdmin : true
-  );
+  const filteredNavItems = navItems.filter(item => {
+    if (item.roles.includes("instructor")) return true;
+    if (item.roles.includes("supervisor") && isSupervisor) return true;
+    if (item.roles.includes("admin") && isAdmin) return true;
+    return false;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-neutral-50/50 dark:bg-neutral-950 transition-colors duration-500">
@@ -119,7 +122,7 @@ export default function Layout({ children }: LayoutProps) {
                   {userEmail}
                 </p>
                 <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md mt-0.5">
-                  {isAdmin ? "Admin" : "Istruttore"}
+                  {isAdmin ? "Admin" : isSupervisor ? "Supervisore" : "Istruttore"}
                 </p>
               </div>
               <Avatar className="w-10 h-10 rounded-xl border border-white/20 dark:border-white/10 shadow-lg">

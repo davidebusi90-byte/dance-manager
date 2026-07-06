@@ -168,7 +168,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Layout onNavigate={handleNavigation} activePath={getActivePath()}>
+      <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
           <motion.div
             animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
@@ -184,7 +184,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Layout onNavigate={handleNavigation} activePath={getActivePath()}>
+    <Layout>
       {/* Search Header (Only on Home/Main) */}
       {activeSubView === "none" && (
         <div className="mb-8 relative z-10">

@@ -268,58 +268,60 @@ export default function Settings() {
               </Card>
             </motion.div>
 
-            {/* Security */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
-                <CardHeader className="p-8">
-                  <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
-                    <Lock className="w-5 h-5 text-accent" />
-                    Sicurezza Account
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-8 pt-0">
-                  <form onSubmit={handleUpdatePassword} className="space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Nuova Password</Label>
-                        <Input
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          required
-                          minLength={6}
-                          className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
-                          placeholder="••••••••"
-                        />
+            {/* Security - Only Admin can change password */}
+            {role === "admin" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                  <CardHeader className="p-8">
+                    <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                      <Lock className="w-5 h-5 text-accent" />
+                      Sicurezza Account
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-0">
+                    <form onSubmit={handleUpdatePassword} className="space-y-6">
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Nuova Password</Label>
+                          <Input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            minLength={6}
+                            className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
+                            placeholder="••••••••"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Conferma</Label>
+                          <Input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            minLength={6}
+                            className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
+                            placeholder="••••••••"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 ml-1">Conferma</Label>
-                        <Input
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          required
-                          minLength={6}
-                          className="h-14 rounded-2xl bg-white/50 dark:bg-black/20 border-white/20 px-6"
-                          placeholder="••••••••"
-                        />
-                      </div>
-                    </div>
-                    <Button 
-                      type="submit" 
-                      disabled={loading} 
-                      className="w-full h-14 rounded-2xl bg-accent hover:bg-accent/90 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
-                    >
-                      {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Aggiorna Password"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </motion.div>
+                      <Button 
+                        type="submit" 
+                        disabled={loading} 
+                        className="w-full h-14 rounded-2xl bg-accent hover:bg-accent/90 text-lg font-bold shadow-xl shadow-accent/20 transition-all active:scale-95"
+                      >
+                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "Aggiorna Password"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {role === "admin" && (
               <motion.div

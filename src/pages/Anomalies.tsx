@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/use-user-role";
 import { Athlete, Couple, Profile } from "@/types/dashboard";
 import { motion, AnimatePresence } from "framer-motion";
+import Layout from "@/components/layout/Layout";
 
 interface CoupleAnomaly {
   couple: Couple;
@@ -114,9 +115,8 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
     return <div className={`${isEmbedded ? 'py-20' : 'min-h-screen flex items-center justify-center bg-background'} text-muted-foreground`}>Caricamento...</div>;
   }
 
-  return (
-    <>
-      <main className={isEmbedded ? "" : "container mx-auto px-4 py-8"}>
+  const content = (
+    <main className={isEmbedded ? "" : "container mx-auto px-4 py-8"}>
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -202,6 +202,7 @@ export default function Anomalies({ isEmbedded = false }: { isEmbedded?: boolean
           </motion.div>
         </AnimatePresence>
       </main>
-    </>
-  );
+    );
+
+  return isEmbedded ? content : <Layout>{content}</Layout>;
 }

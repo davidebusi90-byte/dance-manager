@@ -12,6 +12,7 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import Layout from "@/components/layout/Layout";
 
 type Instructor = {
   profile_id: string;
@@ -319,7 +320,7 @@ export default function Instructors({ isEmbedded = false }: { isEmbedded?: boole
     }
   };
 
-  return (
+  const content = (
     <div className={isEmbedded ? "" : "min-h-screen bg-neutral-50/50 dark:bg-neutral-950/50"}>
       <main className={isEmbedded ? "" : "container mx-auto px-4 py-8 space-y-8"}>
         <motion.div 
@@ -587,4 +588,6 @@ export default function Instructors({ isEmbedded = false }: { isEmbedded?: boole
       </main>
     </div>
   );
+
+  return isEmbedded ? content : <Layout>{content}</Layout>;
 }
