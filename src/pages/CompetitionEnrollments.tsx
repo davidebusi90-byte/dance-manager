@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Trophy, Settings, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Trophy, Settings, Save, Loader2, Archive, ArchiveRestore, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
@@ -92,9 +92,14 @@ export default function CompetitionEnrollments() {
   const [pendingEventChanges, setPendingEventChanges] = useState<Map<string, boolean>>(new Map());
   const [selectedCompetitionForEvents, setSelectedCompetitionForEvents] = useState<string | null>(null);
   const [competitionClasses, setCompetitionClasses] = useState<Map<string, Set<string>>>(new Map());
+  const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
+
+  const activeCompetitions = competitions.filter(c => !c.is_completed);
+  const archivedCompetitions = competitions.filter(c => c.is_completed);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -388,6 +393,36 @@ export default function CompetitionEnrollments() {
   };
 
 
+  const handleToggleArchive = async (competitionId: string, currentStatus: boolean) => {
+    if (!isAdmin) return;
+    setArchivingId(competitionId);
+    try {
+      const { error } = await supabase
+        .from("competitions")
+        .update({ is_completed: !currentStatus } as any)
+        .eq("id", competitionId);
+
+      if (error) throw error;
+
+      toast({
+        title: !currentStatus ? "Competizione archiviata" : "Competizione ripristinata",
+        description: !currentStatus 
+          ? "La competizione è stata spostata nell'archivio delle gare passate." 
+          : "La competizione è stata ripristinata tra le gare attive."
+      });
+      await fetchData(true);
+    } catch (error) {
+      console.error("Error toggling archive status:", error);
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiornare lo stato di archiviazione",
+        variant: "destructive"
+      });
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
   const handleCompetitionAdded = async () => {
     await fetchData(true);
   };
@@ -481,15 +516,15 @@ export default function CompetitionEnrollments() {
           </motion.div>
         )}
 
-        {competitions.length === 0 ? (
+        {activeCompetitions.length === 0 ? (
           <div className="py-20 text-center glass rounded-3xl">
             <Trophy className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-            <h3 className="text-xl font-display font-bold mb-2">Nessuna competizione</h3>
+            <h3 className="text-xl font-display font-bold mb-2">Nessuna competizione attiva</h3>
             <p className="text-muted-foreground">Inizia aggiungendo una nuova competizione tramite il pulsante "+" in alto.</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {competitions.map((competition, idx) => {
+            {activeCompetitions.map((competition, idx) => {
               const compEvents = getCompetitionEventTypes(competition.id);
               const isExpanded = selectedCompetitionForEvents === competition.id;
               const activeClasses = competitionClasses.get(competition.id) || new Set<string>();
@@ -550,11 +585,25 @@ export default function CompetitionEnrollments() {
                                 {competition.name}
                               </span>
                               {isAdmin && (
-                                <div onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                   <EditCompetitionDialog 
                                     competition={competition} 
                                     onSuccess={() => fetchData(true)} 
                                   />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 rounded-xl"
+                                    onClick={() => handleToggleArchive(competition.id, false)}
+                                    disabled={archivingId === competition.id}
+                                    title="Archivia competizione"
+                                  >
+                                    {archivingId === competition.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Archive className="w-4 h-4" />
+                                    )}
+                                  </Button>
                                 </div>
                               )}
                             </div>
@@ -708,6 +757,166 @@ export default function CompetitionEnrollments() {
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {/* Archivio Gare Passate */}
+        {archivedCompetitions.length > 0 && (
+          <div className="mt-12 space-y-6">
+            <div 
+              onClick={() => setIsArchiveExpanded(!isArchiveExpanded)}
+              className="flex items-center justify-between p-6 bg-neutral-900/5 dark:bg-white/5 hover:bg-neutral-900/10 dark:hover:bg-white/10 border border-white/5 rounded-3xl cursor-pointer transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center">
+                  <Archive className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-display font-bold tracking-tight">Archivio Gare Passate</h2>
+                  <p className="text-sm text-muted-foreground font-medium">{archivedCompetitions.length} competizioni archiviate</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="rounded-xl">
+                {isArchiveExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </Button>
+            </div>
+
+            <AnimatePresence>
+              {isArchiveExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-6 overflow-hidden"
+                >
+                  {archivedCompetitions.map((competition, idx) => {
+                    const compEvents = getCompetitionEventTypes(competition.id);
+                    const isExpanded = selectedCompetitionForEvents === competition.id;
+                    const activeClasses = competitionClasses.get(competition.id) || new Set<string>();
+
+                    return (
+                      <motion.div
+                        key={competition.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                      >
+                        <Card className="overflow-hidden glass-card border-white/5 bg-neutral-900/10 dark:bg-neutral-950/20 opacity-70 hover:opacity-100 transition-opacity">
+                          <CardHeader
+                            className="cursor-pointer group py-6 px-8"
+                            onClick={() => setSelectedCompetitionForEvents(isExpanded ? null : competition.id)}
+                          >
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-6 flex-1">
+                                <div className="flex flex-col gap-1 min-w-[240px]">
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-display font-bold text-xl tracking-tight leading-none text-muted-foreground group-hover:text-primary transition-colors">
+                                      {competition.name}
+                                    </span>
+                                    {isAdmin && (
+                                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 rounded-xl"
+                                          onClick={() => handleToggleArchive(competition.id, true)}
+                                          disabled={archivingId === competition.id}
+                                          title="Ripristina competizione"
+                                        >
+                                          {archivingId === competition.id ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                          ) : (
+                                            <ArchiveRestore className="w-4 h-4" />
+                                          )}
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="text-sm font-medium text-muted-foreground/60">{formatDate(competition.date, competition.end_date)}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="status-badge bg-amber-500/10 text-amber-600 text-xs px-3 py-1 font-bold rounded-xl">Archiviata</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 shrink-0">
+                                <CustomBadge count={compEvents.length} />
+                                <motion.div
+                                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                                  className="text-muted-foreground group-hover:text-primary transition-colors"
+                                >
+                                  <Settings className="w-5 h-5" />
+                                </motion.div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                              >
+                                <CardContent className="pt-0 pb-8 px-8 pointer-events-none select-none">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-6 border-t border-white/5">
+                                    {DISCIPLINES.map(discipline => (
+                                      <div key={discipline} className="space-y-4">
+                                        <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+                                          <h3 className="font-display font-bold text-lg tracking-tight text-muted-foreground">{discipline}</h3>
+                                        </div>
+                                        <div className="grid gap-3">
+                                          {getEventsForDiscipline(discipline).map(preset => {
+                                            const fullEventName = `${discipline} - ${preset.name}`;
+                                            const isActive = getEventActive(competition.id, fullEventName);
+                                            const existingEvent = eventTypes.find(e => e.competition_id === competition.id && e.event_name === fullEventName);
+                                            const classesToShow = existingEvent ? existingEvent.allowed_classes : preset.classes;
+
+                                            return (
+                                              <div
+                                                key={fullEventName}
+                                                className={cn(
+                                                  "flex items-start gap-4 p-4 rounded-2xl border transition-all relative overflow-hidden",
+                                                  isActive 
+                                                    ? "bg-primary/5 border-primary/20 shadow-sm opacity-60" 
+                                                    : "bg-black/5 dark:bg-white/5 border-transparent opacity-30"
+                                                )}
+                                              >
+                                                <Checkbox
+                                                  id={`${competition.id}-${fullEventName}`}
+                                                  checked={isActive}
+                                                  disabled
+                                                  className="mt-1 rounded-md"
+                                                />
+                                                <div className="space-y-1.5 relative z-10">
+                                                  <span className="text-sm font-bold leading-none block text-muted-foreground">
+                                                    {preset.name}
+                                                  </span>
+                                                  <div className="flex flex-wrap gap-1">
+                                                    {classesToShow.map(c => (
+                                                      <span key={c} className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/5 dark:bg-white/10 text-muted-foreground/60">
+                                                        {c}
+                                                      </span>
+                                                    ))}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </main>
