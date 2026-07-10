@@ -722,7 +722,6 @@ export default function CompetitionEnrollments() {
                                               "mt-1 rounded-md transition-all",
                                               isPending ? "ring-2 ring-primary ring-offset-2" : ""
                                             )}
-                                            onClick={e => e.stopPropagation()}
                                           />
                                           <div className="space-y-1.5 relative z-10">
                                             <span className="text-sm font-bold leading-none block group-hover/event:text-primary transition-colors">
