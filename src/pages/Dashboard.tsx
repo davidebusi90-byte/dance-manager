@@ -240,7 +240,7 @@ export default function Dashboard() {
               isActive={activeView === "couples"}
             />
             <div
-               onClick={() => handleNavigation("/enroll")}
+               onClick={() => navigate("/competition-enrollments")}
                className="cursor-pointer group"
             >
               <div className="h-full p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300">
@@ -249,8 +249,8 @@ export default function Dashboard() {
                     <ClipboardList className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-2xl font-black">Iscrizioni</p>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Gestisci Gare</p>
+                    <p className="text-2xl font-black">Gestione gare</p>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Gestione Classi</p>
                   </div>
                 </div>
               </div>
