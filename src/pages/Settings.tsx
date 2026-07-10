@@ -11,7 +11,8 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
 import { usePrivacyConsent } from "@/hooks/usePrivacyConsent";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2, ArrowLeft } from "lucide-react";
+import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2, ArrowLeft, DatabaseBackup, Clock, AlertTriangle, CheckCheck, Trash2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
 import Layout from "@/components/layout/Layout";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +29,18 @@ export default function Settings() {
     instructors: true
   });
   const [updatingSettings, setUpdatingSettings] = useState(false);
+
+  // --- Stato dashboard anonimizzazione ---
+  const RETENTION_DAYS = 90; // giorni prima dell'anonimizzazione
+  const [softDeletedAthletes, setSoftDeletedAthletes] = useState<Array<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    deleted_at: string;
+    daysLeft: number;
+    pct: number; // % tempo consumato (0=appena eliminato, 100=già scaduto)
+  }>>([]);
+  const [loadingAnon, setLoadingAnon] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -54,6 +67,41 @@ export default function Settings() {
       fetchSettings();
     }
   }, [userId]);
+
+  // Fetch atleti soft-deleted con countdown anonimizzazione (solo admin)
+  useEffect(() => {
+    if (role !== 'admin') return;
+    const fetchSoftDeleted = async () => {
+      setLoadingAnon(true);
+      try {
+        const { data, error } = await (supabase
+          .from('athletes' as any) as any)
+          .select('id, first_name, last_name, deleted_at')
+          .eq('is_deleted', true)
+          .not('deleted_at', 'is', null)
+          .order('deleted_at', { ascending: true });
+
+        if (error) throw error;
+
+        const now = new Date();
+        const enriched = ((data || []) as any[]).map((a: any) => {
+          const deletedAt = new Date(a.deleted_at);
+          const msSinceDelete = now.getTime() - deletedAt.getTime();
+          const daysSinceDelete = msSinceDelete / (1000 * 60 * 60 * 24);
+          const daysLeft = Math.max(0, Math.ceil(RETENTION_DAYS - daysSinceDelete));
+          const pct = Math.min(100, Math.round((daysSinceDelete / RETENTION_DAYS) * 100));
+          return { ...a, daysLeft, pct };
+        });
+
+        setSoftDeletedAthletes(enriched);
+      } catch (_) {
+        // silenzioso
+      } finally {
+        setLoadingAnon(false);
+      }
+    };
+    fetchSoftDeleted();
+  }, [role]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -394,6 +442,140 @@ export default function Settings() {
                       {testingEmail ? <Loader2 className="w-6 h-6 animate-spin" /> : <Mail className="w-6 h-6" />}
                       {testingEmail ? "Invio..." : "Invia Test Diagnostico"}
                     </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Anonymization Dashboard - Admin only */}
+            {role === 'admin' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                  <CardHeader className="p-8">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                        <DatabaseBackup className="w-5 h-5 text-orange-400" />
+                        Protezione Dati — Anonimizzazione
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        {loadingAnon && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                        {!loadingAnon && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "rounded-full px-4 py-1 text-[10px] font-black tracking-widest uppercase",
+                              softDeletedAthletes.filter(a => a.daysLeft < 14).length > 0
+                                ? "bg-red-500/10 text-red-400 border-red-500/20 animate-pulse"
+                                : softDeletedAthletes.length > 0
+                                  ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                                  : "bg-green-500/10 text-green-500 border-green-500/20"
+                            )}
+                          >
+                            {softDeletedAthletes.filter(a => a.daysLeft < 14).length > 0
+                              ? `${softDeletedAthletes.filter(a => a.daysLeft < 14).length} Urgenti`
+                              : softDeletedAthletes.length > 0
+                                ? `${softDeletedAthletes.length} In attesa`
+                                : 'Nessuno'}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <CardDescription className="mt-2 text-sm">
+                      Gli atleti eliminati vengono anonimizzati dopo <strong>90 giorni</strong> per conformità GDPR.
+                      I dati delle iscrizioni alle gare vengono preservati.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-0">
+                    {loadingAnon ? (
+                      <div className="flex items-center justify-center py-8 text-muted-foreground">
+                        <Loader2 className="w-6 h-6 animate-spin mr-3" />
+                        Caricamento...
+                      </div>
+                    ) : softDeletedAthletes.length === 0 ? (
+                      <div className="flex items-center gap-4 p-6 rounded-3xl bg-green-500/5 border border-green-500/10">
+                        <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+                          <CheckCheck className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-green-500">Nessun atleta in attesa di anonimizzazione</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Tutti i dati sono protetti e nessuna scadenza è imminente.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {softDeletedAthletes.map((atleta) => {
+                          const isUrgent = atleta.daysLeft < 14;
+                          const isExpired = atleta.daysLeft === 0;
+                          return (
+                            <div
+                              key={atleta.id}
+                              className={cn(
+                                "p-5 rounded-3xl border transition-all",
+                                isExpired
+                                  ? "bg-red-500/10 border-red-500/20"
+                                  : isUrgent
+                                    ? "bg-orange-500/5 border-orange-500/20"
+                                    : "bg-white/5 border-white/5"
+                              )}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className={cn(
+                                    "w-9 h-9 rounded-xl flex items-center justify-center",
+                                    isExpired ? "bg-red-500/20 text-red-400"
+                                      : isUrgent ? "bg-orange-500/20 text-orange-400"
+                                        : "bg-white/10 text-muted-foreground"
+                                  )}>
+                                    {isExpired || isUrgent
+                                      ? <AlertTriangle className="w-4 h-4" />
+                                      : <Trash2 className="w-4 h-4" />}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-sm">
+                                      {atleta.first_name} {atleta.last_name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Eliminato il {new Date(atleta.deleted_at).toLocaleDateString('it-IT')}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "rounded-full text-[10px] font-black tracking-widest uppercase px-3 py-0.5",
+                                    isExpired
+                                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                      : isUrgent
+                                        ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                                        : "bg-white/5 text-muted-foreground border-white/10"
+                                  )}
+                                >
+                                  {isExpired ? 'Scaduto' : `${atleta.daysLeft}gg`}
+                                </Badge>
+                              </div>
+                              <div className="space-y-1.5">
+                                <Progress
+                                  value={atleta.pct}
+                                  className={cn(
+                                    "h-2 rounded-full",
+                                    isExpired ? "[&>div]:bg-red-500"
+                                      : isUrgent ? "[&>div]:bg-orange-400"
+                                        : "[&>div]:bg-primary/60"
+                                  )}
+                                />
+                                <p className="text-[10px] text-muted-foreground text-right">
+                                  {atleta.pct}% del periodo di retention consumato
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
