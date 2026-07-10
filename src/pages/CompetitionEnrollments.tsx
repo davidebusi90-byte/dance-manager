@@ -636,9 +636,9 @@ export default function CompetitionEnrollments() {
                                   variant="ghost"
                                   size="sm"
                                   className="h-8 px-4 text-[10px] uppercase font-bold tracking-widest bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-400 rounded-xl transition-all"
-                                  onClick={() => DISCIPLINES.forEach(d => toggleAllEvents(competition.id, d))}
+                                  onClick={() => DISCIPLINES.filter(d => d !== "Combinata").forEach(d => toggleAllEvents(competition.id, d))}
                                 >
-                                  Tutte
+                                  Championship
                                 </Button>
                                 <Button
                                   variant="ghost"
