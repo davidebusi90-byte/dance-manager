@@ -66,6 +66,17 @@ export const isEventAllowedByAge = (
           else if (name.includes("over 55")) { minAge = 55; }
           else if (name.includes("under 21")) { minAge = 16; maxAge = 20; }
           else if (name.includes("under 16")) { minAge = 6; maxAge = 15; }
+          else if (name.includes("juvenile")) { minAge = 6; maxAge = 11; }
+          else if (name.includes("junior")) { minAge = 12; maxAge = 15; }
+          else if (name.includes("youth")) { minAge = 16; maxAge = 18; }
+          else if (name.includes("adult")) {
+              minAge = 19;
+              if (name.includes("world") || name.includes("cup") || name.includes("open")) {
+                  maxAge = null;
+              } else {
+                  maxAge = 34;
+              }
+          }
     }
 
     // Se ancora non ci sono restrizioni, permettiamo tutto
@@ -179,8 +190,14 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         return false;
     }
 
-    // 6. REGOLA AS: Solo eventi Open
-    if (c === "AS" && !nameFormattedNorm.includes("open")) return false;
+    // 6. REGOLA AS: Solo eventi Open o competizioni di stampo internazionale (Campionati del Mondo, World Cup, Rising Star)
+    if (effectiveClass === "AS" && 
+        !nameFormattedNorm.includes("open") && 
+        !nameFormattedNorm.includes("world") && 
+        !nameFormattedNorm.includes("cup") && 
+        !nameFormattedNorm.includes("championship") && 
+        !nameFormattedNorm.includes("rising star")
+    ) return false;
 
     // 7. REGOLA OVER: Esclusione incrociata Over 35/45/55
     if (nameNorm.includes("over 35")) {

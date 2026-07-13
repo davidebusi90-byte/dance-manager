@@ -719,7 +719,7 @@ export default function CompetitionEnrollments() {
                                             id={`${competition.id}-${fullEventName}`}
                                             checked={isActive}
                                             className={cn(
-                                              "mt-1 rounded-md transition-all",
+                                              "mt-1 rounded-md transition-all pointer-events-none",
                                               isPending ? "ring-2 ring-primary ring-offset-2" : ""
                                             )}
                                           />
