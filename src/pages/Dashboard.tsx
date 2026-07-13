@@ -257,7 +257,7 @@ export default function Dashboard() {
             </div>
             <StatCard
               icon={Trophy}
-              value={competitions.length}
+              value={competitions.filter(c => !c.is_completed).length}
               label="Competizioni"
               colorClass="bg-amber-500/10 text-amber-600"
               onClick={() => handleStatClick("competitions")}
