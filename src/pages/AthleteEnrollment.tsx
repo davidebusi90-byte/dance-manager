@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronLeft, ChevronRight, Check, ShieldCheck } from "lucide-react";
+import { Search, User, Users, Trophy, Calendar, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronLeft, ChevronRight, Check, ShieldCheck, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getCategoryMinAge, getSportsAge, getCategorySortRank } from "@/lib/category-validation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,6 +16,7 @@ import { useUserRole } from "@/hooks/use-user-role";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Layout from "@/components/layout/Layout";
+import { QrCodeScanner } from "@/components/QrCodeScanner";
 import { 
   isEventAllowedForCouple, 
   formatEventName
@@ -49,6 +50,7 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
   const [searchParams] = useSearchParams();
   const cidInputRef = useRef<HTMLInputElement>(null);
   const [searchResults, setSearchResults] = useState<Athlete[]>([]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   useEffect(() => {
     if (step === "cid") {
@@ -374,7 +376,8 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                <CardContent className="p-8 pt-0 space-y-6">
                   <div className="flex gap-3">
                     <Input ref={cidInputRef} placeholder="Cerca Nome o CID..." value={cidCode} onChange={(e) => setCidCode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCidLookup()} className="h-14 rounded-2xl bg-white dark:bg-black/20 text-lg px-6" />
-                    <Button onClick={handleCidLookup} disabled={loading} className="w-14 h-14 rounded-2xl"><Search /></Button>
+                    <Button onClick={handleCidLookup} disabled={loading} className="w-14 h-14 rounded-2xl" title="Cerca"><Search /></Button>
+                    <Button onClick={() => setIsScannerOpen(true)} variant="outline" className="w-14 h-14 rounded-2xl border-neutral-200 dark:border-neutral-800" title="Scansiona QR Code"><QrCode className="w-6 h-6" /></Button>
                   </div>
                   {searchResults.length > 0 && (
                     <div className="rounded-2xl overflow-hidden glass border-white/10 divide-y divide-white/5">
@@ -466,6 +469,25 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
           </motion.div>
         )}
       </AnimatePresence>
+
+      <QrCodeScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={(decodedText) => {
+          let code = decodedText;
+          try {
+            const url = new URL(decodedText);
+            const codeParam = url.searchParams.get("code");
+            if (codeParam) {
+              code = codeParam;
+            }
+          } catch (e) {
+            // Not a URL
+          }
+          setCidCode(code);
+          triggerAutoLookup(code);
+        }}
+      />
     </div>
   );
 
