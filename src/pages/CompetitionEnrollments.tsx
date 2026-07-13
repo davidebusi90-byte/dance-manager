@@ -96,22 +96,28 @@ export default function CompetitionEnrollments() {
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { isAdmin, isAnyAdmin, loading: adminLoading } = useIsAdmin();
 
   const activeCompetitions = competitions.filter(c => !c.is_completed);
   const archivedCompetitions = competitions.filter(c => c.is_completed);
 
   useEffect(() => {
+    if (adminLoading) return;
+
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
       }
+      if (!isAnyAdmin) {
+        navigate("/dashboard");
+        return;
+      }
       fetchData();
     };
     checkAuth();
-  }, [navigate]);
+  }, [navigate, adminLoading, isAnyAdmin]);
 
   useEffect(() => {
     // Sync competitionClasses state with eventTypes

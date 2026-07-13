@@ -221,7 +221,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+            className={`grid grid-cols-1 md:grid-cols-2 ${role === "instructor" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-6 mb-12`}
           >
             <StatCard
               icon={Users}
@@ -239,22 +239,24 @@ export default function Dashboard() {
               onClick={() => handleStatClick("couples")}
               isActive={activeView === "couples"}
             />
-            <div
-               onClick={() => navigate("/competition-enrollments")}
-               className="cursor-pointer group"
-            >
-              <div className="h-full p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-500/10 text-indigo-600 group-hover:scale-110 transition-transform">
-                    <ClipboardList className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black">Gestione gare</p>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Gestione Classi</p>
+            {role !== "instructor" && (
+              <div
+                 onClick={() => navigate("/competition-enrollments")}
+                 className="cursor-pointer group"
+              >
+                <div className="h-full p-6 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-indigo-500/10 text-indigo-600 group-hover:scale-110 transition-transform">
+                      <ClipboardList className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-black">Gestione gare</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Gestione Classi</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
             <StatCard
               icon={Trophy}
               value={competitions.filter(c => !c.is_completed).length}
