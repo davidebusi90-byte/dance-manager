@@ -36,7 +36,7 @@ export function QrCodeScanner({ isOpen, onClose, onScanSuccess }: QrCodeScannerP
           {
             fps: 10,
             qrbox: (width, height) => {
-              const size = Math.min(width, height) * 0.7;
+              const size = Math.min(width, height) * 0.65;
               return { width: size, height: size };
             }
           },
@@ -105,8 +105,10 @@ export function QrCodeScanner({ isOpen, onClose, onScanSuccess }: QrCodeScannerP
           </DialogDescription>
         </DialogHeader>
 
-        <div className="relative flex flex-col items-center justify-center aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-3xl border border-white/10 bg-black shadow-inner my-4">
-          <div id={containerId} className="w-full h-full object-cover" />
+        <div className="relative flex flex-col items-center justify-center aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-3xl border border-white/10 bg-black shadow-inner my-4" style={{ aspectRatio: "1 / 1" }}>
+          <div id={containerId} className="absolute inset-0" style={{ overflow: "hidden" }}>
+            <style>{`#${containerId} video { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: auto !important; height: 100% !important; min-width: 100%; object-fit: cover; }`}</style>
+          </div>
           
           {loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-3">
