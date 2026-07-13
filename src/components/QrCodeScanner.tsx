@@ -106,15 +106,39 @@ export function QrCodeScanner({ isOpen, onClose, onScanSuccess }: QrCodeScannerP
         </DialogHeader>
 
         <div className="relative flex flex-col items-center justify-center w-full max-w-sm mx-auto overflow-hidden rounded-3xl border border-white/10 bg-black shadow-inner my-4" style={{ aspectRatio: "1 / 1" }}>
-          <style>{`#qr-reader-element { width: 100% !important; height: 100% !important; } #qr-reader-element video { position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; min-width: 100% !important; min-height: 100% !important; width: auto !important; height: auto !important; object-fit: cover !important; }`}</style>
+          <style>{`
+            #qr-reader-element { width: 100% !important; height: 100% !important; }
+            #qr-reader-element video { position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; min-width: 100% !important; min-height: 100% !important; width: auto !important; height: auto !important; object-fit: cover !important; }
+            #qr-reader-element__scan_region { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; }
+            #qr-reader-element__scan_region img { display: none !important; }
+            #qr-reader-element__dashboard { display: none !important; }
+            #qr-shaded-region { display: none !important; }
+          `}</style>
           <div id={containerId} className="w-full h-full" />
-          
+
+          {/* Custom square scan frame overlay */}
+          {!loading && !error && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="relative" style={{ width: "65%", aspectRatio: "1 / 1" }}>
+                {/* Top-left corner */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-sm" />
+                {/* Top-right corner */}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-sm" />
+                {/* Bottom-left corner */}
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-sm" />
+                {/* Bottom-right corner */}
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-sm" />
+              </div>
+            </div>
+          )}
+
           {loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-white gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-sm font-medium">Avvio fotocamera...</p>
             </div>
           )}
+
 
           {error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950 text-neutral-400 p-6 text-center gap-4">
