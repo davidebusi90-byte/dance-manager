@@ -190,14 +190,32 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
         return false;
     }
 
-    // 6. REGOLA AS: Solo eventi Open o competizioni di stampo internazionale (Campionati del Mondo, World Cup, Rising Star)
-    if (effectiveClass === "AS" && 
-        !nameFormattedNorm.includes("open") && 
-        !nameFormattedNorm.includes("world") && 
-        !nameFormattedNorm.includes("cup") && 
-        !nameFormattedNorm.includes("championship") && 
-        !nameFormattedNorm.includes("rising star")
-    ) return false;
+    // 6. REGOLA AS/MASTER nelle gare per fascia d'età (Juvenile 1 → Senior 5):
+    //    Le gare per fascia d'età sono ballate SOLO fino alla classe A.
+    //    AS e MASTER hanno le proprie gare Open / Rising Star / World Championship / Master.
+    //    Una gara è "per fascia d'età" se il nome contiene un pattern numerico specifico
+    //    (codici tipo 6/9, 10/11, 12/13, 14/15, 16/18, 19/34, 35/44, 45/54 ecc.)
+    //    oppure label con numero (Juvenile 1, Junior 2, Senior 3a, Youth (16/18)…).
+    //    Sono ESCLUSE da questa regola le gare genuinamente aperte (Adult Open, Over 35/45/55,
+    //    World Championship, World Cup, Rising Star, Master, "Senior Open" senza codice età).
+    const isAgeBracketRace = /\b(juvenile\s*\d|junior\s*\d|senior\s*\d|youth\s*\(|6\/9|10\/11|12\/13|14\/15|16\/18|19\/34|35\/44|45\/54|55\/60|61\/64|65\/69|70\/74|75\+)\b/i.test(nameFormattedNorm);
+    const isGenuinelyOpen =
+        nameFormattedNorm.includes("world") ||
+        nameFormattedNorm.includes("cup") ||
+        nameFormattedNorm.includes("championship") ||
+        nameFormattedNorm.includes("rising star") ||
+        nameFormattedNorm.includes("master") ||
+        nameFormattedNorm.includes("over 35") ||
+        nameFormattedNorm.includes("over 45") ||
+        nameFormattedNorm.includes("over 55") ||
+        nameFormattedNorm.includes("over 65") ||
+        nameFormattedNorm.includes("over 70") ||
+        // "Adult Open" / "Senior Open" senza codice fascia d'età = gara genuinamente aperta
+        (!isAgeBracketRace && nameFormattedNorm.includes("open"));
+
+    if ((effectiveClass === "AS" || effectiveClass === "MASTER") && isAgeBracketRace) return false;
+    if (effectiveClass === "AS" && !isGenuinelyOpen) return false;
+
 
     // 7. REGOLA OVER: Esclusione incrociata Over 35/45/55
     if (nameNorm.includes("over 35")) {

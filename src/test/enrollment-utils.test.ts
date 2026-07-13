@@ -111,7 +111,7 @@ describe('isEventAllowedForCouple', () => {
 
         it('should allow AS Senior couple to see Open events', () => {
             const event = {
-                event_name: 'Senior 3 Open Standard',
+                event_name: 'Senior Open Standard',
                 allowed_classes: ['AS', 'A'],
                 min_age: 55,
                 max_age: 60
@@ -126,7 +126,6 @@ describe('isEventAllowedForCouple', () => {
                 min_age: 55,
                 max_age: 60
             };
-            // nameFormattedNorm will be "campionato regionale standard - as" (does not contain "open")
             expect(isEventAllowedForCouple(event, asSeniorCouple)).toBe(false);
         });
 
@@ -161,7 +160,60 @@ describe('isEventAllowedForCouple', () => {
             };
             expect(isEventAllowedForCouple(event, asAdultCouple)).toBe(false);
         });
+
+        it('should NOT allow AS couple to see Juvenile 1 age-bracket races', () => {
+            const asAdultCouple = {
+                class: 'AS',
+                disciplines: ['standard'],
+                category: 'Adult',
+                discipline_info: { standard: 'AS' }
+            };
+            const event = {
+                event_name: 'Juvenile 1 (6/9) Open Standard',
+                allowed_classes: ['AS', 'A'],
+                min_age: 6,
+                max_age: 9
+            };
+            expect(isEventAllowedForCouple(event, asAdultCouple)).toBe(false);
+        });
+
+        it('should NOT allow AS couple to see Junior 2 age-bracket races', () => {
+            const asAdultCouple = {
+                class: 'AS',
+                disciplines: ['latino'],
+                category: 'Adult',
+                discipline_info: { latino: 'AS' }
+            };
+            const event = {
+                event_name: 'Junior 2 (14/15) Open Latino',
+                allowed_classes: ['AS', 'A'],
+                min_age: 14,
+                max_age: 15
+            };
+            expect(isEventAllowedForCouple(event, asAdultCouple)).toBe(false);
+        });
+
+        it('should NOT allow AS couple to see Senior 3 age-bracket races (e.g. 55/60)', () => {
+            const event = {
+                event_name: 'Senior 3a Standard',
+                allowed_classes: ['AS', 'A'],
+                min_age: 55,
+                max_age: 60
+            };
+            expect(isEventAllowedForCouple(event, asSeniorCouple)).toBe(false);
+        });
+
+        it('should allow AS couple to see Over 55 races (genuinely open)', () => {
+            const event = {
+                event_name: 'Over 55 Open Standard',
+                allowed_classes: ['AS', 'A', 'B1'],
+                min_age: 55,
+                max_age: null
+            };
+            expect(isEventAllowedForCouple(event, asSeniorCouple)).toBe(true);
+        });
     });
+
 
     describe('Over 35/45/55 Age Restrictions', () => {
         const senior1Couple = {
