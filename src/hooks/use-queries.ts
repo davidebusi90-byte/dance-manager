@@ -4,7 +4,8 @@ import { Athlete, Couple, Competition, Profile } from "@/types/dashboard";
 import { 
   filterAthletesByInstructor, 
   isInstructorResponsibleForCouple, 
-  isInstructorResponsibleForCoupleByResponsabili 
+  isInstructorResponsibleForCoupleByResponsabili,
+  isInstructorResponsibleForAthlete
 } from "@/lib/instructor-utils";
 
 export function useAthletes() {
@@ -112,9 +113,6 @@ export function useDashboardSummary(role: string, userId: string | null) {
   if (role !== "admin" && role !== "supervisor" && userId) {
     const profile = data.profiles.find(p => p.user_id === userId);
     if (profile) {
-      filteredAthletes = filterAthletesByInstructor(filteredAthletes, profile);
-      deactivatedAthletes = filterAthletesByInstructor(deactivatedAthletes, profile);
-      
       filteredCouples = filteredCouples.filter(couple => {
         const athlete1 = data.athletes.find(a => a.id === couple.athlete1_id);
         const athlete2 = data.athletes.find(a => a.id === couple.athlete2_id);
@@ -130,6 +128,23 @@ export function useDashboardSummary(role: string, userId: string | null) {
                isInstructorResponsibleForCouple(athlete1, athlete2, profile) ||
                isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.responsabili || []);
       });
+
+      // Build a set of all athlete IDs belonging to visible couples
+      const visibleAthleteIds = new Set([
+        ...filteredCouples.flatMap(c => [c.athlete1_id, c.athlete2_id]),
+        ...deactivatedCouples.flatMap(c => [c.athlete1_id, c.athlete2_id])
+      ]);
+
+      // Filter athletes, keeping those directly responsible OR in any visible couple
+      filteredAthletes = data.athletes.filter(a => !a.is_deleted && (
+        isInstructorResponsibleForAthlete(a, profile) ||
+        visibleAthleteIds.has(a.id)
+      ));
+
+      deactivatedAthletes = data.athletes.filter(a => a.is_deleted && (
+        isInstructorResponsibleForAthlete(a, profile) ||
+        visibleAthleteIds.has(a.id)
+      ));
     } else {
       filteredAthletes = [];
       deactivatedAthletes = [];

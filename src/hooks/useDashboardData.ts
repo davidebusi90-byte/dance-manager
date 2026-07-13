@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { 
     filterAthletesByInstructor, 
     isInstructorResponsibleForCouple, 
-    isInstructorResponsibleForCoupleByResponsabili 
+    isInstructorResponsibleForCoupleByResponsabili,
+    isInstructorResponsibleForAthlete
 } from "@/lib/instructor-utils";
 import { Athlete, Couple, Competition, Profile } from "@/types/dashboard";
 
@@ -72,9 +73,6 @@ export function useDashboardData(role: string, userId: string | null) {
             if (role !== "admin" && role !== "supervisor") {
                 const currentUserProfile = rawProfiles.find(p => p.user_id === userId);
                 if (currentUserProfile) {
-                    fetchedAthletes = filterAthletesByInstructor(fetchedAthletes, currentUserProfile);
-                    fetchedDeactivatedAthletes = filterAthletesByInstructor(fetchedDeactivatedAthletes, currentUserProfile);
-                    
                     fetchedCouples = fetchedCouples.filter(couple => {
                         const athlete1 = rawAthletes.find(a => a.id === couple.athlete1_id);
                         const athlete2 = rawAthletes.find(a => a.id === couple.athlete2_id);
@@ -89,6 +87,25 @@ export function useDashboardData(role: string, userId: string | null) {
                         return couple.instructor_id === currentUserProfile.id || 
                                isInstructorResponsibleForCouple(athlete1, athlete2, currentUserProfile) ||
                                isInstructorResponsibleForCoupleByResponsabili(currentUserProfile.full_name, couple.responsabili || []);
+                    });
+
+                    // Build a set of all athlete IDs belonging to visible couples
+                    const visibleAthleteIds = new Set([
+                        ...fetchedCouples.flatMap(c => [c.athlete1_id, c.athlete2_id]),
+                        ...fetchedDeactivatedCouples.flatMap(c => [c.athlete1_id, c.athlete2_id])
+                    ]);
+
+                    // Keep athletes who are directly responsible or are part of any visible couple
+                    fetchedAthletes = uniqueRawAthletes.filter(a => !a.is_deleted && (
+                        isInstructorResponsibleForAthlete(a, currentUserProfile) ||
+                        visibleAthleteIds.has(a.id)
+                    ));
+
+                    fetchedDeactivatedAthletes = uniqueRawAthletes.filter(a => {
+                        if (!a.is_deleted) return false;
+                        const nameKey = `${(a.first_name || '').trim().toLowerCase()}-${(a.last_name || '').trim().toLowerCase()}`;
+                        if (activeNames.has(nameKey)) return false;
+                        return isInstructorResponsibleForAthlete(a, currentUserProfile) || visibleAthleteIds.has(a.id);
                     });
                 } else {
                     console.warn("[DashboardData] Profile not found for logged user.");
