@@ -29,6 +29,22 @@ interface EventType {
   allowed_classes: string[];
   min_age: number | null;
   max_age: number | null;
+  dance_category: "standard" | "latino" | "combinata" | "show_dance" | null;
+}
+
+function getDanceCategoryBadge(category: EventType["dance_category"]) {
+  switch (category) {
+    case "standard":
+      return { label: "Standard", className: "bg-blue-500/15 text-blue-400 border-blue-500/20" };
+    case "latino":
+      return { label: "Latini", className: "bg-orange-500/15 text-orange-400 border-orange-500/20" };
+    case "combinata":
+      return { label: "Combinata", className: "bg-purple-500/15 text-purple-400 border-purple-500/20" };
+    case "show_dance":
+      return { label: "Show Dance", className: "bg-pink-500/15 text-pink-400 border-pink-500/20" };
+    default:
+      return null;
+  }
 }
 
 export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?: boolean }) {
@@ -507,7 +523,8 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                                {eventTypes.filter(et => et.competition_id === comp.id && isEventAllowedForCouple(et, selectedCouple)).map(et => (
                                  <button key={et.id} onClick={() => toggleRace(comp.id, et.id)} className={cn("p-4 rounded-2xl border text-sm font-bold flex items-center gap-3", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-primary text-white border-transparent" : "bg-white/40 dark:bg-white/5 border-white/10")}>
                                     <Checkbox checked={(selectedRaces[comp.id] || []).includes(et.id)} />
-                                    {formatEventName(et.event_name)}
+                                    <span className="flex-1 text-left">{formatEventName(et.event_name)}</span>
+                                    {(() => { const badge = getDanceCategoryBadge(et.dance_category); return badge ? <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-white/20 text-white border-white/30" : badge.className)}>{badge.label}</span> : null; })()}
                                  </button>
                                ))}
                              </div>
