@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Layout from "@/components/layout/Layout";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 type Instructor = {
   profile_id: string;
@@ -523,24 +525,45 @@ export default function Instructors({ isEmbedded = false }: { isEmbedded?: boole
                               <div>
                                 <div className="flex items-center gap-2 group/name">
                                   <span className="font-bold text-lg">{i.full_name}</span>
-                                  <Button variant="ghost" size="icon" className="w-6 h-6 opacity-0 group-hover/name:opacity-100" onClick={() => handleEditName(i)}>
-                                    <Edit2 className="w-3 h-3 text-muted-foreground" />
-                                  </Button>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="w-6 h-6 opacity-0 group-hover/name:opacity-100" onClick={() => handleEditName(i)}>
+                                        <Edit2 className="w-3 h-3 text-muted-foreground" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Modifica nome</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 </div>
                                 <div className="flex items-center gap-2 group/email">
                                   <span className="text-sm text-muted-foreground font-medium">{i.email ?? "-"}</span>
-                                  <Button variant="ghost" size="icon" className="w-6 h-6 opacity-0 group-hover/email:opacity-100" onClick={() => handleEditEmail(i)}>
-                                    <Mail className="w-3 h-3 text-muted-foreground" />
-                                  </Button>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="w-6 h-6 opacity-0 group-hover/email:opacity-100" onClick={() => handleEditEmail(i)}>
+                                        <Mail className="w-3 h-3 text-muted-foreground" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Modifica indirizzo email</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                   {i.email && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="w-6 h-6 text-red-500 opacity-0 group-hover/email:opacity-100" 
-                                      onClick={() => window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${i.email}`, '_blank')}
-                                    >
-                                      <Mail className="w-3 h-3" />
-                                    </Button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="icon" 
+                                          className="w-6 h-6 text-red-500 opacity-0 group-hover/email:opacity-100" 
+                                          onClick={() => window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${i.email}`, '_blank')}
+                                        >
+                                          <Mail className="w-3 h-3" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Invia email (apri Gmail)</p>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   )}
                                 </div>
                               </div>
@@ -567,15 +590,22 @@ export default function Instructors({ isEmbedded = false }: { isEmbedded?: boole
                           </div>
                         </td>
                         <td className="px-8 py-6 text-right pr-8">
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            disabled={deletingId === i.user_id}
-                            onClick={() => handleDeleteInstructor(i)}
-                            className="rounded-xl shadow-lg hover:bg-red-600 transition-all w-10 h-10"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                disabled={deletingId === i.user_id}
+                                onClick={() => handleDeleteInstructor(i)}
+                                className="rounded-xl shadow-lg hover:bg-red-600 transition-all w-10 h-10"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Elimina istruttore</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </td>
                       </motion.tr>
                     ))}
