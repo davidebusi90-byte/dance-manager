@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Athlete, Couple, Competition } from "@/types/dashboard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -32,6 +32,7 @@ interface EventType {
 }
 
 export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?: boolean }) {
+  const navigate = useNavigate();
   const [cidCode, setCidCode] = useState("");
   const [athlete, setAthlete] = useState<Athlete | null>(null);
   const [couples, setCouples] = useState<Couple[]>([]);
@@ -86,7 +87,9 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
       }
 
       const found = (result.data || []).find(
-        (a: Athlete) => a.code.toLowerCase() === code.toLowerCase()
+        (a: Athlete) => 
+          a.code.toLowerCase() === code.toLowerCase() ||
+          (a.qr_code && a.qr_code.toLowerCase() === code.toLowerCase())
       );
 
       if (found) {
@@ -319,6 +322,18 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
   const content = (
     <div className={isEmbedded ? "max-w-2xl mx-auto" : "min-h-[80vh] py-8 container mx-auto px-4 max-w-2xl"}>
       {!isEmbedded && (
+        <div className="mb-8 flex justify-start">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/auth")}
+            className="rounded-2xl flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-900 font-bold"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            <span>Torna all'Accesso</span>
+          </Button>
+        </div>
+      )}
+      {!isEmbedded && (
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-primary to-accent rounded-[2rem] p-5 flex items-center justify-center shadow-2xl shadow-primary/20 rotate-3 hover:rotate-0 transition-transform duration-500">
               <img src="/logo.png" alt="Logo" className="w-full h-full object-contain brightness-0 invert" />
@@ -375,7 +390,14 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                </CardHeader>
                <CardContent className="p-8 pt-0 space-y-6">
                   <div className="flex gap-3">
-                    <Input ref={cidInputRef} placeholder="Cerca Nome o CID..." value={cidCode} onChange={(e) => setCidCode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCidLookup()} className="h-14 rounded-2xl bg-white dark:bg-black/20 text-lg px-6" />
+                    <Input 
+                      ref={cidInputRef} 
+                      placeholder={userRole === "admin" || userRole === "supervisor" || userRole === "instructor" ? "Cerca Nome o CID..." : "Cerca per codice CID..."} 
+                      value={cidCode} 
+                      onChange={(e) => setCidCode(e.target.value)} 
+                      onKeyDown={(e) => e.key === "Enter" && handleCidLookup()} 
+                      className="h-14 rounded-2xl bg-white dark:bg-black/20 text-lg px-6" 
+                    />
                     <Button onClick={handleCidLookup} disabled={loading} className="w-14 h-14 rounded-2xl" title="Cerca"><Search /></Button>
                     <Button onClick={() => setIsScannerOpen(true)} variant="outline" className="w-14 h-14 rounded-2xl border-neutral-200 dark:border-neutral-800" title="Scansiona QR Code"><QrCode className="w-6 h-6" /></Button>
                   </div>

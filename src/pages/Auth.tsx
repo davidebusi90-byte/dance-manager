@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ClipboardList } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Auth() {
@@ -67,6 +67,25 @@ export default function Auth() {
                 {loading ? <Loader2 className="animate-spin" /> : <span>Accedi</span>}
               </Button>
             </form>
+
+            <div className="relative flex items-center justify-center my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+              </div>
+              <div className="relative px-3 bg-white/70 dark:bg-black/70 backdrop-blur-md rounded-full text-[10px] uppercase tracking-widest font-black text-muted-foreground/50">
+                Oppure
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate("/enroll")}
+              className="w-full h-14 rounded-2xl border-neutral-200 dark:border-neutral-800 bg-white/40 dark:bg-black/40 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-lg font-bold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+            >
+              <ClipboardList className="w-5 h-5 text-muted-foreground" />
+              <span>Vai a Iscrizioni</span>
+            </Button>
           </CardContent>
           <div className="bg-primary/5 p-4 text-center border-t border-white/5">
             <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/40">© 2026 Dance Manager • Premium Edition</p>
