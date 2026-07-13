@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { filterAthletesByInstructor } from "@/lib/instructor-utils";
+import { 
+    filterAthletesByInstructor, 
+    isInstructorResponsibleForCouple, 
+    isInstructorResponsibleForCoupleByResponsabili 
+} from "@/lib/instructor-utils";
 import { Athlete, Couple, Competition, Profile } from "@/types/dashboard";
 
 export type { Athlete, Couple, Competition, Profile };
@@ -70,7 +74,22 @@ export function useDashboardData(role: string, userId: string | null) {
                 if (currentUserProfile) {
                     fetchedAthletes = filterAthletesByInstructor(fetchedAthletes, currentUserProfile);
                     fetchedDeactivatedAthletes = filterAthletesByInstructor(fetchedDeactivatedAthletes, currentUserProfile);
-                    // Keep existing couples logic
+                    
+                    fetchedCouples = fetchedCouples.filter(couple => {
+                        const athlete1 = rawAthletes.find(a => a.id === couple.athlete1_id);
+                        const athlete2 = rawAthletes.find(a => a.id === couple.athlete2_id);
+                        return couple.instructor_id === currentUserProfile.id || 
+                               isInstructorResponsibleForCouple(athlete1, athlete2, currentUserProfile) ||
+                               isInstructorResponsibleForCoupleByResponsabili(currentUserProfile.full_name, couple.responsabili || []);
+                    });
+                    
+                    fetchedDeactivatedCouples = fetchedDeactivatedCouples.filter(couple => {
+                        const athlete1 = rawAthletes.find(a => a.id === couple.athlete1_id);
+                        const athlete2 = rawAthletes.find(a => a.id === couple.athlete2_id);
+                        return couple.instructor_id === currentUserProfile.id || 
+                               isInstructorResponsibleForCouple(athlete1, athlete2, currentUserProfile) ||
+                               isInstructorResponsibleForCoupleByResponsabili(currentUserProfile.full_name, couple.responsabili || []);
+                    });
                 } else {
                     console.warn("[DashboardData] Profile not found for logged user.");
                     fetchedAthletes = [];

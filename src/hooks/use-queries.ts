@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Athlete, Couple, Competition, Profile } from "@/types/dashboard";
-import { filterAthletesByInstructor } from "@/lib/instructor-utils";
+import { 
+  filterAthletesByInstructor, 
+  isInstructorResponsibleForCouple, 
+  isInstructorResponsibleForCoupleByResponsabili 
+} from "@/lib/instructor-utils";
 
 export function useAthletes() {
   return useQuery({
@@ -110,7 +114,22 @@ export function useDashboardSummary(role: string, userId: string | null) {
     if (profile) {
       filteredAthletes = filterAthletesByInstructor(filteredAthletes, profile);
       deactivatedAthletes = filterAthletesByInstructor(deactivatedAthletes, profile);
-      // For couples, we assume they are already linked via instructor_id or filtering is done on the fly
+      
+      filteredCouples = filteredCouples.filter(couple => {
+        const athlete1 = data.athletes.find(a => a.id === couple.athlete1_id);
+        const athlete2 = data.athletes.find(a => a.id === couple.athlete2_id);
+        return couple.instructor_id === profile.id || 
+               isInstructorResponsibleForCouple(athlete1, athlete2, profile) ||
+               isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.responsabili || []);
+      });
+      
+      deactivatedCouples = deactivatedCouples.filter(couple => {
+        const athlete1 = data.athletes.find(a => a.id === couple.athlete1_id);
+        const athlete2 = data.athletes.find(a => a.id === couple.athlete2_id);
+        return couple.instructor_id === profile.id || 
+               isInstructorResponsibleForCouple(athlete1, athlete2, profile) ||
+               isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.responsabili || []);
+      });
     } else {
       filteredAthletes = [];
       deactivatedAthletes = [];
