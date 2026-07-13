@@ -483,7 +483,11 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                         <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white"><Users /></div>
                         <div>
                           <p className="text-[10px] font-black uppercase text-primary">Coppia Selezionata</p>
-                          <p className="font-black text-xl">{selectedCouple.athlete1.id === athlete.id ? selectedCouple.athlete2.full_name : selectedCouple.athlete1.full_name}</p>
+                          <p className="font-black text-xl">
+                            {selectedCouple.athlete1.id === athlete.id 
+                               ? `${selectedCouple.athlete2.first_name} ${selectedCouple.athlete2.last_name}` 
+                               : `${selectedCouple.athlete1.first_name} ${selectedCouple.athlete1.last_name}`}
+                          </p>
                         </div>
                       </div>
                       <Button variant="ghost" onClick={() => setSelectedCouple(null)} className="rounded-xl">Cambia</Button>
