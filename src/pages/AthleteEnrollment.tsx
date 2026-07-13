@@ -387,7 +387,7 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
             return (
               <div key={s.id} className="flex items-center">
                 <div className={cn("w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300", 
-                  isActive ? "bg-primary text-white scale-110 shadow-lg shadow-primary/20" : isCompleted ? "bg-primary/20 text-primary" : "bg-neutral-200 dark:bg-neutral-800 text-muted-foreground opacity-50")}>
+                  isActive ? "bg-neutral-900 dark:bg-neutral-800 text-white scale-110 shadow-lg border border-neutral-700 dark:border-neutral-600" : isCompleted ? "bg-primary/20 text-primary" : "bg-neutral-200 dark:bg-neutral-800 text-muted-foreground opacity-50")}>
                   <s.icon className="w-5 h-5" />
                 </div>
                 {i < 2 && <div className={cn("w-8 h-1 mx-2 rounded-full", isCompleted ? "bg-primary/30" : "bg-neutral-200 dark:bg-neutral-800")} />}
@@ -478,20 +478,19 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                 </div>
               ) : (
                 <div className="space-y-6">
-                   <div className="rounded-3xl glass border-white/10 p-6 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white"><Users /></div>
-                        <div>
-                          <p className="text-[10px] font-black uppercase text-primary">Coppia Selezionata</p>
-                          <p className="font-black text-xl">
-                            {selectedCouple.athlete1.id === athlete.id 
-                               ? `${selectedCouple.athlete2.first_name} ${selectedCouple.athlete2.last_name}` 
-                               : `${selectedCouple.athlete1.first_name} ${selectedCouple.athlete1.last_name}`}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" onClick={() => setSelectedCouple(null)} className="rounded-xl">Cambia</Button>
-                   </div>
+                    <div className="rounded-3xl glass border-white/10 p-6 flex items-center justify-start gap-4">
+                       <div className="flex items-center gap-4">
+                         <div className="w-12 h-12 bg-neutral-200 dark:bg-neutral-800 rounded-2xl flex items-center justify-center text-neutral-800 dark:text-neutral-200"><Users /></div>
+                         <div>
+                           <p className="text-[10px] font-black uppercase text-primary">Coppia Selezionata</p>
+                           <p className="font-black text-xl">
+                             {selectedCouple.athlete1.id === athlete.id 
+                                ? `${selectedCouple.athlete2.first_name} ${selectedCouple.athlete2.last_name}` 
+                                : `${selectedCouple.athlete1.first_name} ${selectedCouple.athlete1.last_name}`}
+                           </p>
+                         </div>
+                       </div>
+                    </div>
                    <div className="space-y-4">
                       {competitions.filter(c => isCompetitionAllowed(c, selectedCouple)).map(comp => (
                         <div key={comp.id} className={cn("rounded-[2rem] border p-1 transition-all", selectedCompetitions.has(comp.id) ? "border-primary bg-primary/5" : "glass border-white/10")}>
