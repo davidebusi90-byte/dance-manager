@@ -47,7 +47,7 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<"cid" | "enrollment" | "success" | "couple">("cid");
   const { toast } = useToast();
-  const { role: userRole } = useUserRole();
+  const { role: userRole, loading: isRoleLoading } = useUserRole();
   const [searchParams] = useSearchParams();
   const cidInputRef = useRef<HTMLInputElement>(null);
   const [searchResults, setSearchResults] = useState<Athlete[]>([]);
@@ -88,17 +88,19 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
 
       const found = (result.data || []).find(
         (a: Athlete) => 
-          a.code.toLowerCase() === code.toLowerCase() ||
-          (a.qr_code && a.qr_code.toLowerCase() === code.toLowerCase())
+          a.qr_code && a.qr_code.toLowerCase() === code.toLowerCase()
       );
 
       if (found) {
         setAthlete(found);
         await fetchCouples(found.id);
         setStep("enrollment");
+      } else {
+        toast({ title: "Atleta non trovato o QR Code non valido", variant: "destructive" });
       }
     } catch (err) {
       console.error("Auto-lookup error:", err);
+      toast({ title: "Errore durante la scansione", variant: "destructive" });
     }
     setLoading(false);
   };
@@ -111,6 +113,11 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
   };
 
   const handleCidLookup = async () => {
+    if (userRole !== "admin") {
+      toast({ title: "La ricerca manuale è riservata agli amministratori", variant: "destructive" });
+      return;
+    }
+
     const trimmed = cidCode.trim();
     if (!trimmed) {
       toast({ title: "Inserisci il tuo codice CID", variant: "destructive" });
@@ -135,7 +142,11 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
       const isPrivileged = userRole === "admin" || userRole === "supervisor" || userRole === "instructor";
       
       if (isPrivileged) {
-        const foundExact = result.data.find((a: Athlete) => a.code.toLowerCase() === trimmed.toLowerCase());
+        const foundExact = result.data.find(
+          (a: Athlete) => 
+            a.code.toLowerCase() === trimmed.toLowerCase() ||
+            (a.qr_code && a.qr_code.toLowerCase() === trimmed.toLowerCase())
+        );
         
         if (foundExact) {
           handleSelectAthlete(foundExact);
@@ -319,6 +330,16 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
     setSubmitting(false);
   };
 
+  if (isRoleLoading) {
+    const loadingContent = (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground font-medium animate-pulse">Caricamento...</p>
+      </div>
+    );
+    return isEmbedded ? loadingContent : <Layout>{loadingContent}</Layout>;
+  }
+
   const content = (
     <div className={isEmbedded ? "max-w-2xl mx-auto" : "min-h-[80vh] py-8 container mx-auto px-4 max-w-2xl"}>
       {!isEmbedded && (
@@ -384,34 +405,51 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                   <CardTitle className="text-2xl font-display font-bold flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                       <User className="w-5 h-5" />
-                    </div>
-                    {userRole === "admin" ? "Ricerca Atleta" : "Accesso Portale"}
+                    </div>                     {userRole === "admin" ? "Ricerca Atleta" : "Accesso Portale"}
                   </CardTitle>
                </CardHeader>
                <CardContent className="p-8 pt-0 space-y-6">
-                  <div className="flex gap-3">
-                    <Input 
-                      ref={cidInputRef} 
-                      placeholder={userRole === "admin" || userRole === "supervisor" || userRole === "instructor" ? "Cerca Nome o CID..." : "Cerca per codice CID..."} 
-                      value={cidCode} 
-                      onChange={(e) => setCidCode(e.target.value)} 
-                      onKeyDown={(e) => e.key === "Enter" && handleCidLookup()} 
-                      className="h-14 rounded-2xl bg-white dark:bg-black/20 text-lg px-6" 
-                    />
-                    <Button onClick={handleCidLookup} disabled={loading} className="w-14 h-14 rounded-2xl" title="Cerca"><Search /></Button>
-                    <Button onClick={() => setIsScannerOpen(true)} variant="outline" className="w-14 h-14 rounded-2xl border-neutral-200 dark:border-neutral-800" title="Scansiona QR Code"><QrCode className="w-6 h-6" /></Button>
-                  </div>
-                  {searchResults.length > 0 && (
-                    <div className="rounded-2xl overflow-hidden glass border-white/10 divide-y divide-white/5">
-                      {searchResults.map(a => (
-                        <button key={a.id} onClick={() => handleSelectAthlete(a)} className="w-full text-left p-4 hover:bg-primary/5 flex justify-between items-center group">
-                          <div>
-                            <p className="font-bold group-hover:text-primary transition-colors">{a.first_name} {a.last_name}</p>
-                            <p className="text-xs text-muted-foreground">CID: {a.code} • {a.category} {a.class}</p>
-                          </div>
-                          <ChevronRight className="w-5 h-5" />
-                        </button>
-                      ))}
+                  {userRole === "admin" ? (
+                    <>
+                      <div className="flex gap-3">
+                        <Input 
+                          ref={cidInputRef} 
+                          placeholder="Cerca Nome o CID..." 
+                          value={cidCode} 
+                          onChange={(e) => setCidCode(e.target.value)} 
+                          onKeyDown={(e) => e.key === "Enter" && handleCidLookup()} 
+                          className="h-14 rounded-2xl bg-white dark:bg-black/20 text-lg px-6" 
+                        />
+                        <Button onClick={handleCidLookup} disabled={loading} className="w-14 h-14 rounded-2xl" title="Cerca"><Search /></Button>
+                        <Button onClick={() => setIsScannerOpen(true)} variant="outline" className="w-14 h-14 rounded-2xl border-neutral-200 dark:border-neutral-800" title="Scansiona QR Code"><QrCode className="w-6 h-6" /></Button>
+                      </div>
+                      {searchResults.length > 0 && (
+                        <div className="rounded-2xl overflow-hidden glass border-white/10 divide-y divide-white/5">
+                          {searchResults.map(a => (
+                            <button key={a.id} onClick={() => handleSelectAthlete(a)} className="w-full text-left p-4 hover:bg-primary/5 flex justify-between items-center group">
+                              <div>
+                                <p className="font-bold group-hover:text-primary transition-colors">{a.first_name} {a.last_name}</p>
+                                <p className="text-xs text-muted-foreground">CID: {a.code} • {a.category} {a.class}</p>
+                              </div>
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                      <p className="text-muted-foreground text-center font-medium max-w-sm">
+                        Scansiona il tuo QR Code per accedere alla pagina di iscrizione.
+                      </p>
+                      <Button 
+                        onClick={() => setIsScannerOpen(true)} 
+                        className="w-full h-16 rounded-3xl text-lg font-black uppercase flex items-center justify-center gap-3 shadow-xl transition-all active:scale-95 bg-primary hover:bg-primary/90 text-white"
+                        title="Scansiona QR Code"
+                      >
+                        <QrCode className="w-6 h-6" />
+                        <span>Scansiona QR Code</span>
+                      </Button>
                     </div>
                   )}
                </CardContent>

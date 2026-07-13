@@ -62,14 +62,19 @@ Deno.serve(async (req) => {
       if (q.length < 2) throw new Error("Query troppo breve");
 
       const sanitized = q.replace(/[^a-zA-ZÀ-ÿ0-9\s'-]/g, "").substring(0, 50);
-      const pattern = `%${sanitized}%`;
+      const words = sanitized.split(/\s+/).filter(Boolean);
 
-      const { data, error } = await supabase
+      let queryBuilder = supabase
         .from("athletes")
         .select("id, code, first_name, last_name, category, class, qr_code, discipline_info")
-        .eq("is_deleted", false)
-        .or(`first_name.ilike.${pattern},last_name.ilike.${pattern},code.ilike.${pattern},qr_code.ilike.${pattern}`)
-        .limit(20);
+        .eq("is_deleted", false);
+
+      for (const word of words) {
+        const pattern = `%${word}%`;
+        queryBuilder = queryBuilder.or(`first_name.ilike.${pattern},last_name.ilike.${pattern},code.ilike.${pattern},qr_code.ilike.${pattern}`);
+      }
+
+      const { data, error } = await queryBuilder.limit(20);
 
       if (error) throw error;
       return new Response(JSON.stringify({ data }), {
