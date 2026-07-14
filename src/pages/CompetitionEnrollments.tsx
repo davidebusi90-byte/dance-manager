@@ -117,11 +117,11 @@ export default function CompetitionEnrollments() {
       const nameA = a.event_name.toLowerCase();
       const nameB = b.event_name.toLowerCase();
       
-      const isOverOrUnderA = nameA.includes("over") || nameA.includes("under");
-      const isOverOrUnderB = nameB.includes("over") || nameB.includes("under");
+      const isAtEndA = nameA.includes("over") || nameA.includes("under") || nameA.includes("open") || nameA.includes("master");
+      const isAtEndB = nameB.includes("over") || nameB.includes("under") || nameB.includes("open") || nameB.includes("master");
       
-      if (isOverOrUnderA && !isOverOrUnderB) return 1;
-      if (!isOverOrUnderA && isOverOrUnderB) return -1;
+      if (isAtEndA && !isAtEndB) return 1;
+      if (!isAtEndA && isAtEndB) return -1;
       
       const minAgeA = a.min_age ?? 0;
       const minAgeB = b.min_age ?? 0;
