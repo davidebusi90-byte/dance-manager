@@ -1,0 +1,355 @@
+AUDIT REPORT: INSTRUCTOR COUPLES VISIBILITY
+Generated on: 2026-07-13T10:31:02.601Z
+Total Instructors: 10
+Total Active Couples: 53
+========================================================
+
+Instructor: Michela Natali (ID: 24ced4bc-85e4-4968-8898-3ebbf880df40)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 28
+- Difference: +28 couples
+
+  Newly visible couples:
+  * ALESSIA AFFRONTI & MATTEO PERSICO (Linked to athlete(s) via athlete_instructors)
+  * GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO (Linked to athlete(s) via athlete_instructors)
+  * LUCA BENETTI & SORINA CUCULAS (Linked to athlete(s) via athlete_instructors)
+  * FRANCESCO BEVILACQUA & GIULIA ANDREA GIANNOTTI (Linked to athlete(s) via athlete_instructors)
+  * CIRILLO CAPUTO & SILVIA TABARRONI (Linked to athlete(s) via athlete_instructors)
+  * MICHELE PERSICO & AURORA ZUPPIROLI (Linked to athlete(s) via athlete_instructors)
+  * DANIELE SERAFINI & BARBARA SILVESTRI (Linked to athlete(s) via athlete_instructors)
+  * GIOVANNI BONADONNA & LETIZIA NASI (Linked to athlete(s) via athlete_instructors)
+  * ELISA GARUTI & MICHELE MARCHETTI (Linked to athlete(s) via athlete_instructors)
+  * LUDOVICO ACCORSI & SERENA LORENZANI (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ALBERGHINI & MICHELE BARTOLOZZI (Linked to athlete(s) via athlete_instructors)
+  * LUCA ALBERGHINI & ELENA BABINKOVA (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ANSALONI & ANTONIO RUSSO (Linked to athlete(s) via athlete_instructors)
+  * EMANUEL BEVILACQUA & ALESSANDRA MANDORINI (Linked to athlete(s) via athlete_instructors)
+  * GABRIEL CRISTOFORI & ASIA FURGERI (Linked to athlete(s) via athlete_instructors)
+  * EZIO GORETTI & SABRINA SCAGLIARINI (Linked to athlete(s) via athlete_instructors)
+  * ELIA MARZOCCHI & ARIANNA MORETTI (Linked to athlete(s) via athlete_instructors)
+  * IMMACOLATA PENTORIERI & PAOLO VATIERO (Linked to athlete(s) via athlete_instructors)
+  * SABRINA COLOMBARI & CHRISTIAN LUPPI (Linked to athlete(s) via athlete_instructors)
+  * ANITA MAZZONI & SAMUELE NATALINI (Linked to athlete(s) via athlete_instructors)
+  * PAOLA BALBONI & GRAZIANO GALLERANI (Linked to athlete(s) via athlete_instructors)
+  * MARCO BRIGANTI & WHITNEY MUSAKU (Linked to athlete(s) via athlete_instructors)
+  * MAURA FANTUZZI & MASSIMO GHERARDI (Linked to athlete(s) via athlete_instructors)
+  * REBECCA FERRARI & MARCELLO STALLONE (Linked to athlete(s) via athlete_instructors)
+  * NICHOLAS FIORASO & CHARLIZE VALENTE (Linked to athlete(s) via athlete_instructors)
+  * CATERINA ALBERGHINI & ALESSANDRO REINA (Linked to athlete(s) via athlete_instructors)
+  * MARCO BENETTI  & MATILDE MODESTI (Linked to athlete(s) via athlete_instructors)
+  * CRISTINA  DAVALLI O DALLAVALLE & MASSIMILIANO  PIEROTTI  (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - ALESSIA AFFRONTI & MATTEO PERSICO
+  - GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO
+  - LUCA BENETTI & SORINA CUCULAS
+  - FRANCESCO BEVILACQUA & GIULIA ANDREA GIANNOTTI
+  - CIRILLO CAPUTO & SILVIA TABARRONI
+  - MICHELE PERSICO & AURORA ZUPPIROLI
+  - DANIELE SERAFINI & BARBARA SILVESTRI
+  - GIOVANNI BONADONNA & LETIZIA NASI
+  - ELISA GARUTI & MICHELE MARCHETTI
+  - LUDOVICO ACCORSI & SERENA LORENZANI
+  - GIULIA ALBERGHINI & MICHELE BARTOLOZZI
+  - LUCA ALBERGHINI & ELENA BABINKOVA
+  - GIULIA ANSALONI & ANTONIO RUSSO
+  - EMANUEL BEVILACQUA & ALESSANDRA MANDORINI
+  - GABRIEL CRISTOFORI & ASIA FURGERI
+  - EZIO GORETTI & SABRINA SCAGLIARINI
+  - ELIA MARZOCCHI & ARIANNA MORETTI
+  - IMMACOLATA PENTORIERI & PAOLO VATIERO
+  - SABRINA COLOMBARI & CHRISTIAN LUPPI
+  - ANITA MAZZONI & SAMUELE NATALINI
+  - PAOLA BALBONI & GRAZIANO GALLERANI
+  - MARCO BRIGANTI & WHITNEY MUSAKU
+  - MAURA FANTUZZI & MASSIMO GHERARDI
+  - REBECCA FERRARI & MARCELLO STALLONE
+  - NICHOLAS FIORASO & CHARLIZE VALENTE
+  - CATERINA ALBERGHINI & ALESSANDRO REINA
+  - MARCO BENETTI  & MATILDE MODESTI
+  - CRISTINA  DAVALLI O DALLAVALLE & MASSIMILIANO  PIEROTTI 
+
+========================================================
+
+Instructor: Fabio Bernardini (ID: 4614552d-5182-44f3-97b9-96b491fef9b0)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 3
+- Difference: +3 couples
+
+  Newly visible couples:
+  * MATTIA BELLINATO & ANGELICA  SCIANGUETTA  (Linked to athlete(s) via athlete_instructors)
+  * NOEMI MANTOVANI & ENRICO PREVIDI (Linked to athlete(s) via athlete_instructors)
+  * MATHIAS GIBERTI & NOEMI SANFILIPPO (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - MATTIA BELLINATO & ANGELICA  SCIANGUETTA 
+  - NOEMI MANTOVANI & ENRICO PREVIDI
+  - MATHIAS GIBERTI & NOEMI SANFILIPPO
+
+========================================================
+
+Instructor: Andrea Giannotti (ID: e36dc3c6-5b54-4032-953b-bd82599d5e44)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 4
+- Difference: +4 couples
+
+  Newly visible couples:
+  * GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO (Linked to athlete(s) via athlete_instructors)
+  * LUDOVICO ACCORSI & SERENA LORENZANI (Linked to athlete(s) via athlete_instructors)
+  * ALESSANDRA MUSIANI & MAURIZIO RESENTERRA (Linked to athlete(s) via athlete_instructors)
+  * VALERIO GATTI & PAOLA METTA (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO
+  - LUDOVICO ACCORSI & SERENA LORENZANI
+  - ALESSANDRA MUSIANI & MAURIZIO RESENTERRA
+  - VALERIO GATTI & PAOLA METTA
+
+========================================================
+
+Instructor: Francesco Bevilacqua (ID: 17a7c4e8-cfb8-4923-a56f-cc9f20c4f877)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 4
+- Difference: +4 couples
+
+  Newly visible couples:
+  * GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO (Linked to athlete(s) via athlete_instructors)
+  * LUDOVICO ACCORSI & SERENA LORENZANI (Linked to athlete(s) via athlete_instructors)
+  * ALESSANDRA MUSIANI & MAURIZIO RESENTERRA (Linked to athlete(s) via athlete_instructors)
+  * VALERIO GATTI & PAOLA METTA (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO
+  - LUDOVICO ACCORSI & SERENA LORENZANI
+  - ALESSANDRA MUSIANI & MAURIZIO RESENTERRA
+  - VALERIO GATTI & PAOLA METTA
+
+========================================================
+
+Instructor: Serena Monari (ID: 1170136e-6567-41b1-99e7-49d091dcdec1)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 9
+- Difference: +9 couples
+
+  Newly visible couples:
+  * JACOPO BOMBARDI & DARIA LAZZARI (Linked to athlete(s) via athlete_instructors)
+  * CIRILLO CAPUTO & SILVIA TABARRONI (Linked to athlete(s) via athlete_instructors)
+  * GIADA CARTANI & FRANCESCO NATALE (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ANSALONI & ANTONIO RUSSO (Linked to athlete(s) via athlete_instructors)
+  * GIACOMO CARNEVALE & RACHELE ROSSI (Linked to athlete(s) via athlete_instructors)
+  * SIMONE CABURAZZI & SARA FANTONI (Linked to athlete(s) via athlete_instructors)
+  * ANIA PULITO & FEDERICO RIGHI (Linked to athlete(s) via athlete_instructors)
+  * REBECCA FERRARI & MARCELLO STALLONE (Linked to athlete(s) via athlete_instructors)
+  * MATHIAS GIBERTI & NOEMI SANFILIPPO (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - JACOPO BOMBARDI & DARIA LAZZARI
+  - CIRILLO CAPUTO & SILVIA TABARRONI
+  - GIADA CARTANI & FRANCESCO NATALE
+  - GIULIA ANSALONI & ANTONIO RUSSO
+  - GIACOMO CARNEVALE & RACHELE ROSSI
+  - SIMONE CABURAZZI & SARA FANTONI
+  - ANIA PULITO & FEDERICO RIGHI
+  - REBECCA FERRARI & MARCELLO STALLONE
+  - MATHIAS GIBERTI & NOEMI SANFILIPPO
+
+========================================================
+
+Instructor: Omar Ravaioli (ID: 79b81334-b274-439e-8183-39551d78e0d5)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 8
+- Difference: +8 couples
+
+  Newly visible couples:
+  * JACOPO BOMBARDI & DARIA LAZZARI (Linked to athlete(s) via athlete_instructors)
+  * ANNA MILLICO & SABINO PACIOLLA (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ANSALONI & ANTONIO RUSSO (Linked to athlete(s) via athlete_instructors)
+  * LINDA BATTISTINI & GIACOMO ROSATI (Linked to athlete(s) via athlete_instructors)
+  * GIACOMO CARNEVALE & RACHELE ROSSI (Linked to athlete(s) via athlete_instructors)
+  * ERMINIA ANNA DITOMMASO & LUIGI FERRENTI (Linked to athlete(s) via athlete_instructors)
+  * RUBEN GIULIANI & ANITA GRAZIANI (Linked to athlete(s) via athlete_instructors)
+  * ANIA PULITO & FEDERICO RIGHI (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - JACOPO BOMBARDI & DARIA LAZZARI
+  - ANNA MILLICO & SABINO PACIOLLA
+  - GIULIA ANSALONI & ANTONIO RUSSO
+  - LINDA BATTISTINI & GIACOMO ROSATI
+  - GIACOMO CARNEVALE & RACHELE ROSSI
+  - ERMINIA ANNA DITOMMASO & LUIGI FERRENTI
+  - RUBEN GIULIANI & ANITA GRAZIANI
+  - ANIA PULITO & FEDERICO RIGHI
+
+========================================================
+
+Instructor: Alessandro Reina (ID: a59fd7f0-f866-4f47-84ae-147379c34d0d)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 11
+- Difference: +11 couples
+
+  Newly visible couples:
+  * SIMONE BATTAGLIA & ANDREEA GABRIELA DOBRESCU (Linked to athlete(s) via athlete_instructors)
+  * FILIPPO NADALINI & BEATRICE VENTURINI (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ANSALONI & ANTONIO RUSSO (Linked to athlete(s) via athlete_instructors)
+  * EMANUEL BEVILACQUA & ALESSANDRA MANDORINI (Linked to athlete(s) via athlete_instructors)
+  * PIERO DI GIACINTO & TATIANA SGHINOLFI (Linked to athlete(s) via athlete_instructors)
+  * BARBARA CANè & DAVIDE ZANNONI (Linked to athlete(s) via athlete_instructors)
+  * GAIA CAPPELLINI & GABRIELE DILEO (Linked to athlete(s) via athlete_instructors)
+  * BEATRICE DI PASQUALE & ALESSANDRO PREVIATI (Linked to athlete(s) via athlete_instructors)
+  * JOY  LIN & SEBASTIANO MEZZACAPO (Linked to athlete(s) via athlete_instructors)
+  * CRISTIAN  DI NONO  & MARINA ALEXANDRA DOBRESCU (Linked to athlete(s) via athlete_instructors)
+  * SIMONA MONTIERI & ALESSIO PIPITONE (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - SIMONE BATTAGLIA & ANDREEA GABRIELA DOBRESCU
+  - FILIPPO NADALINI & BEATRICE VENTURINI
+  - GIULIA ANSALONI & ANTONIO RUSSO
+  - EMANUEL BEVILACQUA & ALESSANDRA MANDORINI
+  - PIERO DI GIACINTO & TATIANA SGHINOLFI
+  - BARBARA CANè & DAVIDE ZANNONI
+  - GAIA CAPPELLINI & GABRIELE DILEO
+  - BEATRICE DI PASQUALE & ALESSANDRO PREVIATI
+  - JOY  LIN & SEBASTIANO MEZZACAPO
+  - CRISTIAN  DI NONO  & MARINA ALEXANDRA DOBRESCU
+  - SIMONA MONTIERI & ALESSIO PIPITONE
+
+========================================================
+
+Instructor: Gaia Garuti (ID: 3404eeeb-482e-4d55-aa97-c2af299a8840)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 1
+- Difference: +1 couples
+
+  Newly visible couples:
+  * MATTIA BELLINATO & ANGELICA  SCIANGUETTA  (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - MATTIA BELLINATO & ANGELICA  SCIANGUETTA 
+
+========================================================
+
+Instructor: Simone Corvini (ID: 5f733ecb-fae2-4bc6-a67a-ea4c24480d2e)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 28
+- Difference: +28 couples
+
+  Newly visible couples:
+  * ALESSIA AFFRONTI & MATTEO PERSICO (Linked to athlete(s) via athlete_instructors)
+  * GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO (Linked to athlete(s) via athlete_instructors)
+  * LUCA BENETTI & SORINA CUCULAS (Linked to athlete(s) via athlete_instructors)
+  * FRANCESCO BEVILACQUA & GIULIA ANDREA GIANNOTTI (Linked to athlete(s) via athlete_instructors)
+  * CIRILLO CAPUTO & SILVIA TABARRONI (Linked to athlete(s) via athlete_instructors)
+  * MICHELE PERSICO & AURORA ZUPPIROLI (Linked to athlete(s) via athlete_instructors)
+  * DANIELE SERAFINI & BARBARA SILVESTRI (Linked to athlete(s) via athlete_instructors)
+  * GIOVANNI BONADONNA & LETIZIA NASI (Linked to athlete(s) via athlete_instructors)
+  * ELISA GARUTI & MICHELE MARCHETTI (Linked to athlete(s) via athlete_instructors)
+  * LUDOVICO ACCORSI & SERENA LORENZANI (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ALBERGHINI & MICHELE BARTOLOZZI (Linked to athlete(s) via athlete_instructors)
+  * LUCA ALBERGHINI & ELENA BABINKOVA (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ANSALONI & ANTONIO RUSSO (Linked to athlete(s) via athlete_instructors)
+  * EMANUEL BEVILACQUA & ALESSANDRA MANDORINI (Linked to athlete(s) via athlete_instructors)
+  * GABRIEL CRISTOFORI & ASIA FURGERI (Linked to athlete(s) via athlete_instructors)
+  * EZIO GORETTI & SABRINA SCAGLIARINI (Linked to athlete(s) via athlete_instructors)
+  * ELIA MARZOCCHI & ARIANNA MORETTI (Linked to athlete(s) via athlete_instructors)
+  * IMMACOLATA PENTORIERI & PAOLO VATIERO (Linked to athlete(s) via athlete_instructors)
+  * SABRINA COLOMBARI & CHRISTIAN LUPPI (Linked to athlete(s) via athlete_instructors)
+  * ANITA MAZZONI & SAMUELE NATALINI (Linked to athlete(s) via athlete_instructors)
+  * PAOLA BALBONI & GRAZIANO GALLERANI (Linked to athlete(s) via athlete_instructors)
+  * MARCO BRIGANTI & WHITNEY MUSAKU (Linked to athlete(s) via athlete_instructors)
+  * MAURA FANTUZZI & MASSIMO GHERARDI (Linked to athlete(s) via athlete_instructors)
+  * REBECCA FERRARI & MARCELLO STALLONE (Linked to athlete(s) via athlete_instructors)
+  * NICHOLAS FIORASO & CHARLIZE VALENTE (Linked to athlete(s) via athlete_instructors)
+  * CATERINA ALBERGHINI & ALESSANDRO REINA (Linked to athlete(s) via athlete_instructors)
+  * MARCO BENETTI  & MATILDE MODESTI (Linked to athlete(s) via athlete_instructors)
+  * CRISTINA  DAVALLI O DALLAVALLE & MASSIMILIANO  PIEROTTI  (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - ALESSIA AFFRONTI & MATTEO PERSICO
+  - GIADA BALDASSARI & ALESSANDRO GHIMBRA ZUMBO
+  - LUCA BENETTI & SORINA CUCULAS
+  - FRANCESCO BEVILACQUA & GIULIA ANDREA GIANNOTTI
+  - CIRILLO CAPUTO & SILVIA TABARRONI
+  - MICHELE PERSICO & AURORA ZUPPIROLI
+  - DANIELE SERAFINI & BARBARA SILVESTRI
+  - GIOVANNI BONADONNA & LETIZIA NASI
+  - ELISA GARUTI & MICHELE MARCHETTI
+  - LUDOVICO ACCORSI & SERENA LORENZANI
+  - GIULIA ALBERGHINI & MICHELE BARTOLOZZI
+  - LUCA ALBERGHINI & ELENA BABINKOVA
+  - GIULIA ANSALONI & ANTONIO RUSSO
+  - EMANUEL BEVILACQUA & ALESSANDRA MANDORINI
+  - GABRIEL CRISTOFORI & ASIA FURGERI
+  - EZIO GORETTI & SABRINA SCAGLIARINI
+  - ELIA MARZOCCHI & ARIANNA MORETTI
+  - IMMACOLATA PENTORIERI & PAOLO VATIERO
+  - SABRINA COLOMBARI & CHRISTIAN LUPPI
+  - ANITA MAZZONI & SAMUELE NATALINI
+  - PAOLA BALBONI & GRAZIANO GALLERANI
+  - MARCO BRIGANTI & WHITNEY MUSAKU
+  - MAURA FANTUZZI & MASSIMO GHERARDI
+  - REBECCA FERRARI & MARCELLO STALLONE
+  - NICHOLAS FIORASO & CHARLIZE VALENTE
+  - CATERINA ALBERGHINI & ALESSANDRO REINA
+  - MARCO BENETTI  & MATILDE MODESTI
+  - CRISTINA  DAVALLI O DALLAVALLE & MASSIMILIANO  PIEROTTI 
+
+========================================================
+
+Instructor: Caterina Alberghini (ID: ee3e80f0-790a-4451-bab6-86d11cf0b194)
+--------------------------------------------------------
+- Couples visible under OLD rules: 0
+- Couples visible under NEW rules: 11
+- Difference: +11 couples
+
+  Newly visible couples:
+  * SIMONE BATTAGLIA & ANDREEA GABRIELA DOBRESCU (Linked to athlete(s) via athlete_instructors)
+  * FILIPPO NADALINI & BEATRICE VENTURINI (Linked to athlete(s) via athlete_instructors)
+  * GIULIA ANSALONI & ANTONIO RUSSO (Linked to athlete(s) via athlete_instructors)
+  * EMANUEL BEVILACQUA & ALESSANDRA MANDORINI (Linked to athlete(s) via athlete_instructors)
+  * PIERO DI GIACINTO & TATIANA SGHINOLFI (Linked to athlete(s) via athlete_instructors)
+  * BARBARA CANè & DAVIDE ZANNONI (Linked to athlete(s) via athlete_instructors)
+  * GAIA CAPPELLINI & GABRIELE DILEO (Linked to athlete(s) via athlete_instructors)
+  * BEATRICE DI PASQUALE & ALESSANDRO PREVIATI (Linked to athlete(s) via athlete_instructors)
+  * JOY  LIN & SEBASTIANO MEZZACAPO (Linked to athlete(s) via athlete_instructors)
+  * CRISTIAN  DI NONO  & MARINA ALEXANDRA DOBRESCU (Linked to athlete(s) via athlete_instructors)
+  * SIMONA MONTIERI & ALESSIO PIPITONE (Linked to athlete(s) via athlete_instructors)
+
+  All visible couples:
+  - SIMONE BATTAGLIA & ANDREEA GABRIELA DOBRESCU
+  - FILIPPO NADALINI & BEATRICE VENTURINI
+  - GIULIA ANSALONI & ANTONIO RUSSO
+  - EMANUEL BEVILACQUA & ALESSANDRA MANDORINI
+  - PIERO DI GIACINTO & TATIANA SGHINOLFI
+  - BARBARA CANè & DAVIDE ZANNONI
+  - GAIA CAPPELLINI & GABRIELE DILEO
+  - BEATRICE DI PASQUALE & ALESSANDRO PREVIATI
+  - JOY  LIN & SEBASTIANO MEZZACAPO
+  - CRISTIAN  DI NONO  & MARINA ALEXANDRA DOBRESCU
+  - SIMONA MONTIERI & ALESSIO PIPITONE
+
+========================================================
+
+SUMMARY TABLE
+========================================================
+Instructor | Old Count | New Count | Difference
+--------------------------------------------------------
+Michela Natali            |         0 |        28 | +28
+Fabio Bernardini          |         0 |         3 | +3
+Andrea Giannotti          |         0 |         4 | +4
+Francesco Bevilacqua      |         0 |         4 | +4
+Serena Monari             |         0 |         9 | +9
+Omar Ravaioli             |         0 |         8 | +8
+Alessandro Reina          |         0 |        11 | +11
+Gaia Garuti               |         0 |         1 | +1
+Simone Corvini            |         0 |        28 | +28
+Caterina Alberghini       |         0 |        11 | +11
+========================================================
