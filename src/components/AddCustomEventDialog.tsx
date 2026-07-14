@@ -145,7 +145,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           if (intlDisc.includes("Showdance")) {
             classStr = "";
             if (ageStr.toLowerCase().includes("adult")) {
-              ageStr = "Adult";
+              ageStr = ageStr.toLowerCase().includes("master") ? "Adult Master" : "Adult";
             }
           }
 
@@ -261,7 +261,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                 if (intlDisc.includes("Showdance")) {
                   classStr = "";
                   if (ageStr.toLowerCase().includes("adult")) {
-                    ageStr = "Adult";
+                    ageStr = ageStr.toLowerCase().includes("master") ? "Adult Master" : "Adult";
                   }
                 }
 
@@ -317,7 +317,9 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                if (targetIntlDisc.includes("Showdance")) {
                  nameToInsert = nameToInsert.replace(/\bOpen\b/ig, '').replace(/\s+/g, ' ').trim();
                  if (nameToInsert.toLowerCase().includes("adult")) {
-                   nameToInsert = nameToInsert.replace(/\bAdult\b.*?(Classic Showdance|South American Showdance)/i, `Adult $1`);
+                   const isMaster = nameToInsert.toLowerCase().includes("master");
+                   const replacement = isMaster ? "Adult Master $1" : "Adult $1";
+                   nameToInsert = nameToInsert.replace(/\bAdult\b.*?(Classic Showdance|South American Showdance)/i, replacement);
                  }
                }
             } else {
