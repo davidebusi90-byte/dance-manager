@@ -186,7 +186,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           <div className="space-y-2">
             <Label>Nome Gara</Label>
             <Input 
-              placeholder="Es. WDSF International Open Latin" 
+              placeholder="Es. IDSF International Open Latin" 
               value={eventName}
               onChange={(e) => setEventName(e.target.value)}
             />
