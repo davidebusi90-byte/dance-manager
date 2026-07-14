@@ -41,7 +41,7 @@ function getDanceCategoryBadge(category: EventType["dance_category"]) {
     case "combinata":
       return { label: "Combinata", className: "bg-purple-500/15 text-purple-400 border-purple-500/20" };
     case "show_dance":
-      return { label: "Show Dance", className: "bg-pink-500/15 text-pink-400 border-pink-500/20" };
+      return { label: "Showdance", className: "bg-pink-500/15 text-pink-400 border-pink-500/20" };
     default:
       return null;
   }
