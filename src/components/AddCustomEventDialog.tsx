@@ -79,7 +79,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
     }
   }, [existingEvent]);
 
-  // Sync single preset selection
+  // Sync single preset initialization
   useEffect(() => {
     if (!existingEvent) {
       if (selectedPresets.size === 1) {
@@ -89,41 +89,53 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           setMinAge(preset.minAge ? preset.minAge.toString() : "");
           setMaxAge(preset.maxAge ? preset.maxAge.toString() : "");
           setAllowedClasses(new Set(preset.classes));
-
-          if (isInternationalFormat) {
-            let ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
-            ageStr = ageStr.replace(/\bOpen\b/ig, '').trim();
-            let classStr = "Open";
-            if (preset.classes.length === 1) {
-              classStr = preset.classes[0];
-            } else if (preset.classes.length > 1) {
-              const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER"];
-              const sortedClasses = [...preset.classes].sort((a, b) => classOrder.indexOf(b) - classOrder.indexOf(a));
-              const highestClass = sortedClasses[0];
-              let baseClass = highestClass;
-              if (highestClass.startsWith("B")) baseClass = "B";
-              if (highestClass.startsWith("A") && highestClass !== "AS") baseClass = "A";
-              if (highestClass === "AS" || highestClass === "MASTER") baseClass = "";
-              classStr = baseClass ? `${baseClass} Open` : "Open";
-            }
-            if (classStr === "MASTER") classStr = "Master";
-            if (classStr === "Master" && ageStr.toLowerCase().includes("master")) classStr = "";
-            
-            let intlDisc = "Standard";
-            if (discipline.includes("Latin")) intlDisc = "Latin";
-            if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
-            
-            setEventName(`${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim());
-          } else {
-            setEventName(`${discipline} - ${preset.name}`);
-          }
         }
       } else if (selectedPresets.size > 1) {
         // Clear classes so it uses the preset defaults unless the user manually selects them
         setAllowedClasses(new Set());
       }
     }
-  }, [selectedPresets, discipline, existingEvent, isInternationalFormat]);
+  }, [selectedPresets, discipline, existingEvent]);
+
+  // Sync single preset event name dynamically
+  useEffect(() => {
+    if (!existingEvent && selectedPresets.size === 1) {
+      const presetName = Array.from(selectedPresets)[0];
+      const preset = getEventsForDiscipline(discipline).find(p => p.name === presetName);
+      if (preset) {
+        const classesArray = Array.from(allowedClasses);
+        const classesToUse = classesArray.length > 0 ? classesArray : preset.classes;
+
+        if (isInternationalFormat) {
+          let ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
+          ageStr = ageStr.replace(/\bOpen\b/ig, '').trim();
+          let classStr = "Open";
+          if (classesToUse.length === 1) {
+            classStr = classesToUse[0];
+          } else if (classesToUse.length > 1) {
+            const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER"];
+            const sortedClasses = [...classesToUse].sort((a, b) => classOrder.indexOf(b) - classOrder.indexOf(a));
+            const highestClass = sortedClasses[0];
+            let baseClass = highestClass;
+            if (highestClass.startsWith("B")) baseClass = "B";
+            if (highestClass.startsWith("A") && highestClass !== "AS") baseClass = "A";
+            if (highestClass === "AS" || highestClass === "MASTER") baseClass = "";
+            classStr = baseClass ? `${baseClass} Open` : "Open";
+          }
+          if (classStr === "MASTER") classStr = "Master";
+          if (classStr === "Master" && ageStr.toLowerCase().includes("master")) classStr = "";
+          
+          let intlDisc = "Standard";
+          if (discipline.includes("Latin")) intlDisc = "Latin";
+          if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
+          
+          setEventName(`${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim());
+        } else {
+          setEventName(`${discipline} - ${preset.name}`);
+        }
+      }
+    }
+  }, [selectedPresets, discipline, allowedClasses, isInternationalFormat, existingEvent]);
 
   // Auto-toggle International format
   useEffect(() => {
