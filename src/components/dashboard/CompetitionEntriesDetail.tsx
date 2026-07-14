@@ -223,16 +223,16 @@ export default function CompetitionEntriesDetail({
   };
 
   const sortEntriesByCategory = (e1: CompetitionEntry, e2: CompetitionEntry) => {
-    const rank1 = getCategorySortRank(e1.couples.category);
-    const rank2 = getCategorySortRank(e2.couples.category);
+    const rank1 = getCategorySortRank(e1.couples?.category || "");
+    const rank2 = getCategorySortRank(e2.couples?.category || "");
     if (rank1 !== rank2) return rank1 - rank2;
 
-    const name1 = `${e1.couples.athlete1?.last_name || ""} ${e1.couples.athlete1?.first_name || ""}`.toLowerCase();
-    const name2 = `${e2.couples.athlete1?.last_name || ""} ${e2.couples.athlete1?.first_name || ""}`.toLowerCase();
+    const name1 = `${e1.couples?.athlete1?.last_name || ""} ${e1.couples?.athlete1?.first_name || ""}`.toLowerCase();
+    const name2 = `${e2.couples?.athlete1?.last_name || ""} ${e2.couples?.athlete1?.first_name || ""}`.toLowerCase();
     return name1.localeCompare(name2);
   };
 
-  const activeEntries = filteredEntries.filter(e => e.status !== "cancelled").sort(sortEntriesByCategory);
+  const activeEntries = filteredEntries.filter(e => e.status !== "cancelled" && e.couples).sort(sortEntriesByCategory);
   const paidEntries = activeEntries.filter(e => e.is_paid);
   const lateUnpaidEntries = activeEntries.filter(e => !e.is_paid && isLateEntry(e.created_at));
   const regularUnpaidEntries = activeEntries.filter(e => !e.is_paid && !isLateEntry(e.created_at));
