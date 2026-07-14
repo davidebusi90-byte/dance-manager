@@ -111,7 +111,34 @@ export default function CompetitionEnrollments() {
   };
 
   const getCompetitionEventTypes = (competitionId: string) => {
-    return eventTypes.filter(e => e.competition_id === competitionId);
+    const events = eventTypes.filter(e => e.competition_id === competitionId);
+    
+    return events.sort((a, b) => {
+      const nameA = a.event_name.toLowerCase();
+      const nameB = b.event_name.toLowerCase();
+      
+      const isOverOrUnderA = nameA.includes("over") || nameA.includes("under");
+      const isOverOrUnderB = nameB.includes("over") || nameB.includes("under");
+      
+      if (isOverOrUnderA && !isOverOrUnderB) return 1;
+      if (!isOverOrUnderA && isOverOrUnderB) return -1;
+      
+      const minAgeA = a.min_age ?? 0;
+      const minAgeB = b.min_age ?? 0;
+      
+      if (minAgeA !== minAgeB) {
+        return minAgeA - minAgeB;
+      }
+      
+      const maxAgeA = a.max_age ?? 99;
+      const maxAgeB = b.max_age ?? 99;
+      
+      if (maxAgeA !== maxAgeB) {
+        return maxAgeA - maxAgeB;
+      }
+      
+      return a.event_name.localeCompare(b.event_name);
+    });
   };
 
   const handleDeleteEvent = async (eventId: string) => {
