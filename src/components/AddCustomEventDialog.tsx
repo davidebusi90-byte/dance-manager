@@ -47,7 +47,12 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const [createMultiple, setCreateMultiple] = useState({
     standard: true,
     latin: false,
-    combinata: false
+  const [createMultiple, setCreateMultiple] = useState({
+    standard: true,
+    latin: true,
+    combinata: false,
+    classicShowdance: false,
+    southAmericanShowdance: false
   });
 
   // Sync initial checkboxes with selected discipline
@@ -56,7 +61,9 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
       setCreateMultiple({
         standard: discipline === "Danze Standard",
         latin: discipline === "Danze Latino Americane",
-        combinata: discipline === "Combinata"
+        combinata: discipline === "Combinata",
+        classicShowdance: discipline === "Classic Showdance",
+        southAmericanShowdance: discipline === "South American Showdance"
       });
     }
   }, [discipline, existingEvent]);
@@ -69,8 +76,12 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
       setAllowedClasses(new Set(existingEvent.allowed_classes || []));
       
       const evtLower = existingEvent.event_name.toLowerCase();
-      if (evtLower.includes("combinata") || evtLower.includes("show")) {
-        setDiscipline(evtLower.includes("show") ? "Show Dance" : "Combinata");
+      if (evtLower.includes("combinata")) {
+        setDiscipline("Combinata");
+      } else if (evtLower.includes("classic show") || evtLower.includes("classic showdance")) {
+        setDiscipline("Classic Showdance");
+      } else if (evtLower.includes("south american show") || evtLower.includes("south america showdance")) {
+        setDiscipline("South American Showdance");
       } else if (evtLower.includes("latin")) {
         setDiscipline("Danze Latino Americane");
       } else {
@@ -128,6 +139,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
           if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
+          if (discipline.includes("Classic Showdance")) intlDisc = "Classic Showdance";
+          if (discipline.includes("South American Showdance")) intlDisc = "South American Showdance";
           
           setEventName(`${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim());
         } else {
@@ -205,6 +218,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               let discName = "Danze Standard";
               if (discKey === "latin") discName = "Danze Latino Americane";
               if (discKey === "combinata") discName = "Combinata";
+              if (discKey === "classicShowdance") discName = "Classic Showdance";
+              if (discKey === "southAmericanShowdance") discName = "South American Showdance";
 
               let finalName = "";
               if (isInternationalFormat) {
@@ -253,6 +268,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             let discName = "Danze Standard";
             if (discKey === "latin") discName = "Danze Latino Americane";
             if (discKey === "combinata") discName = "Combinata";
+            if (discKey === "classicShowdance") discName = "Classic Showdance";
+            if (discKey === "southAmericanShowdance") discName = "South American Showdance";
 
             let nameToInsert = eventName.trim();
             
@@ -260,6 +277,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                let targetIntlDisc = "Standard";
                if (discKey === "latin") targetIntlDisc = "Latin";
                if (discKey === "combinata") targetIntlDisc = "Ten Dance";
+               if (discKey === "classicShowdance") targetIntlDisc = "Classic Showdance";
+               if (discKey === "southAmericanShowdance") targetIntlDisc = "South American Showdance";
                
                if (nameToInsert.endsWith("Standard")) {
                  nameToInsert = nameToInsert.replace(/Standard$/, targetIntlDisc);
@@ -267,6 +286,10 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                  nameToInsert = nameToInsert.replace(/Latin$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("Ten Dance")) {
                  nameToInsert = nameToInsert.replace(/Ten Dance$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Classic Showdance")) {
+                 nameToInsert = nameToInsert.replace(/Classic Showdance$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("South American Showdance")) {
+                 nameToInsert = nameToInsert.replace(/South American Showdance$/, targetIntlDisc);
                } else if (!nameToInsert.includes(targetIntlDisc)) {
                  nameToInsert = `${nameToInsert} ${targetIntlDisc}`;
                }
@@ -406,32 +429,48 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               
               <div className="space-y-3 p-3 rounded-md border bg-black/5 dark:bg-white/5">
                 <Label className="text-muted-foreground">Crea contemporaneamente per:</Label>
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="multi-std" 
-                      checked={createMultiple.standard} 
-                      onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, standard: !!c }))}
-                    />
-                    <label htmlFor="multi-std" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Standard</label>
+                  <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-std" 
+                        checked={createMultiple.standard} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, standard: !!c }))}
+                      />
+                      <label htmlFor="multi-std" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Standard</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-lat" 
+                        checked={createMultiple.latin} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, latin: !!c }))}
+                      />
+                      <label htmlFor="multi-lat" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Latini</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-comb" 
+                        checked={createMultiple.combinata} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata: !!c }))}
+                      />
+                      <label htmlFor="multi-comb" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Combinata</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-classic" 
+                        checked={createMultiple.classicShowdance} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, classicShowdance: !!c }))}
+                      />
+                      <label htmlFor="multi-classic" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Classic Showdance</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-sa" 
+                        checked={createMultiple.southAmericanShowdance} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, southAmericanShowdance: !!c }))}
+                      />
+                      <label htmlFor="multi-sa" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">South American Showdance</label>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="multi-lat" 
-                      checked={createMultiple.latin} 
-                      onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, latin: !!c }))}
-                    />
-                    <label htmlFor="multi-lat" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Latini</label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="multi-comb" 
-                      checked={createMultiple.combinata} 
-                      onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata: !!c }))}
-                    />
-                    <label htmlFor="multi-comb" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Combinata</label>
-                  </div>
-                </div>
               </div>
             </div>
           )}
