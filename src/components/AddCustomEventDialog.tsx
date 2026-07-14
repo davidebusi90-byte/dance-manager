@@ -80,14 +80,19 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
   // Sync single preset selection
   useEffect(() => {
-    if (!existingEvent && selectedPresets.size === 1) {
-      const presetName = Array.from(selectedPresets)[0];
-      const preset = getEventsForDiscipline(discipline).find(p => p.name === presetName);
-      if (preset) {
-        setEventName(`${discipline} - ${preset.name}`);
-        setMinAge(preset.minAge ? preset.minAge.toString() : "");
-        setMaxAge(preset.maxAge ? preset.maxAge.toString() : "");
-        setAllowedClasses(new Set(preset.classes));
+    if (!existingEvent) {
+      if (selectedPresets.size === 1) {
+        const presetName = Array.from(selectedPresets)[0];
+        const preset = getEventsForDiscipline(discipline).find(p => p.name === presetName);
+        if (preset) {
+          setEventName(`${discipline} - ${preset.name}`);
+          setMinAge(preset.minAge ? preset.minAge.toString() : "");
+          setMaxAge(preset.maxAge ? preset.maxAge.toString() : "");
+          setAllowedClasses(new Set(preset.classes));
+        }
+      } else if (selectedPresets.size > 1) {
+        // Clear classes so it uses the preset defaults unless the user manually selects them
+        setAllowedClasses(new Set());
       }
     }
   }, [selectedPresets, discipline, existingEvent]);
@@ -146,6 +151,9 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             const preset = presetsList.find(p => p.name === presetName);
             if (!preset) return;
 
+            // If user selected classes, override. Otherwise use default preset classes.
+            const classesToUse = allowedClasses.size > 0 ? Array.from(allowedClasses) : preset.classes;
+
             selectedDiscs.forEach(discKey => {
               let discName = "Danze Standard";
               if (discKey === "latin") discName = "Danze Latino Americane";
@@ -159,7 +167,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               toInsert.push({
                 competition_id: competitionId,
                 event_name: finalName,
-                allowed_classes: preset.classes,
+                allowed_classes: classesToUse,
                 min_age: preset.minAge || null,
                 max_age: preset.maxAge || null,
               });
@@ -325,7 +333,9 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           {selectedPresets.size > 1 ? (
             <div className="col-span-2 p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg text-sm font-medium text-center">
               Modalità Creazione Multipla Attiva.<br/>
-              Verranno create <strong>{selectedPresets.size} gare</strong> per ogni disciplina selezionata, utilizzando le impostazioni standard dei modelli.
+              Verranno create <strong>{selectedPresets.size} gare</strong> per ogni disciplina selezionata.<br/>
+              I nomi e le età saranno generati in automatico dai modelli. 
+              {allowedClasses.size === 0 ? " Verranno usate le classi standard di ciascun modello." : " Le classi standard verranno sovrascritte con quelle selezionate qui sotto."}
             </div>
           ) : (
             <>
@@ -358,26 +368,26 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                   />
                 </div>
               </div>
-
-              <div className="space-y-3 col-span-2">
-                <Label>Classi Ammesse</Label>
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_CLASSES.map(cls => (
-                    <Button
-                      key={cls}
-                      type="button"
-                      variant={allowedClasses.has(cls) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleClassToggle(cls)}
-                      className="font-mono text-xs"
-                    >
-                      {cls}
-                    </Button>
-                  ))}
-                </div>
-              </div>
             </>
           )}
+
+          <div className="space-y-3 col-span-2">
+            <Label>Classi Ammesse {selectedPresets.size > 1 && "(Opzionale: sovrascrive le classi standard)"}</Label>
+            <div className="flex flex-wrap gap-2">
+              {AVAILABLE_CLASSES.map(cls => (
+                <Button
+                  key={cls}
+                  type="button"
+                  variant={allowedClasses.has(cls) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleClassToggle(cls)}
+                  className="font-mono text-xs"
+                >
+                  {cls}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 mt-4">
