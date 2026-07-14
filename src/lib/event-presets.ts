@@ -34,7 +34,7 @@ export const STANDARD_LATIN_EVENTS = [
   { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
   
   // Master
-  { name: "Rising Star Master", classes: ["MASTER"] },
+  { name: "Adult Master Rising Stars", classes: ["MASTER"] },
   { name: "Adult Master", classes: ["MASTER"] },
   { name: "Master 1", classes: ["MASTER"] },
   { name: "Master 2", classes: ["MASTER"] },
