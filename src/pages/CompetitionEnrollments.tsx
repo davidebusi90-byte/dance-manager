@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -427,71 +428,92 @@ export default function CompetitionEnrollments() {
                                   <p>Nessuna gara configurata per questa competizione.</p>
                                 </div>
                               ) : (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                                  {compEvents.map(event => (
-                                    <div 
-                                      key={event.id} 
-                                      className={cn(
-                                        "bg-black/5 dark:bg-white/5 border rounded-2xl p-4 flex flex-col gap-3 group relative transition-colors cursor-pointer",
-                                        selectedEvents.has(event.id) ? "border-primary bg-primary/5" : "border-white/10 hover:border-white/20"
-                                      )}
-                                      onClick={() => {
-                                        setSelectedEvents(prev => {
-                                          const next = new Set(prev);
-                                          if (next.has(event.id)) next.delete(event.id);
-                                          else next.add(event.id);
-                                          return next;
-                                        });
-                                      }}
-                                    >
-                                      <div className="flex items-start justify-between gap-4">
-                                        <div className="flex items-start gap-3">
-                                          {isAdmin && (
-                                            <Checkbox 
-                                              checked={selectedEvents.has(event.id)} 
-                                              className="mt-0.5 pointer-events-none"
-                                            />
+                                <div className="border border-white/10 rounded-xl overflow-hidden">
+                                  <Table>
+                                    <TableHeader className="bg-black/5 dark:bg-white/5">
+                                      <TableRow>
+                                        {isAdmin && <TableHead className="w-[50px]"></TableHead>}
+                                        <TableHead>Nome Gara</TableHead>
+                                        <TableHead>Classi Ammesse</TableHead>
+                                        <TableHead>Età</TableHead>
+                                        {isAdmin && <TableHead className="text-right">Azioni</TableHead>}
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {compEvents.map(event => (
+                                        <TableRow 
+                                          key={event.id}
+                                          className={cn(
+                                            "group transition-colors cursor-pointer",
+                                            selectedEvents.has(event.id) ? "bg-primary/5" : "hover:bg-black/5 dark:hover:bg-white/5"
                                           )}
-                                          <h4 className="font-bold text-sm leading-tight">{event.event_name}</h4>
-                                        </div>
-                                        {isAdmin && (
-                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
-                                            <AddCustomEventDialog 
-                                              competitionId={competition.id} 
-                                              onSuccess={() => fetchData(true)} 
-                                              existingEvent={event}
-                                              trigger={
-                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10" title="Modifica gara">
-                                                  <Pencil className="w-3.5 h-3.5" />
+                                          onClick={() => {
+                                            setSelectedEvents(prev => {
+                                              const next = new Set(prev);
+                                              if (next.has(event.id)) next.delete(event.id);
+                                              else next.add(event.id);
+                                              return next;
+                                            });
+                                          }}
+                                        >
+                                          {isAdmin && (
+                                            <TableCell onClick={e => e.stopPropagation()}>
+                                              <Checkbox 
+                                                checked={selectedEvents.has(event.id)}
+                                                onCheckedChange={(checked) => {
+                                                  setSelectedEvents(prev => {
+                                                    const next = new Set(prev);
+                                                    if (checked) next.add(event.id);
+                                                    else next.delete(event.id);
+                                                    return next;
+                                                  });
+                                                }}
+                                              />
+                                            </TableCell>
+                                          )}
+                                          <TableCell className="font-medium text-xs sm:text-sm">{event.event_name}</TableCell>
+                                          <TableCell>
+                                            <div className="flex flex-wrap gap-1">
+                                              {event.allowed_classes.map(c => (
+                                                <span key={c} className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/10 dark:bg-white/10 text-muted-foreground">
+                                                  {c}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            {(event.min_age !== null || event.max_age !== null) && (
+                                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                                {event.min_age ? `${event.min_age}+` : ""}{event.min_age && event.max_age ? " - " : ""}{event.max_age ? `max ${event.max_age}` : ""}
+                                              </span>
+                                            )}
+                                          </TableCell>
+                                          {isAdmin && (
+                                            <TableCell className="text-right">
+                                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                                <AddCustomEventDialog 
+                                                  competitionId={competition.id} 
+                                                  onSuccess={() => fetchData(true)} 
+                                                  existingEvent={event}
+                                                  trigger={
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10" title="Modifica gara">
+                                                      <Pencil className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                  }
+                                                />
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => handleCopySingleEvent(event)} title="Copia singola gara">
+                                                  <Copy className="w-3.5 h-3.5" />
                                                 </Button>
-                                              }
-                                            />
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => handleCopySingleEvent(event)} title="Copia singola gara">
-                                              <Copy className="w-3.5 h-3.5" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteEvent(event.id)} title="Elimina gara">
-                                              <Trash2 className="w-3.5 h-3.5" />
-                                            </Button>
-                                          </div>
-                                        )}
-                                      </div>
-                                      
-                                      <div className="flex flex-wrap gap-1">
-                                        {event.allowed_classes.map(c => (
-                                          <span key={c} className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-black/10 dark:bg-white/10 text-muted-foreground">
-                                            {c}
-                                          </span>
-                                        ))}
-                                      </div>
-
-                                      {(event.min_age !== null || event.max_age !== null) && (
-                                        <p className="text-[11px] font-medium text-muted-foreground/60 flex items-center gap-1 mt-auto">
-                                          <Settings className="w-3 h-3" />
-                                          Età: {event.min_age ? `${event.min_age}+` : ""}{event.min_age && event.max_age ? " - " : ""}{event.max_age ? `max ${event.max_age}` : ""}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ))}
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDeleteEvent(event.id)} title="Elimina gara">
+                                                  <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                              </div>
+                                            </TableCell>
+                                          )}
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
                                 </div>
                               )}
                             </div>
