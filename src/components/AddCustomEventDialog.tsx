@@ -237,10 +237,27 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             if (discKey === "combinata") discName = "Combinata";
 
             let nameToInsert = eventName.trim();
-            if (discipline !== discName && nameToInsert.includes(discipline)) {
-               nameToInsert = nameToInsert.replace(discipline, discName);
-            } else if (discipline !== discName && !nameToInsert.includes(discName)) {
-               nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
+            
+            if (isInternationalFormat) {
+               let targetIntlDisc = "Standard";
+               if (discKey === "latin") targetIntlDisc = "Latin";
+               if (discKey === "combinata") targetIntlDisc = "Ten Dance";
+               
+               if (nameToInsert.endsWith("Standard")) {
+                 nameToInsert = nameToInsert.replace(/Standard$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Latin")) {
+                 nameToInsert = nameToInsert.replace(/Latin$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Ten Dance")) {
+                 nameToInsert = nameToInsert.replace(/Ten Dance$/, targetIntlDisc);
+               } else if (!nameToInsert.includes(targetIntlDisc)) {
+                 nameToInsert = `${nameToInsert} ${targetIntlDisc}`;
+               }
+            } else {
+               if (discipline !== discName && nameToInsert.includes(discipline)) {
+                  nameToInsert = nameToInsert.replace(discipline, discName);
+               } else if (discipline !== discName && !nameToInsert.includes(discName)) {
+                  nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
+               }
             }
 
             if (titlePrefix !== "Nessuno") {
@@ -270,9 +287,13 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
         setAllowedClasses(new Set());
         setTitlePrefix("Nessuno");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding/updating event:", error);
-      toast({ title: "Errore", description: "Impossibile salvare la gara", variant: "destructive" });
+      if (error?.code === "23505") {
+        toast({ title: "Attenzione", description: "Esiste già una gara con questo nome.", variant: "destructive" });
+      } else {
+        toast({ title: "Errore", description: "Impossibile salvare la gara.", variant: "destructive" });
+      }
     } finally {
       setSaving(false);
     }
