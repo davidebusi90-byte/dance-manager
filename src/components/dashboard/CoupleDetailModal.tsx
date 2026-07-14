@@ -319,19 +319,19 @@ export default function CoupleDetailModal({
                         <div className="pt-6 mt-4 border-t border-destructive/10">
                             <button
                                 onClick={async () => {
-                                    if (!confirm("Sei sicuro di voler disattivare questa coppia? Verrà spostata nella sezione 'Coppie Disattivate'.")) return;
+                                    if (!confirm("Sei sicuro di voler disiscrivere questa coppia dalla gara?")) return;
                                     setIsDeactivating(true);
                                     try {
                                         const { error } = await supabase
-                                            .from("couples")
-                                            .update({ is_active: false } as any)
-                                            .eq("id", couple.id);
+                                            .from("competition_entries")
+                                            .delete()
+                                            .eq("id", entry.id);
                                         
                                         if (error) throw error;
                                         
-                                        toast({ title: "Coppia disattivata", description: "La coppia è stata spostata tra quelle disattivate." });
+                                        toast({ title: "Coppia disiscritta", description: "L'iscrizione è stata rimossa." });
                                         onClose();
-                                        window.location.reload(); 
+                                        if (onUpdate) onUpdate();
                                     } catch (err: any) {
                                         toast({ title: "Errore", description: err.message, variant: "destructive" });
                                     } finally {
@@ -341,8 +341,8 @@ export default function CoupleDetailModal({
                                 disabled={isDeactivating}
                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-destructive/5 text-destructive border border-destructive/20 hover:bg-destructive/10 transition-all font-semibold"
                             >
-                                <Trash2 className="w-4 h-4" />
-                                {isDeactivating ? "Disattivazione..." : "Disattiva Coppia"}
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                {isDeactivating ? "Annullamento..." : "Disiscrivi Coppia"}
                             </button>
                         </div>
                     )}
