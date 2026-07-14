@@ -227,7 +227,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           <DialogTitle>{existingEvent ? "Modifica Gara" : "Aggiungi Gara"}</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-6 py-4">
+        <div className="flex flex-col gap-5 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Disciplina Base</Label>
@@ -263,66 +263,64 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {!existingEvent && (
-              <>
-                <div className="col-span-2 space-y-2 mt-2">
-                  <Label>Età / Modelli (selezionane uno o più)</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 border rounded-md max-h-[160px] overflow-y-auto bg-black/5 dark:bg-white/5">
-                    {getEventsForDiscipline(discipline).map(preset => (
-                      <div key={preset.name} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`preset-${preset.name}`} 
-                          checked={selectedPresets.has(preset.name)}
-                          onCheckedChange={(checked) => {
-                            setSelectedPresets(prev => {
-                              const next = new Set(prev);
-                              if (checked) next.add(preset.name);
-                              else next.delete(preset.name);
-                              return next;
-                            });
-                          }}
-                        />
-                        <label htmlFor={`preset-${preset.name}`} className="text-xs font-medium leading-none cursor-pointer">
-                          {preset.name}
-                        </label>
-                      </div>
-                    ))}
+          {!existingEvent && (
+            <div className="flex flex-col gap-4 mt-2">
+              <div className="space-y-2">
+                <Label>Età / Modelli (selezionane uno o più)</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 border rounded-md max-h-[160px] overflow-y-auto bg-black/5 dark:bg-white/5">
+                  {getEventsForDiscipline(discipline).map(preset => (
+                    <div key={preset.name} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`preset-${preset.name}`} 
+                        checked={selectedPresets.has(preset.name)}
+                        onCheckedChange={(checked) => {
+                          setSelectedPresets(prev => {
+                            const next = new Set(prev);
+                            if (checked) next.add(preset.name);
+                            else next.delete(preset.name);
+                            return next;
+                          });
+                        }}
+                      />
+                      <label htmlFor={`preset-${preset.name}`} className="text-xs font-medium leading-none cursor-pointer">
+                        {preset.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-3 p-3 rounded-md border bg-black/5 dark:bg-white/5">
+                <Label className="text-muted-foreground">Crea contemporaneamente per:</Label>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="multi-std" 
+                      checked={createMultiple.standard} 
+                      onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, standard: !!c }))}
+                    />
+                    <label htmlFor="multi-std" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Standard</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="multi-lat" 
+                      checked={createMultiple.latin} 
+                      onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, latin: !!c }))}
+                    />
+                    <label htmlFor="multi-lat" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Latini</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="multi-comb" 
+                      checked={createMultiple.combinata} 
+                      onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata: !!c }))}
+                    />
+                    <label htmlFor="multi-comb" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Combinata</label>
                   </div>
                 </div>
-                
-                <div className="col-span-2 space-y-3 mt-2 p-3 rounded-md border bg-black/5 dark:bg-white/5">
-                  <Label className="text-muted-foreground">Crea contemporaneamente per:</Label>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="multi-std" 
-                        checked={createMultiple.standard} 
-                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, standard: !!c }))}
-                      />
-                      <label htmlFor="multi-std" className="text-sm font-medium leading-none cursor-pointer">Standard</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="multi-lat" 
-                        checked={createMultiple.latin} 
-                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, latin: !!c }))}
-                      />
-                      <label htmlFor="multi-lat" className="text-sm font-medium leading-none cursor-pointer">Latini</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="multi-comb" 
-                        checked={createMultiple.combinata} 
-                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata: !!c }))}
-                      />
-                      <label htmlFor="multi-comb" className="text-sm font-medium leading-none cursor-pointer">Combinata</label>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
 
           {selectedPresets.size > 1 ? (
             <div className="col-span-2 p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg text-sm font-medium text-center">
