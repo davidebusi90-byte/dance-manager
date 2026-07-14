@@ -508,29 +508,35 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                        </div>
                     </div>
                    <div className="space-y-4">
-                      {competitions.filter(c => isCompetitionAllowed(c, selectedCouple)).map(comp => (
-                        <div key={comp.id} className={cn("rounded-[2rem] border p-1 transition-all", selectedCompetitions.has(comp.id) ? "border-primary bg-primary/5" : "glass border-white/10")}>
-                           <div className="p-6 flex items-center gap-4 cursor-pointer" onClick={() => toggleExpansion(comp.id)}>
-                              <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", selectedCompetitions.has(comp.id) ? "bg-primary text-white" : "bg-neutral-200 dark:bg-white/10")}><Trophy /></div>
-                              <div className="flex-1">
-                                <p className="font-bold text-lg">{comp.name}</p>
-                                <p className="text-xs text-muted-foreground">{new Date(comp.date).toLocaleDateString()}</p>
-                              </div>
-                              <ChevronDown className={cn("transition-transform", expandedCompetitions.has(comp.id) && "rotate-180")} />
-                           </div>
-                           {expandedCompetitions.has(comp.id) && (
-                             <div className="p-6 pt-0 grid sm:grid-cols-2 gap-2">
-                               {eventTypes.filter(et => et.competition_id === comp.id && isEventAllowedForCouple(et, selectedCouple)).map(et => (
-                                 <button key={et.id} onClick={() => toggleRace(comp.id, et.id)} className={cn("p-4 rounded-2xl border text-sm font-bold flex items-center gap-3", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-primary text-white border-transparent" : "bg-white/40 dark:bg-white/5 border-white/10")}>
-                                    <Checkbox checked={(selectedRaces[comp.id] || []).includes(et.id)} />
-                                    <span className="flex-1 text-left">{formatEventName(et.event_name)}</span>
-                                    {(() => { const badge = getDanceCategoryBadge(et.dance_category); return badge ? <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-white/20 text-white border-white/30" : badge.className)}>{badge.label}</span> : null; })()}
-                                 </button>
-                               ))}
+                      {competitions.map(comp => {
+                        const isAllowed = isCompetitionAllowed(comp, selectedCouple);
+                        const isExpanded = expandedCompetitions.has(comp.id);
+                        const isSelected = selectedCompetitions.has(comp.id);
+                        
+                        return (
+                          <div key={comp.id} className={cn("rounded-[2rem] border p-1 transition-all", isSelected ? "border-primary bg-primary/5" : "glass border-white/10", !isAllowed && "opacity-50 grayscale")}>
+                             <div className={cn("p-6 flex items-center gap-4", isAllowed ? "cursor-pointer" : "cursor-not-allowed")} onClick={() => isAllowed && toggleExpansion(comp.id)}>
+                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", isSelected ? "bg-primary text-white" : "bg-neutral-200 dark:bg-white/10")}><Trophy /></div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-lg">{comp.name}</p>
+                                  <p className="text-xs text-muted-foreground">{new Date(comp.date).toLocaleDateString()}</p>
+                                </div>
+                                {isAllowed && <ChevronDown className={cn("transition-transform", isExpanded && "rotate-180")} />}
                              </div>
-                           )}
-                        </div>
-                      ))}
+                             {isAllowed && isExpanded && (
+                               <div className="p-6 pt-0 grid sm:grid-cols-2 gap-2">
+                                 {eventTypes.filter(et => et.competition_id === comp.id && isEventAllowedForCouple(et, selectedCouple)).map(et => (
+                                   <button key={et.id} onClick={() => toggleRace(comp.id, et.id)} className={cn("p-4 rounded-2xl border text-sm font-bold flex items-center gap-3", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-primary text-white border-transparent" : "bg-white/40 dark:bg-white/5 border-white/10")}>
+                                      <Checkbox checked={(selectedRaces[comp.id] || []).includes(et.id)} />
+                                      <span className="flex-1 text-left">{formatEventName(et.event_name)}</span>
+                                      {(() => { const badge = getDanceCategoryBadge(et.dance_category); return badge ? <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-white/20 text-white border-white/30" : badge.className)}>{badge.label}</span> : null; })()}
+                                   </button>
+                                 ))}
+                               </div>
+                             )}
+                          </div>
+                        );
+                      })}
                    </div>
                    <Button size="lg" onClick={handleSubmit} disabled={selectedCompetitions.size === 0 || submitting} className="w-full h-16 rounded-3xl text-xl font-black uppercase shadow-xl transition-all active:scale-95">
                       {submitting ? <Loader2 className="animate-spin" /> : `Iscriviti (${selectedCompetitions.size})`}
