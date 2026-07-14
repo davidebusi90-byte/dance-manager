@@ -91,7 +91,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           setAllowedClasses(new Set(preset.classes));
 
           if (isInternationalFormat) {
-            const ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
+            let ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
+            ageStr = ageStr.replace(/\bOpen\b/ig, '').trim();
             let classStr = "Open";
             if (preset.classes.length === 1) {
               classStr = preset.classes[0];
@@ -195,7 +196,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
               let finalName = "";
               if (isInternationalFormat) {
-                const ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
+                let ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
+                ageStr = ageStr.replace(/\bOpen\b/ig, '').trim();
                 let classStr = "Open";
                 if (classesToUse.length === 1) {
                   classStr = classesToUse[0];
