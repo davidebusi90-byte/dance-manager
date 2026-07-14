@@ -46,9 +46,6 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const [isInternationalFormat, setIsInternationalFormat] = useState<boolean>(false);
   const [createMultiple, setCreateMultiple] = useState({
     standard: true,
-    latin: false,
-  const [createMultiple, setCreateMultiple] = useState({
-    standard: true,
     latin: true,
     combinata: false,
     classicShowdance: false,
