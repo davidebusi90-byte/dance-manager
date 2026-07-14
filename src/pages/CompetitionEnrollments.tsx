@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -38,6 +39,7 @@ export default function CompetitionEnrollments() {
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCompetitionForEvents, setSelectedCompetitionForEvents] = useState<string | null>(null);
+  const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [isArchiveExpanded, setIsArchiveExpanded] = useState(false);
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [clipboardEvents, setClipboardEvents] = useState<Omit<EventType, 'id' | 'competition_id'>[]>([]);
@@ -119,10 +121,48 @@ export default function CompetitionEnrollments() {
       const { error } = await supabase.from("competition_event_types").delete().eq("id", eventId);
       if (error) throw error;
       toast({ title: "Gara eliminata" });
+      setSelectedEvents(prev => {
+        const next = new Set(prev);
+        next.delete(eventId);
+        return next;
+      });
       fetchData(true);
     } catch (error) {
       toast({ title: "Errore", description: "Impossibile eliminare la gara", variant: "destructive" });
     }
+  };
+
+  const handleDeleteSelected = async (competitionId: string) => {
+    if (!isAdmin) return;
+    const eventsToDelete = Array.from(selectedEvents);
+    if (eventsToDelete.length === 0) return;
+    if (!window.confirm(`Sei sicuro di voler eliminare ${eventsToDelete.length} gare selezionate?`)) return;
+    
+    try {
+      const { error } = await supabase.from("competition_event_types").delete().in("id", eventsToDelete);
+      if (error) throw error;
+      toast({ title: "Gare eliminate", description: `${eventsToDelete.length} gare sono state rimosse.` });
+      setSelectedEvents(new Set());
+      fetchData(true);
+    } catch (error) {
+      toast({ title: "Errore", description: "Impossibile eliminare le gare", variant: "destructive" });
+    }
+  };
+
+  const handleSelectAll = (competitionId: string) => {
+    const compEvents = getCompetitionEventTypes(competitionId);
+    const allIds = compEvents.map(e => e.id);
+    const allSelected = allIds.length > 0 && allIds.every(id => selectedEvents.has(id));
+    
+    setSelectedEvents(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        allIds.forEach(id => next.delete(id));
+      } else {
+        allIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
   };
 
   const handleCopySingleEvent = (event: EventType) => {
@@ -337,23 +377,48 @@ export default function CompetitionEnrollments() {
                                   <AddCustomEventDialog competitionId={competition.id} onSuccess={() => fetchData(true)} />
                                   <div className="w-px h-6 bg-border mx-2"></div>
                                   <Button 
-                                    variant="outline" 
+                                    variant="ghost" 
                                     size="sm" 
-                                    onClick={() => handleCopyAllEvents(competition.id)}
+                                    onClick={() => handleSelectAll(competition.id)}
                                     disabled={compEvents.length === 0}
                                     className="gap-2"
                                   >
-                                    <Copy className="w-4 h-4" /> Copia Tutte
+                                    <Checkbox 
+                                      checked={compEvents.length > 0 && compEvents.every(e => selectedEvents.has(e.id))} 
+                                      className="pointer-events-none"
+                                    /> Seleziona Tutte
                                   </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => handlePasteEvents(competition.id)}
-                                    disabled={clipboardEvents.length === 0}
-                                    className="gap-2"
-                                  >
-                                    <ClipboardPaste className="w-4 h-4" /> Incolla ({clipboardEvents.length})
-                                  </Button>
+                                  {Array.from(selectedEvents).some(id => compEvents.some(e => e.id === id)) ? (
+                                    <Button 
+                                      variant="destructive" 
+                                      size="sm" 
+                                      onClick={() => handleDeleteSelected(competition.id)}
+                                      className="gap-2 ml-auto"
+                                    >
+                                      <Trash2 className="w-4 h-4" /> Elimina Selezionate ({Array.from(selectedEvents).filter(id => compEvents.some(e => e.id === id)).length})
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => handleCopyAllEvents(competition.id)}
+                                        disabled={compEvents.length === 0}
+                                        className="gap-2 ml-auto"
+                                      >
+                                        <Copy className="w-4 h-4" /> Copia Tutte
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => handlePasteEvents(competition.id)}
+                                        disabled={clipboardEvents.length === 0}
+                                        className="gap-2"
+                                      >
+                                        <ClipboardPaste className="w-4 h-4" /> Incolla ({clipboardEvents.length})
+                                      </Button>
+                                    </>
+                                  )}
                                 </div>
                               )}
 
@@ -364,11 +429,33 @@ export default function CompetitionEnrollments() {
                               ) : (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                                   {compEvents.map(event => (
-                                    <div key={event.id} className="bg-black/5 dark:bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-3 group relative hover:border-white/20 transition-colors">
+                                    <div 
+                                      key={event.id} 
+                                      className={cn(
+                                        "bg-black/5 dark:bg-white/5 border rounded-2xl p-4 flex flex-col gap-3 group relative transition-colors cursor-pointer",
+                                        selectedEvents.has(event.id) ? "border-primary bg-primary/5" : "border-white/10 hover:border-white/20"
+                                      )}
+                                      onClick={() => {
+                                        setSelectedEvents(prev => {
+                                          const next = new Set(prev);
+                                          if (next.has(event.id)) next.delete(event.id);
+                                          else next.add(event.id);
+                                          return next;
+                                        });
+                                      }}
+                                    >
                                       <div className="flex items-start justify-between gap-4">
-                                        <h4 className="font-bold text-sm leading-tight">{event.event_name}</h4>
+                                        <div className="flex items-start gap-3">
+                                          {isAdmin && (
+                                            <Checkbox 
+                                              checked={selectedEvents.has(event.id)} 
+                                              className="mt-0.5 pointer-events-none"
+                                            />
+                                          )}
+                                          <h4 className="font-bold text-sm leading-tight">{event.event_name}</h4>
+                                        </div>
                                         {isAdmin && (
-                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => handleCopySingleEvent(event)} title="Copia singola gara">
                                               <Copy className="w-3.5 h-3.5" />
                                             </Button>
