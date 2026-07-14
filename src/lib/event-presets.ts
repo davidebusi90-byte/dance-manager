@@ -44,13 +44,9 @@ export const STANDARD_LATIN_EVENTS = [
 export const COMBINATA_EVENTS = [
   { name: "Combinata 10 Balli", classes: ["MASTER", "AS", "A", "A1", "A2", "B1", "B2", "B3"] },
   { name: "Combinata 8 Balli", classes: ["C", "D"] },
-  { name: "Classic Showdance", classes: ["MASTER", "AS", "A"] },
-  { name: "South American Showdance", classes: ["MASTER", "AS", "A"] },
 ];
 
 export const getEventsForDiscipline = (discipline: string) => {
   if (discipline === "Combinata") return COMBINATA_EVENTS;
-  if (discipline === "Classic Showdance") return COMBINATA_EVENTS.filter(e => e.name.includes("Classic Showdance"));
-  if (discipline === "South American Showdance") return COMBINATA_EVENTS.filter(e => e.name.includes("South American Showdance"));
   return STANDARD_LATIN_EVENTS;
 };
