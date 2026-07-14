@@ -42,6 +42,22 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const [minAge, setMinAge] = useState<string>(existingEvent?.min_age ? existingEvent.min_age.toString() : "");
   const [maxAge, setMaxAge] = useState<string>(existingEvent?.max_age ? existingEvent.max_age.toString() : "");
   const [allowedClasses, setAllowedClasses] = useState<Set<string>>(new Set(existingEvent?.allowed_classes || []));
+  const [createMultiple, setCreateMultiple] = useState({
+    standard: true,
+    latin: false,
+    combinata: false
+  });
+
+  // Sync initial checkboxes with selected discipline
+  useEffect(() => {
+    if (!existingEvent) {
+      setCreateMultiple({
+        standard: discipline === "Danze Standard",
+        latin: discipline === "Danze Latino Americane",
+        combinata: discipline === "Combinata"
+      });
+    }
+  }, [discipline, existingEvent]);
 
   useEffect(() => {
     if (existingEvent) {
@@ -96,9 +112,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
     setSaving(true);
     try {
-      const payload = {
+      const basePayload = {
         competition_id: competitionId,
-        event_name: eventName.trim(),
         allowed_classes: Array.from(allowedClasses),
         min_age: minAge ? parseInt(minAge) : null,
         max_age: maxAge ? parseInt(maxAge) : null,
@@ -106,10 +121,35 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
       let error;
       if (existingEvent) {
-        const { error: updateError } = await supabase.from("competition_event_types").update(payload).eq("id", existingEvent.id);
+        const { error: updateError } = await supabase.from("competition_event_types").update({
+          ...basePayload,
+          event_name: eventName.trim(),
+        }).eq("id", existingEvent.id);
         error = updateError;
       } else {
-        const { error: insertError } = await supabase.from("competition_event_types").insert(payload);
+        const selectedDiscs = Object.entries(createMultiple).filter(([_, v]) => v).map(([k]) => k);
+        if (selectedDiscs.length === 0) {
+          toast({ title: "Errore", description: "Seleziona almeno una disciplina da creare", variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+
+        const toInsert = selectedDiscs.map(discKey => {
+          let discName = "Danze Standard";
+          if (discKey === "latin") discName = "Danze Latino Americane";
+          if (discKey === "combinata") discName = "Combinata";
+
+          let nameToInsert = eventName.trim();
+          if (discipline !== discName && nameToInsert.includes(discipline)) {
+             nameToInsert = nameToInsert.replace(discipline, discName);
+          } else if (discipline !== discName && !nameToInsert.includes(discName)) {
+             nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
+          }
+
+          return { ...basePayload, event_name: nameToInsert };
+        });
+
+        const { error: insertError } = await supabase.from("competition_event_types").insert(toInsert);
         error = insertError;
       }
 
@@ -166,20 +206,52 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             </div>
             
             {!existingEvent && (
-              <div className="space-y-2">
-                <Label>Pre-compila da Modello</Label>
-                <Select value={selectedPreset} onValueChange={setSelectedPreset}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Scegli un modello (opzionale)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="custom">-- Vuoto (Personalizzato) --</SelectItem>
-                    {getEventsForDiscipline(discipline).map(preset => (
-                      <SelectItem key={preset.name} value={preset.name}>{preset.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label>Pre-compila da Modello</Label>
+                  <Select value={selectedPreset} onValueChange={setSelectedPreset}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Scegli un modello (opzionale)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="custom">-- Vuoto (Personalizzato) --</SelectItem>
+                      {getEventsForDiscipline(discipline).map(preset => (
+                        <SelectItem key={preset.name} value={preset.name}>{preset.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="col-span-2 space-y-3 mt-2 p-3 rounded-md border bg-black/5 dark:bg-white/5">
+                  <Label className="text-muted-foreground">Crea contemporaneamente per:</Label>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-std" 
+                        checked={createMultiple.standard} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, standard: !!c }))}
+                      />
+                      <label htmlFor="multi-std" className="text-sm font-medium leading-none cursor-pointer">Standard</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-lat" 
+                        checked={createMultiple.latin} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, latin: !!c }))}
+                      />
+                      <label htmlFor="multi-lat" className="text-sm font-medium leading-none cursor-pointer">Latini</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-comb" 
+                        checked={createMultiple.combinata} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata: !!c }))}
+                      />
+                      <label htmlFor="multi-comb" className="text-sm font-medium leading-none cursor-pointer">Combinata</label>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
 
