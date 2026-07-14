@@ -377,7 +377,7 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
             </div>
             <h1 className="text-4xl font-display font-black tracking-tight mb-3">Iscrizione Gara</h1>
             <p className="text-muted-foreground font-medium max-w-sm mx-auto leading-relaxed">
-              Gestione iscrizioni semplificata. Supporto: <a href="mailto:ufficiogare@ritmodanza.net" className="text-primary hover:underline font-semibold">ufficiogare@ritmodanza.net</a>
+              Per informazioni e supporto contattare: <a href="mailto:ufficiogare@ritmodanza.net" className="text-primary hover:underline font-semibold">ufficiogare@ritmodanza.net</a>
             </p>
         </motion.div>
       )}
