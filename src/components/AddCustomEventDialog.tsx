@@ -137,6 +137,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             else classStr = classStr.replace("MASTER", "Master");
           }
           if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
+          if (ageStr.toLowerCase().includes("rising stars")) classStr = classStr.replace(/\bOpen\b/ig, "").trim();
 
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
@@ -170,6 +171,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             else classStr = classStr.replace("MASTER", "Master");
           }
           if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
+          if (ageStr.toLowerCase().includes("rising stars")) classStr = classStr.replace(/\bOpen\b/ig, "").trim();
           
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
@@ -289,6 +291,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                   else classStr = classStr.replace("MASTER", "Master");
                 }
                 if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
+          if (ageStr.toLowerCase().includes("rising stars")) classStr = classStr.replace(/\bOpen\b/ig, "").trim();
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
@@ -323,6 +326,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                   else classStr = classStr.replace("MASTER", "Master");
                 }
                 if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
+          if (ageStr.toLowerCase().includes("rising stars")) classStr = classStr.replace(/\bOpen\b/ig, "").trim();
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
@@ -386,6 +390,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                  nameToInsert = `${nameToInsert} ${targetIntlDisc}`;
                }
 
+               if (nameToInsert.toLowerCase().includes("rising stars")) nameToInsert = nameToInsert.replace(/\bOpen\b/ig, "").replace(/\s+/g, " ").trim();
                if (targetIntlDisc.includes("Showdance")) {
                  nameToInsert = nameToInsert.replace(/\bOpen\b/ig, '').replace(/\s+/g, ' ').trim();
                }
@@ -410,6 +415,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                  nameToInsert = `${nameToInsert} ${targetIntlDisc}`;
                }
 
+               if (nameToInsert.toLowerCase().includes("rising stars")) nameToInsert = nameToInsert.replace(/\bOpen\b/ig, "").replace(/\s+/g, " ").trim();
                if (targetIntlDisc.includes("Showdance")) {
                  nameToInsert = nameToInsert.replace(/\bOpen\b/ig, '').replace(/\s+/g, ' ').trim();
                  if (nameToInsert.toLowerCase().includes("adult")) {

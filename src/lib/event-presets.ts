@@ -29,7 +29,7 @@ export const STANDARD_LATIN_EVENTS = [
   // Open/Rising
   { name: "Adult Open", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
   { name: "Amator Open A", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
-  { name: "Rising Star", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
+  { name: "Adult Rising Stars", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
   { name: "Youth Open", classes: ["B1", "B2", "B3", "A", "A1", "A2", "AS"], minAge: 16, maxAge: 18 },
   { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
   
