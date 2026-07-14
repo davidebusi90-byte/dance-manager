@@ -105,12 +105,14 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               if (highestClass === "AS" || highestClass === "MASTER") baseClass = "";
               classStr = baseClass ? `${baseClass} Open` : "Open";
             }
+            if (classStr === "MASTER") classStr = "Master";
+            if (classStr === "Master" && ageStr.toLowerCase().includes("master")) classStr = "";
             
             let intlDisc = "Standard";
             if (discipline.includes("Latin")) intlDisc = "Latin";
             if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
             
-            setEventName(`${ageStr} ${classStr} ${intlDisc}`.trim());
+            setEventName(`${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim());
           } else {
             setEventName(`${discipline} - ${preset.name}`);
           }
@@ -207,12 +209,14 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                   if (highestClass === "AS" || highestClass === "MASTER") baseClass = "";
                   classStr = baseClass ? `${baseClass} Open` : "Open";
                 }
+                if (classStr === "MASTER") classStr = "Master";
+                if (classStr === "Master" && ageStr.toLowerCase().includes("master")) classStr = "";
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
                 if (discKey === "combinata") intlDisc = "Ten Dance";
 
-                finalName = `${ageStr} ${classStr} ${intlDisc}`.trim();
+                finalName = `${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim();
               } else {
                 finalName = `${discName} - ${preset.name}`;
               }
