@@ -23,6 +23,7 @@ export const STANDARD_LATIN_EVENTS = [
   { name: "Over 45", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"], minAge: 45 },
   { name: "Over 55", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"], minAge: 55 },
   { name: "Over 65", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"], minAge: 65 },
+  { name: "Over 70", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"], minAge: 70 },
   { name: "Over 75", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"], minAge: 75 },
 
   // Open/Rising
