@@ -37,7 +37,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const { toast } = useToast();
 
   const [discipline, setDiscipline] = useState<string>("Danze Standard");
-  const [selectedPreset, setSelectedPreset] = useState<string>("custom");
+  const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set());
   const [eventName, setEventName] = useState(existingEvent?.event_name || "");
   const [minAge, setMinAge] = useState<string>(existingEvent?.min_age ? existingEvent.min_age.toString() : "");
   const [maxAge, setMaxAge] = useState<string>(existingEvent?.max_age ? existingEvent.max_age.toString() : "");
@@ -77,11 +77,11 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
     }
   }, [existingEvent]);
 
-  // Handle preset selection
+  // Sync single preset selection
   useEffect(() => {
-    if (!existingEvent && selectedPreset && selectedPreset !== "custom") {
-      const presets = getEventsForDiscipline(discipline);
-      const preset = presets.find(p => p.name === selectedPreset);
+    if (!existingEvent && selectedPresets.size === 1) {
+      const presetName = Array.from(selectedPresets)[0];
+      const preset = getEventsForDiscipline(discipline).find(p => p.name === presetName);
       if (preset) {
         setEventName(`${discipline} - ${preset.name}`);
         setMinAge(preset.minAge ? preset.minAge.toString() : "");
@@ -89,7 +89,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
         setAllowedClasses(new Set(preset.classes));
       }
     }
-  }, [selectedPreset, discipline, existingEvent]);
+  }, [selectedPresets, discipline, existingEvent]);
 
   const handleClassToggle = (cls: string) => {
     setAllowedClasses(prev => {
@@ -101,13 +101,15 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   };
 
   const handleSave = async () => {
-    if (!eventName.trim()) {
-      toast({ title: "Errore", description: "Inserisci il nome della gara", variant: "destructive" });
-      return;
-    }
-    if (allowedClasses.size === 0) {
-      toast({ title: "Errore", description: "Seleziona almeno una classe", variant: "destructive" });
-      return;
+    if (existingEvent || selectedPresets.size <= 1) {
+      if (!eventName.trim()) {
+        toast({ title: "Errore", description: "Inserisci il nome della gara", variant: "destructive" });
+        return;
+      }
+      if (allowedClasses.size === 0) {
+        toast({ title: "Errore", description: "Seleziona almeno una classe", variant: "destructive" });
+        return;
+      }
     }
 
     setSaving(true);
@@ -134,20 +136,45 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           return;
         }
 
-        const toInsert = selectedDiscs.map(discKey => {
-          let discName = "Danze Standard";
-          if (discKey === "latin") discName = "Danze Latino Americane";
-          if (discKey === "combinata") discName = "Combinata";
+        const presetsList = getEventsForDiscipline(discipline);
+        let toInsert: any[] = [];
 
-          let nameToInsert = eventName.trim();
-          if (discipline !== discName && nameToInsert.includes(discipline)) {
-             nameToInsert = nameToInsert.replace(discipline, discName);
-          } else if (discipline !== discName && !nameToInsert.includes(discName)) {
-             nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
-          }
+        if (selectedPresets.size > 1) {
+          // Bulk creation across multiple presets AND disciplines
+          Array.from(selectedPresets).forEach(presetName => {
+            const preset = presetsList.find(p => p.name === presetName);
+            if (!preset) return;
 
-          return { ...basePayload, event_name: nameToInsert };
-        });
+            selectedDiscs.forEach(discKey => {
+              let discName = "Danze Standard";
+              if (discKey === "latin") discName = "Danze Latino Americane";
+              if (discKey === "combinata") discName = "Combinata";
+
+              toInsert.push({
+                competition_id: competitionId,
+                event_name: `${discName} - ${preset.name}`,
+                allowed_classes: preset.classes,
+                min_age: preset.minAge || null,
+                max_age: preset.maxAge || null,
+              });
+            });
+          });
+        } else {
+          toInsert = selectedDiscs.map(discKey => {
+            let discName = "Danze Standard";
+            if (discKey === "latin") discName = "Danze Latino Americane";
+            if (discKey === "combinata") discName = "Combinata";
+
+            let nameToInsert = eventName.trim();
+            if (discipline !== discName && nameToInsert.includes(discipline)) {
+               nameToInsert = nameToInsert.replace(discipline, discName);
+            } else if (discipline !== discName && !nameToInsert.includes(discName)) {
+               nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
+            }
+
+            return { ...basePayload, event_name: nameToInsert };
+          });
+        }
 
         const { error: insertError } = await supabase.from("competition_event_types").insert(toInsert);
         error = insertError;
@@ -161,7 +188,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
       
       if (!existingEvent) {
         // Reset form
-        setSelectedPreset("custom");
+        setSelectedPresets(new Set());
         setEventName("");
         setMinAge("");
         setMaxAge("");
@@ -207,19 +234,29 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             
             {!existingEvent && (
               <>
-                <div className="space-y-2">
-                  <Label>Pre-compila da Modello</Label>
-                  <Select value={selectedPreset} onValueChange={setSelectedPreset}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Scegli un modello (opzionale)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="custom">-- Vuoto (Personalizzato) --</SelectItem>
-                      {getEventsForDiscipline(discipline).map(preset => (
-                        <SelectItem key={preset.name} value={preset.name}>{preset.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="col-span-2 space-y-2 mt-2">
+                  <Label>Età / Modelli (selezionane uno o più)</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 border rounded-md max-h-[160px] overflow-y-auto bg-black/5 dark:bg-white/5">
+                    {getEventsForDiscipline(discipline).map(preset => (
+                      <div key={preset.name} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`preset-${preset.name}`} 
+                          checked={selectedPresets.has(preset.name)}
+                          onCheckedChange={(checked) => {
+                            setSelectedPresets(prev => {
+                              const next = new Set(prev);
+                              if (checked) next.add(preset.name);
+                              else next.delete(preset.name);
+                              return next;
+                            });
+                          }}
+                        />
+                        <label htmlFor={`preset-${preset.name}`} className="text-xs font-medium leading-none cursor-pointer">
+                          {preset.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="col-span-2 space-y-3 mt-2 p-3 rounded-md border bg-black/5 dark:bg-white/5">
@@ -255,53 +292,62 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label>Nome Gara</Label>
-            <Input 
-              placeholder="Es. IDSF International Open Latin" 
-              value={eventName}
-              onChange={(e) => setEventName(e.target.value)}
-            />
-          </div>
+          {selectedPresets.size > 1 ? (
+            <div className="col-span-2 p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg text-sm font-medium text-center">
+              Modalità Creazione Multipla Attiva.<br/>
+              Verranno create <strong>{selectedPresets.size} gare</strong> per ogni disciplina selezionata, utilizzando le impostazioni standard dei modelli.
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2 col-span-2">
+                <Label>Nome Gara</Label>
+                <Input 
+                  placeholder="Es. IDSF International Open Latin" 
+                  value={eventName}
+                  onChange={(e) => setEventName(e.target.value)}
+                />
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Età Minima (opzionale)</Label>
-              <Input 
-                type="number" 
-                placeholder="Es. 16" 
-                value={minAge}
-                onChange={(e) => setMinAge(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Età Massima (opzionale)</Label>
-              <Input 
-                type="number" 
-                placeholder="Es. 34" 
-                value={maxAge}
-                onChange={(e) => setMaxAge(e.target.value)}
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-4 col-span-2">
+                <div className="space-y-2">
+                  <Label>Età Minima (opzionale)</Label>
+                  <Input 
+                    type="number" 
+                    placeholder="Es. 16" 
+                    value={minAge}
+                    onChange={(e) => setMinAge(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Età Massima (opzionale)</Label>
+                  <Input 
+                    type="number" 
+                    placeholder="Es. 34" 
+                    value={maxAge}
+                    onChange={(e) => setMaxAge(e.target.value)}
+                  />
+                </div>
+              </div>
 
-          <div className="space-y-3">
-            <Label>Classi Ammesse</Label>
-            <div className="flex flex-wrap gap-2">
-              {AVAILABLE_CLASSES.map(cls => (
-                <Button
-                  key={cls}
-                  type="button"
-                  variant={allowedClasses.has(cls) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleClassToggle(cls)}
-                  className="font-mono text-xs"
-                >
-                  {cls}
-                </Button>
-              ))}
-            </div>
-          </div>
+              <div className="space-y-3 col-span-2">
+                <Label>Classi Ammesse</Label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_CLASSES.map(cls => (
+                    <Button
+                      key={cls}
+                      type="button"
+                      variant={allowedClasses.has(cls) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleClassToggle(cls)}
+                      className="font-mono text-xs"
+                    >
+                      {cls}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 mt-4">
