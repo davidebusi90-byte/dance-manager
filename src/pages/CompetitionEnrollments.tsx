@@ -123,15 +123,22 @@ export default function CompetitionEnrollments() {
       if (isAtEndA && !isAtEndB) return 1;
       if (!isAtEndA && isAtEndB) return -1;
       
-      const minAgeA = a.min_age ?? 0;
-      const minAgeB = b.min_age ?? 0;
+      let minAgeA = a.min_age;
+      if (minAgeA === null) {
+        minAgeA = (nameA.includes("master") || nameA.includes("over") || nameA.includes("adult")) ? 99 : 0;
+      }
+      
+      let minAgeB = b.min_age;
+      if (minAgeB === null) {
+        minAgeB = (nameB.includes("master") || nameB.includes("over") || nameB.includes("adult")) ? 99 : 0;
+      }
       
       if (minAgeA !== minAgeB) {
         return minAgeA - minAgeB;
       }
       
-      const maxAgeA = a.max_age ?? 99;
-      const maxAgeB = b.max_age ?? 99;
+      const maxAgeA = a.max_age ?? 999;
+      const maxAgeB = b.max_age ?? 999;
       
       if (maxAgeA !== maxAgeB) {
         return maxAgeA - maxAgeB;

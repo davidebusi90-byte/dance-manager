@@ -250,8 +250,8 @@ export default function Dashboard() {
                       <ClipboardList className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="text-2xl font-black">Gestione gare</p>
-                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Gestione Classi</p>
+                      <p className="text-2xl font-black">Gestione Gare</p>
+                      <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Gestione Eventi</p>
                     </div>
                   </div>
                 </div>
