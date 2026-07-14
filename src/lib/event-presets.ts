@@ -23,6 +23,7 @@ export const STANDARD_LATIN_EVENTS = [
   { name: "Over 45", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 45 },
   { name: "Over 55", classes: ["D", "C", "B1", "B2", "B3", "A", "AS"], minAge: 55 },
   { name: "Over 65", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 65 },
+  { name: "Over 75", classes: ["D", "C", "B1", "B2", "B3", "A", "AS", "MASTER"], minAge: 75 },
 
   // Open/Rising
   { name: "Adult Open", classes: ["A", "A1", "A2", "AS"], minAge: 16 },
@@ -32,6 +33,10 @@ export const STANDARD_LATIN_EVENTS = [
   { name: "Rising Star Master", classes: ["MASTER"] },
   { name: "Open Classe B", classes: ["B1", "B2", "B3"] },
   { name: "Adult Master", classes: ["MASTER"] },
+  { name: "Master 1", classes: ["MASTER"] },
+  { name: "Master 2", classes: ["MASTER"] },
+  { name: "Master 3", classes: ["MASTER"] },
+  { name: "Master 4", classes: ["MASTER"] },
 ];
 
 export const COMBINATA_EVENTS = [
