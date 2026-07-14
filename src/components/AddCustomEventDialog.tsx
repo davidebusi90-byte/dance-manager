@@ -136,6 +136,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             if (classStr === "MASTER") classStr = "Master";
             else classStr = classStr.replace("MASTER", "Master");
           }
+          if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
 
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
@@ -287,6 +288,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                   if (classStr === "MASTER") classStr = "Master";
                   else classStr = classStr.replace("MASTER", "Master");
                 }
+                if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
