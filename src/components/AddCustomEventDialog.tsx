@@ -287,7 +287,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{existingEvent ? "Modifica Gara" : "Aggiungi Gara"}</DialogTitle>
         </DialogHeader>
