@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2, Pencil } from "lucide-react";
+import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
@@ -436,15 +436,31 @@ export default function CompetitionEnrollments() {
                                       >
                                         <Copy className="w-4 h-4" /> Copia Tutte
                                       </Button>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        onClick={() => handlePasteEvents(competition.id)}
-                                        disabled={clipboardEvents.length === 0}
-                                        className="gap-2"
-                                      >
-                                        <ClipboardPaste className="w-4 h-4" /> Incolla ({clipboardEvents.length})
-                                      </Button>
+                                      <div className="flex items-center bg-background border border-border rounded-md overflow-hidden">
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => handlePasteEvents(competition.id)}
+                                          disabled={clipboardEvents.length === 0}
+                                          className="gap-2 rounded-none border-0 focus-visible:ring-0"
+                                        >
+                                          <ClipboardPaste className="w-4 h-4" /> Incolla ({clipboardEvents.length})
+                                        </Button>
+                                        {clipboardEvents.length > 0 && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              setClipboardEvents([]);
+                                              localStorage.removeItem("dance_manager_copied_events");
+                                            }}
+                                            className="px-2 h-9 rounded-none text-muted-foreground hover:bg-destructive hover:text-destructive-foreground border-l border-border focus-visible:ring-0"
+                                            title="Svuota appunti"
+                                          >
+                                            <X className="w-4 h-4" />
+                                          </Button>
+                                        )}
+                                      </div>
                                     </>
                                   )}
                                 </div>
