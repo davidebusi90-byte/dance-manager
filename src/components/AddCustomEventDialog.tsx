@@ -142,6 +142,13 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           if (discipline.includes("Classic Showdance")) intlDisc = "Classic Showdance";
           if (discipline.includes("South American Showdance")) intlDisc = "South American Showdance";
           
+          if (intlDisc.includes("Showdance")) {
+            classStr = "";
+            if (ageStr.toLowerCase().includes("adult")) {
+              ageStr = "Adult";
+            }
+          }
+
           setEventName(`${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim());
         } else {
           setEventName(`${discipline} - ${preset.name}`);
@@ -248,6 +255,15 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
                 if (discKey === "combinata") intlDisc = "Ten Dance";
+                if (discKey === "classicShowdance") intlDisc = "Classic Showdance";
+                if (discKey === "southAmericanShowdance") intlDisc = "South American Showdance";
+
+                if (intlDisc.includes("Showdance")) {
+                  classStr = "";
+                  if (ageStr.toLowerCase().includes("adult")) {
+                    ageStr = "Adult";
+                  }
+                }
 
                 finalName = `${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim();
               } else {
@@ -296,6 +312,13 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                  nameToInsert = nameToInsert.replace(/South American Showdance$/, targetIntlDisc);
                } else if (!nameToInsert.includes(targetIntlDisc)) {
                  nameToInsert = `${nameToInsert} ${targetIntlDisc}`;
+               }
+
+               if (targetIntlDisc.includes("Showdance")) {
+                 nameToInsert = nameToInsert.replace(/\bOpen\b/ig, '').replace(/\s+/g, ' ').trim();
+                 if (nameToInsert.toLowerCase().includes("adult")) {
+                   nameToInsert = nameToInsert.replace(/\bAdult\b.*?(Classic Showdance|South American Showdance)/i, `Adult $1`);
+                 }
                }
             } else {
                if (discipline !== discName && nameToInsert.includes(discipline)) {

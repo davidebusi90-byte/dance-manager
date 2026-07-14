@@ -312,7 +312,7 @@ export default function CompetitionEnrollments() {
             </div>
             <div>
               <h1 className="text-3xl font-display font-bold tracking-tight">Gestione Gare</h1>
-              <p className="text-muted-foreground font-medium">Configura regolamenti e gare per le competizioni</p>
+              <p className="text-muted-foreground font-medium">Configurazione eventi per competizione</p>
             </div>
           </div>
           
