@@ -44,6 +44,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const [allowedClasses, setAllowedClasses] = useState<Set<string>>(new Set(existingEvent?.allowed_classes || []));
   const [titlePrefix, setTitlePrefix] = useState<string>("Nessuno");
   const [isInternationalFormat, setIsInternationalFormat] = useState<boolean>(false);
+  const [isStarCupFormat, setIsStarCupFormat] = useState<boolean>(false);
   const [createMultiple, setCreateMultiple] = useState({
     standard: true,
     latin: true,
@@ -114,7 +115,40 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
         const classesArray = Array.from(allowedClasses);
         const classesToUse = classesArray.length > 0 ? classesArray : preset.classes;
 
-        if (isInternationalFormat) {
+        if (isStarCupFormat) {
+          const ageMatch = preset.name.match(/\(([^)]+)\)/);
+          let ageStr = ageMatch ? ageMatch[1] : preset.name.replace(/\bOpen\b/ig, '').trim();
+          
+          let classStr = "Open";
+          if (classesToUse.length === 1) {
+            classStr = classesToUse[0];
+          } else if (classesToUse.length > 1) {
+            const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"];
+            const sortedClasses = [...classesToUse].sort((a, b) => classOrder.indexOf(b) - classOrder.indexOf(a));
+            const highestClass = sortedClasses[0];
+            let baseClass = highestClass;
+            if (highestClass.startsWith("B")) baseClass = "B";
+            if (highestClass.startsWith("A") && highestClass !== "AS") baseClass = "A";
+            if (highestClass === "AS" || highestClass.startsWith("MASTER")) baseClass = "";
+            classStr = baseClass ? `${baseClass} Open` : "Open";
+          }
+          if (classStr.startsWith("MASTER")) {
+            if (classStr === "MASTER") classStr = "Master";
+            else classStr = classStr.replace("MASTER", "Master");
+          }
+
+          let intlDisc = "Standard";
+          if (discipline.includes("Latin")) intlDisc = "Latin";
+          if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
+          if (discipline.includes("Classic Showdance")) intlDisc = "Classic Showdance";
+          if (discipline.includes("South American Showdance")) intlDisc = "South American Showdance";
+          
+          if (intlDisc.includes("Showdance")) {
+            classStr = "";
+          }
+
+          setEventName(`${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim());
+        } else if (isInternationalFormat) {
           let ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
           ageStr = ageStr.replace(/\bOpen\b/ig, '').trim();
           let classStr = "Open";
@@ -155,13 +189,15 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
         }
       }
     }
-  }, [selectedPresets, discipline, allowedClasses, isInternationalFormat, existingEvent]);
+  }, [selectedPresets, discipline, allowedClasses, isInternationalFormat, isStarCupFormat, existingEvent]);
 
   // Auto-toggle International format
   useEffect(() => {
     const t = titlePrefix.toLowerCase();
-    const isChampionship = t.includes("championship") || t.includes("international") || t.includes("universal") || t.includes("star") || t.includes("cup");
+    const isStar = t.includes("star cup");
+    const isChampionship = !isStar && (t.includes("championship") || t.includes("international") || t.includes("universal") || t.includes("cup"));
     setIsInternationalFormat(isChampionship);
+    setIsStarCupFormat(isStar);
   }, [titlePrefix]);
 
   const handleClassToggle = (cls: string) => {
@@ -229,7 +265,41 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               if (discKey === "southAmericanShowdance") discName = "South American Showdance";
 
               let finalName = "";
-              if (isInternationalFormat) {
+              if (isStarCupFormat) {
+                const ageMatch = preset.name.match(/\(([^)]+)\)/);
+                let ageStr = ageMatch ? ageMatch[1] : preset.name.replace(/\bOpen\b/ig, '').trim();
+
+                let classStr = "Open";
+                if (classesToUse.length === 1) {
+                  classStr = classesToUse[0];
+                } else if (classesToUse.length > 1) {
+                  const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"];
+                  const sortedClasses = [...classesToUse].sort((a, b) => classOrder.indexOf(b) - classOrder.indexOf(a));
+                  const highestClass = sortedClasses[0];
+                  let baseClass = highestClass;
+                  if (highestClass.startsWith("B")) baseClass = "B";
+                  if (highestClass.startsWith("A") && highestClass !== "AS") baseClass = "A";
+                  if (highestClass === "AS" || highestClass.startsWith("MASTER")) baseClass = "";
+                  classStr = baseClass ? `${baseClass} Open` : "Open";
+                }
+                
+                if (classStr.startsWith("MASTER")) {
+                  if (classStr === "MASTER") classStr = "Master";
+                  else classStr = classStr.replace("MASTER", "Master");
+                }
+                
+                let intlDisc = "Standard";
+                if (discKey === "latin") intlDisc = "Latin";
+                if (discKey === "combinata") intlDisc = "Ten Dance";
+                if (discKey === "classicShowdance") intlDisc = "Classic Showdance";
+                if (discKey === "southAmericanShowdance") intlDisc = "South American Showdance";
+
+                if (intlDisc.includes("Showdance")) {
+                  classStr = "";
+                }
+
+                finalName = `${ageStr} ${classStr} ${intlDisc}`.replace(/\s+/g, ' ').trim();
+              } else if (isInternationalFormat) {
                 let ageStr = preset.name.replace(/\s*\([^)]*\)/g, '').trim();
                 ageStr = ageStr.replace(/\bOpen\b/ig, '').trim();
                 let classStr = "Open";
@@ -293,7 +363,31 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
             let nameToInsert = eventName.trim();
             
-            if (isInternationalFormat) {
+            if (isStarCupFormat) {
+               let targetIntlDisc = "Standard";
+               if (discKey === "latin") targetIntlDisc = "Latin";
+               if (discKey === "combinata") targetIntlDisc = "Ten Dance";
+               if (discKey === "classicShowdance") targetIntlDisc = "Classic Showdance";
+               if (discKey === "southAmericanShowdance") targetIntlDisc = "South American Showdance";
+               
+               if (nameToInsert.endsWith("Standard")) {
+                 nameToInsert = nameToInsert.replace(/Standard$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Latin")) {
+                 nameToInsert = nameToInsert.replace(/Latin$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Ten Dance")) {
+                 nameToInsert = nameToInsert.replace(/Ten Dance$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Classic Showdance")) {
+                 nameToInsert = nameToInsert.replace(/Classic Showdance$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("South American Showdance")) {
+                 nameToInsert = nameToInsert.replace(/South American Showdance$/, targetIntlDisc);
+               } else if (!nameToInsert.includes(targetIntlDisc)) {
+                 nameToInsert = `${nameToInsert} ${targetIntlDisc}`;
+               }
+
+               if (targetIntlDisc.includes("Showdance")) {
+                 nameToInsert = nameToInsert.replace(/\bOpen\b/ig, '').replace(/\s+/g, ' ').trim();
+               }
+            } else if (isInternationalFormat) {
                let targetIntlDisc = "Standard";
                if (discKey === "latin") targetIntlDisc = "Latin";
                if (discKey === "combinata") targetIntlDisc = "Ten Dance";
@@ -413,13 +507,24 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                     <SelectItem value="European Championship">European Championship</SelectItem>
                     <SelectItem value="Italian Championship">Italian Championship</SelectItem>
                     <SelectItem value="Coppa Italia">Coppa Italia</SelectItem>
+                    <SelectItem value="Star Cup">Star Cup</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="flex items-center space-x-2 mt-2 pt-1">
                   <Checkbox 
+                    id="star-cup-format" 
+                    checked={isStarCupFormat} 
+                    onCheckedChange={(c) => { setIsStarCupFormat(!!c); if (c) setIsInternationalFormat(false); }}
+                  />
+                  <label htmlFor="star-cup-format" className="text-xs font-medium cursor-pointer">
+                    Usa formato Star Cup (es. 10/11 B Open Standard)
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2 mt-2 pt-1">
+                  <Checkbox 
                     id="intl-format" 
                     checked={isInternationalFormat} 
-                    onCheckedChange={(c) => setIsInternationalFormat(!!c)}
+                    onCheckedChange={(c) => { setIsInternationalFormat(!!c); if (c) setIsStarCupFormat(false); }}
                   />
                   <label htmlFor="intl-format" className="text-xs font-medium cursor-pointer">
                     Usa formato Internazionale (es. Adult C Open Latin)
