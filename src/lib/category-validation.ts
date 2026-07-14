@@ -53,12 +53,12 @@ export const ALLOWED_CLASSES_BY_CATEGORY: Record<string, string[]> = {
   "junior2": ["D", "C", "B3", "B2", "B1", "A", "AS"],
   "youth": ["D", "C", "B3", "B2", "B1", "A", "AS"],
   "adult": ["D", "C", "B3", "B2", "B1", "A2", "A1", "A", "AS"],
-  "senior1": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
-  "senior2": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
-  "senior3a": ["D", "C", "B3", "B2", "B1", "A", "AS"],
-  "senior3b": ["D", "C", "B3", "B2", "B1", "A", "AS"],
-  "senior4a": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
-  "senior4b": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER"],
+  "senior1": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER", "MASTER 1"],
+  "senior2": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER", "MASTER 2"],
+  "senior3a": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER 3"],
+  "senior3b": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER 3"],
+  "senior4a": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER", "MASTER 4"],
+  "senior4b": ["D", "C", "B3", "B2", "B1", "A", "AS", "MASTER", "MASTER 4"],
   "senior5": ["D", "C", "B3", "B2", "B1", "A", "AS"],
 };
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2, Pencil, X } from "lucide-react";
+import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2, Pencil, X, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
@@ -310,6 +310,10 @@ export default function CompetitionEnrollments() {
           </div>
           
           <div className="flex flex-wrap items-center gap-4">
+            <Button variant="outline" onClick={() => navigate("/dashboard")} className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Torna al Menù
+            </Button>
             {isAdmin && <AddCompetitionDialog onSuccess={() => fetchData(true)} />}
           </div>
         </motion.div>

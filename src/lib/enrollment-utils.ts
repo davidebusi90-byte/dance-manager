@@ -184,7 +184,7 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     
     // 5. REGOLA MASTER: Esclusività classe MASTER
     const isMasterRace = nameFormattedNorm.includes("master");
-    if (effectiveClass === "MASTER") {
+    if (effectiveClass.startsWith("MASTER")) {
         if (!isMasterRace) return false;
     } else if (isMasterRace) {
         return false;

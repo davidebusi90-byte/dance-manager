@@ -4,6 +4,10 @@
  */
 export const CLASS_RANK: Record<string, number> = {
     "MASTER": 0,
+    "MASTER 1": 0,
+    "MASTER 2": 0,
+    "MASTER 3": 0,
+    "MASTER 4": 0,
     "AS": 1,
     "A": 2,
     "A1": 3,

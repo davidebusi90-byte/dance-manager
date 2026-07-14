@@ -346,19 +346,21 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
     setSubmitting(false);
   };
 
+  const isPublicView = userRole === null;
+
   if (isRoleLoading) {
     const loadingContent = (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="text-muted-foreground font-medium animate-pulse">Caricamento...</p>
       </div>
     );
-    return isEmbedded ? loadingContent : <Layout>{loadingContent}</Layout>;
+    return isEmbedded || isPublicView ? loadingContent : <Layout>{loadingContent}</Layout>;
   }
 
   const content = (
-    <div className={isEmbedded ? "max-w-2xl mx-auto" : "min-h-[80vh] py-8 container mx-auto px-4 max-w-2xl"}>
-      {!isEmbedded && (
+    <div className={isEmbedded ? "max-w-2xl mx-auto" : "w-full max-w-2xl mx-auto"}>
+      {!isEmbedded && !isPublicView && (
         <div className="mb-8 flex justify-start">
           <Button
             variant="ghost"
@@ -575,5 +577,15 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
     </div>
   );
 
-  return isEmbedded ? content : <Layout>{content}</Layout>;
+  const finalContent = isPublicView && !isEmbedded ? (
+    <div className="min-h-screen w-full flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-neutral-50/50 dark:bg-neutral-950">
+      {content}
+    </div>
+  ) : !isEmbedded ? (
+    <div className="min-h-[80vh] py-8 container mx-auto px-4">
+      {content}
+    </div>
+  ) : content;
+
+  return isEmbedded || isPublicView ? finalContent : <Layout>{finalContent}</Layout>;
 }

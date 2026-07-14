@@ -29,7 +29,7 @@ interface AddCustomEventDialogProps {
   trigger?: React.ReactNode;
 }
 
-const AVAILABLE_CLASSES = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER"];
+const AVAILABLE_CLASSES = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"];
 
 export default function AddCustomEventDialog({ competitionId, onSuccess, existingEvent, trigger }: AddCustomEventDialogProps) {
   const [open, setOpen] = useState(false);
@@ -121,17 +121,20 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           if (classesToUse.length === 1) {
             classStr = classesToUse[0];
           } else if (classesToUse.length > 1) {
-            const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER"];
+            const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"];
             const sortedClasses = [...classesToUse].sort((a, b) => classOrder.indexOf(b) - classOrder.indexOf(a));
             const highestClass = sortedClasses[0];
             let baseClass = highestClass;
             if (highestClass.startsWith("B")) baseClass = "B";
             if (highestClass.startsWith("A") && highestClass !== "AS") baseClass = "A";
-            if (highestClass === "AS" || highestClass === "MASTER") baseClass = "";
+            if (highestClass === "AS" || highestClass.startsWith("MASTER")) baseClass = "";
             classStr = baseClass ? `${baseClass} Open` : "Open";
           }
-          if (classStr === "MASTER") classStr = "Master";
-          if (classStr === "Master" && ageStr.toLowerCase().includes("master")) classStr = "";
+          if (classStr.startsWith("MASTER")) {
+            if (classStr === "MASTER") classStr = "Master";
+            else classStr = classStr.replace("MASTER", "Master");
+          }
+          if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
           
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
@@ -226,17 +229,21 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                 if (classesToUse.length === 1) {
                   classStr = classesToUse[0];
                 } else if (classesToUse.length > 1) {
-                  const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER"];
+                  const classOrder = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER", "MASTER 1", "MASTER 2", "MASTER 3", "MASTER 4"];
                   const sortedClasses = [...classesToUse].sort((a, b) => classOrder.indexOf(b) - classOrder.indexOf(a));
                   const highestClass = sortedClasses[0];
                   let baseClass = highestClass;
                   if (highestClass.startsWith("B")) baseClass = "B";
                   if (highestClass.startsWith("A") && highestClass !== "AS") baseClass = "A";
-                  if (highestClass === "AS" || highestClass === "MASTER") baseClass = "";
+                  if (highestClass === "AS" || highestClass.startsWith("MASTER")) baseClass = "";
                   classStr = baseClass ? `${baseClass} Open` : "Open";
                 }
-                if (classStr === "MASTER") classStr = "Master";
-                if (classStr === "Master" && ageStr.toLowerCase().includes("master")) classStr = "";
+                
+                if (classStr.startsWith("MASTER")) {
+                  if (classStr === "MASTER") classStr = "Master";
+                  else classStr = classStr.replace("MASTER", "Master");
+                }
+                if (classStr.startsWith("Master") && ageStr.toLowerCase().includes("master")) classStr = "";
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
