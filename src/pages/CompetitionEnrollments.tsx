@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2 } from "lucide-react";
+import { Trophy, Settings, Loader2, Archive, ChevronDown, ChevronUp, Copy, ClipboardPaste, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 import AddCompetitionDialog from "@/components/AddCompetitionDialog";
@@ -456,6 +456,16 @@ export default function CompetitionEnrollments() {
                                         </div>
                                         {isAdmin && (
                                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
+                                            <AddCustomEventDialog 
+                                              competitionId={competition.id} 
+                                              onSuccess={() => fetchData(true)} 
+                                              existingEvent={event}
+                                              trigger={
+                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10" title="Modifica gara">
+                                                  <Pencil className="w-3.5 h-3.5" />
+                                                </Button>
+                                              }
+                                            />
                                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={() => handleCopySingleEvent(event)} title="Copia singola gara">
                                               <Copy className="w-3.5 h-3.5" />
                                             </Button>

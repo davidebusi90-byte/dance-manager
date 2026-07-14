@@ -19,25 +19,51 @@ import { useToast } from "@/hooks/use-toast";
 interface AddCustomEventDialogProps {
   competitionId: string;
   onSuccess: () => void;
+  existingEvent?: {
+    id: string;
+    event_name: string;
+    allowed_classes: string[];
+    min_age: number | null;
+    max_age: number | null;
+  };
+  trigger?: React.ReactNode;
 }
 
 const AVAILABLE_CLASSES = ["D", "C", "B3", "B2", "B1", "A", "A2", "A1", "AS", "MASTER"];
 
-export default function AddCustomEventDialog({ competitionId, onSuccess }: AddCustomEventDialogProps) {
+export default function AddCustomEventDialog({ competitionId, onSuccess, existingEvent, trigger }: AddCustomEventDialogProps) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   const [discipline, setDiscipline] = useState<string>("Danze Standard");
   const [selectedPreset, setSelectedPreset] = useState<string>("custom");
-  const [eventName, setEventName] = useState("");
-  const [minAge, setMinAge] = useState<string>("");
-  const [maxAge, setMaxAge] = useState<string>("");
-  const [allowedClasses, setAllowedClasses] = useState<Set<string>>(new Set());
+  const [eventName, setEventName] = useState(existingEvent?.event_name || "");
+  const [minAge, setMinAge] = useState<string>(existingEvent?.min_age ? existingEvent.min_age.toString() : "");
+  const [maxAge, setMaxAge] = useState<string>(existingEvent?.max_age ? existingEvent.max_age.toString() : "");
+  const [allowedClasses, setAllowedClasses] = useState<Set<string>>(new Set(existingEvent?.allowed_classes || []));
+
+  useEffect(() => {
+    if (existingEvent) {
+      setEventName(existingEvent.event_name);
+      setMinAge(existingEvent.min_age ? existingEvent.min_age.toString() : "");
+      setMaxAge(existingEvent.max_age ? existingEvent.max_age.toString() : "");
+      setAllowedClasses(new Set(existingEvent.allowed_classes || []));
+      
+      const evtLower = existingEvent.event_name.toLowerCase();
+      if (evtLower.includes("combinata") || evtLower.includes("show")) {
+        setDiscipline(evtLower.includes("show") ? "Show Dance" : "Combinata");
+      } else if (evtLower.includes("latin")) {
+        setDiscipline("Danze Latino Americane");
+      } else {
+        setDiscipline("Danze Standard");
+      }
+    }
+  }, [existingEvent]);
 
   // Handle preset selection
   useEffect(() => {
-    if (selectedPreset && selectedPreset !== "custom") {
+    if (!existingEvent && selectedPreset && selectedPreset !== "custom") {
       const presets = getEventsForDiscipline(discipline);
       const preset = presets.find(p => p.name === selectedPreset);
       if (preset) {
@@ -47,7 +73,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess }: AddCu
         setAllowedClasses(new Set(preset.classes));
       }
     }
-  }, [selectedPreset, discipline]);
+  }, [selectedPreset, discipline, existingEvent]);
 
   const handleClassToggle = (cls: string) => {
     setAllowedClasses(prev => {
@@ -70,29 +96,40 @@ export default function AddCustomEventDialog({ competitionId, onSuccess }: AddCu
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("competition_event_types").insert({
+      const payload = {
         competition_id: competitionId,
         event_name: eventName.trim(),
         allowed_classes: Array.from(allowedClasses),
         min_age: minAge ? parseInt(minAge) : null,
         max_age: maxAge ? parseInt(maxAge) : null,
-      });
+      };
+
+      let error;
+      if (existingEvent) {
+        const { error: updateError } = await supabase.from("competition_event_types").update(payload).eq("id", existingEvent.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase.from("competition_event_types").insert(payload);
+        error = insertError;
+      }
 
       if (error) throw error;
 
-      toast({ title: "Successo", description: "Gara aggiunta correttamente" });
+      toast({ title: "Successo", description: existingEvent ? "Gara aggiornata correttamente" : "Gara aggiunta correttamente" });
       setOpen(false);
       onSuccess();
       
-      // Reset form
-      setSelectedPreset("custom");
-      setEventName("");
-      setMinAge("");
-      setMaxAge("");
-      setAllowedClasses(new Set());
+      if (!existingEvent) {
+        // Reset form
+        setSelectedPreset("custom");
+        setEventName("");
+        setMinAge("");
+        setMaxAge("");
+        setAllowedClasses(new Set());
+      }
     } catch (error) {
-      console.error("Error adding event:", error);
-      toast({ title: "Errore", description: "Impossibile aggiungere la gara", variant: "destructive" });
+      console.error("Error adding/updating event:", error);
+      toast({ title: "Errore", description: "Impossibile salvare la gara", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -101,13 +138,15 @@ export default function AddCustomEventDialog({ competitionId, onSuccess }: AddCu
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-          <Plus className="w-4 h-4" /> Aggiungi Gara
-        </Button>
+        {trigger || (
+          <Button size="sm" className="gap-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+            <Plus className="w-4 h-4" /> Aggiungi Gara
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Aggiungi Gara</DialogTitle>
+          <DialogTitle>{existingEvent ? "Modifica Gara" : "Aggiungi Gara"}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
@@ -126,20 +165,22 @@ export default function AddCustomEventDialog({ competitionId, onSuccess }: AddCu
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label>Pre-compila da Modello</Label>
-              <Select value={selectedPreset} onValueChange={setSelectedPreset}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Scegli un modello (opzionale)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">-- Vuoto (Personalizzato) --</SelectItem>
-                  {getEventsForDiscipline(discipline).map(preset => (
-                    <SelectItem key={preset.name} value={preset.name}>{preset.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {!existingEvent && (
+              <div className="space-y-2">
+                <Label>Pre-compila da Modello</Label>
+                <Select value={selectedPreset} onValueChange={setSelectedPreset}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Scegli un modello (opzionale)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">-- Vuoto (Personalizzato) --</SelectItem>
+                    {getEventsForDiscipline(discipline).map(preset => (
+                      <SelectItem key={preset.name} value={preset.name}>{preset.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
