@@ -42,6 +42,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const [minAge, setMinAge] = useState<string>(existingEvent?.min_age ? existingEvent.min_age.toString() : "");
   const [maxAge, setMaxAge] = useState<string>(existingEvent?.max_age ? existingEvent.max_age.toString() : "");
   const [allowedClasses, setAllowedClasses] = useState<Set<string>>(new Set(existingEvent?.allowed_classes || []));
+  const [titlePrefix, setTitlePrefix] = useState<string>("Nessuno");
   const [createMultiple, setCreateMultiple] = useState({
     standard: true,
     latin: false,
@@ -150,9 +151,14 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               if (discKey === "latin") discName = "Danze Latino Americane";
               if (discKey === "combinata") discName = "Combinata";
 
+              let finalName = `${discName} - ${preset.name}`;
+              if (titlePrefix !== "Nessuno") {
+                finalName = `${titlePrefix} ${finalName}`;
+              }
+
               toInsert.push({
                 competition_id: competitionId,
-                event_name: `${discName} - ${preset.name}`,
+                event_name: finalName,
                 allowed_classes: preset.classes,
                 min_age: preset.minAge || null,
                 max_age: preset.maxAge || null,
@@ -170,6 +176,10 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                nameToInsert = nameToInsert.replace(discipline, discName);
             } else if (discipline !== discName && !nameToInsert.includes(discName)) {
                nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
+            }
+
+            if (titlePrefix !== "Nessuno") {
+               nameToInsert = `${titlePrefix} ${nameToInsert}`;
             }
 
             return { ...basePayload, event_name: nameToInsert };
@@ -193,6 +203,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
         setMinAge("");
         setMaxAge("");
         setAllowedClasses(new Set());
+        setTitlePrefix("Nessuno");
       }
     } catch (error) {
       console.error("Error adding/updating event:", error);
@@ -219,7 +230,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
         <div className="grid gap-6 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Disciplina</Label>
+              <Label>Disciplina Base</Label>
               <Select value={discipline} onValueChange={(v) => { setDiscipline(v); setSelectedPreset("custom"); }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona disciplina" />
@@ -232,6 +243,27 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               </Select>
             </div>
             
+            {!existingEvent && (
+              <div className="space-y-2">
+                <Label>Aggiungi Titolo (Prefisso)</Label>
+                <Select value={titlePrefix} onValueChange={setTitlePrefix}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nessuno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nessuno">-- Nessuno --</SelectItem>
+                    <SelectItem value="World Cup">World Cup</SelectItem>
+                    <SelectItem value="World Championship">World Championship</SelectItem>
+                    <SelectItem value="European Championship">European Championship</SelectItem>
+                    <SelectItem value="Italian Championship">Italian Championship</SelectItem>
+                    <SelectItem value="Coppa Italia">Coppa Italia</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             {!existingEvent && (
               <>
                 <div className="col-span-2 space-y-2 mt-2">
