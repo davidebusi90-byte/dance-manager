@@ -238,6 +238,35 @@ export default function CompetitionEntriesDetail({
   const lateUnpaidEntries = activeEntries.filter(e => !e.is_paid && isLateEntry(e.created_at));
   const regularUnpaidEntries = activeEntries.filter(e => !e.is_paid && !isLateEntry(e.created_at));
 
+  const enrolledCoupleIds = new Set(activeEntries.map(e => e.couple_id));
+  
+  const unenrolledCouples = allCouples.filter(couple => {
+    if (role === "instructor" && userId) {
+      const currentUserProfile = profiles.find(p => p.user_id === userId);
+      if (!currentUserProfile || !isInstructorResponsibleForCoupleByResponsabili(currentUserProfile.full_name, couple.responsabili || [])) {
+        return false;
+      }
+    }
+    
+    if (role === "admin" && selectedInstructorId !== "all") {
+      const instructor = profiles.find(p => p.id === selectedInstructorId);
+      if (instructor && !isInstructorResponsibleForCoupleByResponsabili(instructor.full_name, couple.responsabili || [])) {
+        return false;
+      }
+    }
+
+    if (enrolledCoupleIds.has(couple.id)) return false;
+
+    return eventTypes.some(et => isEventAllowedForCouple(et, couple));
+  }).sort((a, b) => {
+    const rank1 = getCategorySortRank(a.category);
+    const rank2 = getCategorySortRank(b.category);
+    if (rank1 !== rank2) return rank1 - rank2;
+    const name1 = `${a.athlete1?.last_name || ""} ${a.athlete1?.first_name || ""}`.toLowerCase();
+    const name2 = `${b.athlete1?.last_name || ""} ${b.athlete1?.first_name || ""}`.toLowerCase();
+    return name1.localeCompare(name2);
+  });
+
   const deleteEntry = async (entryId: string) => {
     const { error } = await supabase.from("competition_entries").delete().eq("id", entryId);
     if (error) {
@@ -391,14 +420,58 @@ export default function CompetitionEntriesDetail({
         </CardHeader>
         <CardContent className="p-0">
            <Tabs defaultValue="iscritti">
-              <TabsList className="bg-neutral-100 dark:bg-black/20 p-2 mx-8 mt-8 rounded-2xl">
-                 <TabsTrigger value="iscritti" className="rounded-xl font-bold py-2">ISCRITTI ({filteredEntries.length})</TabsTrigger>
-                 <TabsTrigger value="non-iscritti" className="rounded-xl font-bold py-2">DA ISCRIVERE</TabsTrigger>
-              </TabsList>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mx-8 mt-8 gap-4">
+                <TabsList className="bg-neutral-100 dark:bg-black/20 p-2 rounded-2xl">
+                   <TabsTrigger value="iscritti" className="rounded-xl font-bold py-2">ISCRITTI ({filteredEntries.length})</TabsTrigger>
+                   <TabsTrigger value="non-iscritti" className="rounded-xl font-bold py-2">DA ISCRIVERE ({unenrolledCouples.length})</TabsTrigger>
+                </TabsList>
+                {role === "admin" && (
+                  <div className="w-full sm:w-64">
+                    <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
+                      <SelectTrigger className="rounded-xl h-10 border-white/10 bg-white/5 font-medium">
+                        <SelectValue placeholder="Filtra per istruttore" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="all">Tutti gli istruttori</SelectItem>
+                        {instructors.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
               <TabsContent value="iscritti" className="p-8 pt-4">
                  <table className="w-full text-left">
                     <thead><tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5"><th className="pb-4 px-3">Atleti</th><th className="pb-4 text-center">Cat / Classe</th><th className="pb-4 hidden md:table-cell">Gare</th><th className="pb-4 hidden lg:table-cell">Istruttori</th><th className="pb-4 text-center">Pagamento</th></tr></thead>
                     <tbody>{activeEntries.map(e => renderEntryRow(e, isLateEntry(e.created_at)))}</tbody>
+                 </table>
+              </TabsContent>
+              <TabsContent value="non-iscritti" className="p-8 pt-4">
+                 <table className="w-full text-left">
+                    <thead>
+                       <tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5">
+                          <th className="pb-4 px-3">Atleti</th>
+                          <th className="pb-4 text-center">Cat / Classe</th>
+                          <th className="pb-4 hidden lg:table-cell">Istruttori</th>
+                       </tr>
+                    </thead>
+                    <tbody>
+                       {unenrolledCouples.map(couple => {
+                          const a1 = couple.athlete1;
+                          const a2 = couple.athlete2;
+                          return (
+                             <tr key={couple.id} className="hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5">
+                                <td className="py-4 px-3 w-[35%]"><div className="flex items-center gap-3">{renderAthleteName(a1)}<span className="text-muted-foreground opacity-30 text-[10px]">&</span>{renderAthleteName(a2)}</div></td>
+                                <td className="text-center w-[20%]"><div className="flex flex-col items-center"><span className="text-sm font-black tracking-tight">{couple.category}</span><span className="text-[9px] text-muted-foreground font-black uppercase opacity-60">CLASSE {couple.class}</span></div></td>
+                                <td className="w-[15%] hidden lg:table-cell"><div className="flex flex-col gap-1">{couple.responsabili?.map(r => <span key={r} className="text-[10px] text-muted-foreground font-bold border-l-2 border-primary/20 pl-2">{r}</span>)}</div></td>
+                             </tr>
+                          );
+                       })}
+                       {unenrolledCouples.length === 0 && (
+                          <tr><td colSpan={3} className="text-center py-8 text-muted-foreground italic">Nessuna coppia da iscrivere.</td></tr>
+                       )}
+                    </tbody>
                  </table>
               </TabsContent>
            </Tabs>
