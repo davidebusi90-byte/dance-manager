@@ -84,6 +84,7 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
       setCidCode(codeFromUrl);
       triggerAutoLookup(codeFromUrl);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const triggerAutoLookup = async (code: string) => {

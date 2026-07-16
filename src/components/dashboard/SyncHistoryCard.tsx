@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,7 @@ export default function SyncHistoryCard() {
   const [selectedLog, setSelectedLog] = useState<SyncLog | null>(null);
   const { toast } = useToast();
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await (supabase
       .from("sync_logs" as any) as any)
@@ -58,11 +58,11 @@ export default function SyncHistoryCard() {
       setLogs(data as unknown as SyncLog[]);
     }
     setLoading(false);
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [fetchLogs]);
 
   const handleResync = async (logId: string) => {
     setSyncingId(logId);

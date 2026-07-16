@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ConsentType = 'privacy_policy' | 'terms_of_service' | 'marketing' | 'third_party_sharing';
@@ -7,7 +7,7 @@ export function usePrivacyConsent(consentType: ConsentType = 'privacy_policy', v
   const [hasConsented, setHasConsented] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkConsent = async () => {
+  const checkConsent = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
@@ -44,7 +44,7 @@ export function usePrivacyConsent(consentType: ConsentType = 'privacy_policy', v
       setHasConsented(false);
     }
     setLoading(false);
-  };
+  }, [consentType, version]);
 
   useEffect(() => {
     checkConsent();
@@ -55,7 +55,7 @@ export function usePrivacyConsent(consentType: ConsentType = 'privacy_policy', v
 
     window.addEventListener(`consent-changed-${consentType}`, handleConsentChange);
     return () => window.removeEventListener(`consent-changed-${consentType}`, handleConsentChange);
-  }, [consentType, version]);
+  }, [consentType, version, checkConsent]);
 
   const saveConsent = async (accepted: boolean) => {
     const { data: { user } } = await supabase.auth.getUser();
