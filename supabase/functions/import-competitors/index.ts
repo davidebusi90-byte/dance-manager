@@ -284,16 +284,10 @@ Deno.serve(async (req) => {
               discipline_info: disciplineInfo,
               medical_certificate_expiry: athlete.medical_certificate_expiry || null,
               responsabili: responsabili.length > 0 ? responsabili : null,
+              notes: athlete.notes || null,
+              qr_code: incomingQr || null,
               is_deleted: false,
           };
-
-          if (athlete.notes !== undefined) {
-              updateData.notes = athlete.notes || null;
-          }
-
-          if (incomingQr) {
-              updateData.qr_code = incomingQr;
-          }
 
           const { error } = await adminClient
               .from("athletes")
