@@ -42,7 +42,11 @@ export function useDashboardData(role: string, userId: string | null) {
             if (profilesRes.error) throw profilesRes.error;
 
             const rawAthletes = (athletesRes.data || []) as Athlete[];
-            const rawCouples = (couplesRes.data || []) as Couple[];
+            const rawCouples = (couplesRes.data || []).map(c => ({
+                ...c,
+                athlete1: rawAthletes.find(a => a.id === c.athlete1_id),
+                athlete2: rawAthletes.find(a => a.id === c.athlete2_id)
+            })) as Couple[];
             const rawProfiles = (profilesRes.data || []) as Profile[];
 
             // Deduplicate athletes by CID (code)
