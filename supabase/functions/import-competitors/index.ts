@@ -269,25 +269,35 @@ Deno.serve(async (req) => {
           const responsabili = [athlete.resp1, athlete.resp2, athlete.resp3, athlete.resp4]
               .filter(r => r && r.trim() !== "");
 
+          const incomingQr = athlete.qr_code || (athlete as any).qrcode || (athlete as any).qrCode || (athlete as any).barcode;
+          
+          const updateData: any = {
+              code: athlete.code,
+              first_name: athlete.first_name,
+              last_name: athlete.last_name,
+              birth_date: athlete.birth_date || null,
+              gender: (athlete.gender || "M").toUpperCase(),
+              email: athlete.email || null,
+              phone: athlete.phone || null,
+              category: athlete.category,
+              class: bestClass.toUpperCase(),
+              discipline_info: disciplineInfo,
+              medical_certificate_expiry: athlete.medical_certificate_expiry || null,
+              responsabili: responsabili.length > 0 ? responsabili : null,
+              is_deleted: false,
+          };
+
+          if (athlete.notes !== undefined) {
+              updateData.notes = athlete.notes || null;
+          }
+
+          if (incomingQr) {
+              updateData.qr_code = incomingQr;
+          }
+
           const { error } = await adminClient
               .from("athletes")
-              .upsert({
-                  code: athlete.code,
-                  first_name: athlete.first_name,
-                  last_name: athlete.last_name,
-                  birth_date: athlete.birth_date || null,
-                  gender: (athlete.gender || "M").toUpperCase(),
-                  email: athlete.email || null,
-                  phone: athlete.phone || null,
-                  category: athlete.category,
-                  class: bestClass.toUpperCase(),
-                  discipline_info: disciplineInfo,
-                  medical_certificate_expiry: athlete.medical_certificate_expiry || null,
-                  responsabili: responsabili.length > 0 ? responsabili : null,
-                  notes: athlete.notes || null,
-                  qr_code: athlete.qr_code || null,
-                  is_deleted: false,
-              }, { onConflict: "code" });
+              .upsert(updateData, { onConflict: "code" });
 
           if (error) {
               results.failed++;
