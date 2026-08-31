@@ -527,10 +527,10 @@ export default function AthleteEnrollment({ isEmbedded = false }: { isEmbedded?:
                              {isAllowed && isExpanded && (
                                <div className="p-6 pt-0 grid sm:grid-cols-2 gap-2">
                                  {eventTypes.filter(et => et.competition_id === comp.id && isEventAllowedForCouple(et, selectedCouple)).map(et => (
-                                   <button key={et.id} onClick={() => toggleRace(comp.id, et.id)} className={cn("p-4 rounded-2xl border text-sm font-bold flex items-center gap-3", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-primary text-white border-transparent" : "bg-white/40 dark:bg-white/5 border-white/10")}>
+                                   <button key={et.id} onClick={() => toggleRace(comp.id, et.id)} className={cn("p-4 rounded-2xl border text-sm font-bold flex items-center gap-3", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-primary text-primary-foreground border-transparent" : "bg-white/40 dark:bg-white/5 border-white/10")}>
                                       <Checkbox checked={(selectedRaces[comp.id] || []).includes(et.id)} />
                                       <span className="flex-1 text-left">{formatEventName(et.event_name)}</span>
-                                      {(() => { const badge = getDanceCategoryBadge(et.dance_category); return badge ? <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-white/20 text-white border-white/30" : badge.className)}>{badge.label}</span> : null; })()}
+                                      {(() => { const badge = getDanceCategoryBadge(et.dance_category); return badge ? <span className={cn("text-[10px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0", (selectedRaces[comp.id] || []).includes(et.id) ? "bg-primary-foreground/10 text-primary-foreground border-primary-foreground/30" : badge.className)}>{badge.label}</span> : null; })()}
                                    </button>
                                  ))}
                                </div>
