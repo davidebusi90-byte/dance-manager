@@ -131,6 +131,21 @@ Deno.serve(async (req) => {
   // Action: Standard Import (POST)
   if (req.method === "POST") {
     try {
+      // Check if auto API sync is enabled
+      const { data: settingsData } = await adminClient
+        .from("system_settings")
+        .select("auto_api_sync_enabled")
+        .eq("id", "global")
+        .maybeSingle();
+      
+      if (settingsData && settingsData.auto_api_sync_enabled === false) {
+        console.log(`[${requestId}] Sync skipped: auto_api_sync_enabled is false`);
+        return new Response(JSON.stringify({ message: "Sync skipped: auto sync is disabled by admin" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+
       const body = (await req.json()) as Body;
 
       if (!body || !body.athletes || !Array.isArray(body.athletes)) {

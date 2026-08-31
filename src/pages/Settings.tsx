@@ -11,7 +11,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { useUserRole } from "@/hooks/use-user-role";
 import { usePrivacyConsent } from "@/hooks/usePrivacyConsent";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2, ArrowLeft, DatabaseBackup, Clock, AlertTriangle, CheckCheck, Trash2 } from "lucide-react";
+import { CheckCircle2, ShieldCheck, ShieldAlert, Settings as SettingsIcon, LogOut, Moon, Sun, Bell, Shield, Lock, User, Mail, Sparkles, Loader2, ArrowLeft, DatabaseBackup, Clock, AlertTriangle, CheckCheck, Trash2, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { PrivacyConsentModal } from "@/components/PrivacyConsentModal";
 import Layout from "@/components/layout/Layout";
@@ -28,6 +28,7 @@ export default function Settings() {
     athletes: true,
     instructors: true
   });
+  const [apiSyncEnabled, setApiSyncEnabled] = useState(true);
   const [updatingSettings, setUpdatingSettings] = useState(false);
 
   // --- Stato dashboard anonimizzazione ---
@@ -51,7 +52,7 @@ export default function Settings() {
     const fetchSettings = async () => {
       const { data, error } = await (supabase
         .from("system_settings" as any) as any)
-        .select("email_notifications_athletes, email_notifications_instructors")
+        .select("email_notifications_athletes, email_notifications_instructors, auto_api_sync_enabled")
         .eq("id", "global")
         .maybeSingle();
 
@@ -60,6 +61,9 @@ export default function Settings() {
           athletes: (data as any).email_notifications_athletes,
           instructors: (data as any).email_notifications_instructors
         });
+        if (data.auto_api_sync_enabled !== undefined) {
+          setApiSyncEnabled((data as any).auto_api_sync_enabled);
+        }
       }
     };
 
@@ -206,6 +210,37 @@ export default function Settings() {
       });
       // Revert local state on error
       setEmailSettings(emailSettings);
+    } finally {
+      setUpdatingSettings(false);
+    }
+  };
+
+  const handleUpdateApiSyncSetting = async (value: boolean) => {
+    setUpdatingSettings(true);
+    const previous = apiSyncEnabled;
+    setApiSyncEnabled(value);
+
+    try {
+      const { error } = await (supabase
+        .from("system_settings" as any) as any)
+        .update({
+          auto_api_sync_enabled: value
+        })
+        .eq("id", "global");
+
+      if (error) throw error;
+
+      toast({
+        title: "Impostazioni aggiornate",
+        description: `Sincronizzazione API automatica ${value ? "attivata" : "disattivata"}.`
+      });
+    } catch (err: any) {
+      toast({
+        title: "Errore",
+        description: err.message || "Errore durante l'aggiornamento delle impostazioni",
+        variant: "destructive"
+      });
+      setApiSyncEnabled(previous);
     } finally {
       setUpdatingSettings(false);
     }
@@ -407,6 +442,30 @@ export default function Settings() {
                       <Switch
                         checked={emailSettings.instructors}
                         onCheckedChange={(checked) => handleUpdateEmailSetting("instructors", checked)}
+                        disabled={updatingSettings}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* API Sync */}
+                <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
+                  <CardHeader className="p-8">
+                    <CardTitle className="text-xl font-display font-bold flex items-center gap-3">
+                      <RefreshCw className="w-5 h-5 text-primary" />
+                      Sincronizzazione Sistema
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-8 pt-0 space-y-6">
+                    <div className="flex items-center justify-between p-6 rounded-3xl bg-white/5 border border-white/5">
+                      <div className="space-y-1">
+                        <Label className="font-bold text-lg leading-none">Sincronizzazione API Automatica</Label>
+                        <p className="text-xs text-muted-foreground">Esegui automaticamente il fetch dei dati dal server</p>
+                      </div>
+                      <Switch
+                        checked={apiSyncEnabled}
+                        onCheckedChange={handleUpdateApiSyncSetting}
                         disabled={updatingSettings}
                         className="data-[state=checked]:bg-primary"
                       />
