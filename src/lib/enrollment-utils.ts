@@ -90,9 +90,15 @@ export const isEventAllowedByAge = (
         const coupleMinAge = Math.min(age1, age2);
         const coupleMaxAge = Math.max(age1, age2);
 
+        // REGOLE OVER: Verifichiamo rigorosamente l'età minima di partenza della categoria ufficiale della coppia
+        if (et.event_name.toLowerCase().includes("over") && minAge !== null) {
+            const coupleCatMinAge = getCategoryMinAge(category);
+            if (coupleCatMinAge < minAge) return false;
+            return true;
+        }
+
         const eventRule = CATEGORY_RULES.find(r => r.minAge === minAge && r.maxAge === maxAge);
         const allowedYoungerMin = minAge !== null ? getMinYoungerAgeForRule(minAge, eventRule?.label) : null;
-
 
         if (maxAge !== null && coupleMaxAge > maxAge) return false;
         
