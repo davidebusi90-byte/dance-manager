@@ -33,7 +33,7 @@ export function useDashboardData(role: string, userId: string | null) {
                 supabase.from("athletes").select("*"),
                 supabase.from("couples").select("*"),
                 supabase.from("competitions").select("*").eq("is_deleted", false).order("date", { ascending: true }),
-                supabase.from("profiles").select("id, user_id, full_name"),
+                supabase.from("profiles").select("id, user_id, full_name, preferences"),
             ]);
 
             if (athletesRes.error) throw athletesRes.error;
