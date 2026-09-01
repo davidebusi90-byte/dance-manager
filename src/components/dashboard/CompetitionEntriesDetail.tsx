@@ -474,6 +474,11 @@ export default function CompetitionEntriesDetail({
       addHeaderFooter(doc);
 
       doc.save(`${competition.name}_Report.pdf`);
+      
+      toast({ 
+        title: "Download completato", 
+        description: "Il report PDF è stato scaricato con successo sul tuo dispositivo." 
+      });
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast({ title: "Errore", description: "Impossibile generare il PDF", variant: "destructive" });

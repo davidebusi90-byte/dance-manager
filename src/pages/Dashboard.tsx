@@ -136,9 +136,18 @@ export default function Dashboard() {
     };
   }, [refresh]);
 
+  const listsContainerRef = useRef<HTMLDivElement>(null);
+
   const handleStatClick = (view: ActiveView) => {
     setActiveSubView("none");
-    setActiveView(activeView === view ? "none" : view);
+    const newView = activeView === view ? "none" : view;
+    setActiveView(newView);
+    
+    if (newView !== "none") {
+      setTimeout(() => {
+        listsContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
   };
 
   const handleNavigation = (path: string) => {
@@ -270,7 +279,7 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <div className="space-y-8">
+      <div className="space-y-8 scroll-mt-24" ref={listsContainerRef}>
         {/* Integrated SubViews */}
         <AnimatePresence mode="wait">
           {activeSubView === "enroll" && (
