@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail, Printer, Loader2, ChevronDown, Search, Info } from "lucide-react";
-import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -100,6 +101,7 @@ export default function CompetitionEntriesDetail({
   const [isSendingReport, setIsSendingReport] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CompetitionEntry | null>(null);
   const [selectedInstructorId, setSelectedInstructorId] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const { role, userId } = useUserRole();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -203,10 +205,22 @@ export default function CompetitionEntriesDetail({
   const instructors = profiles.filter(p => !!p.full_name).sort((a, b) => a.full_name.localeCompare(b.full_name));
 
   const filteredEntries = entries.filter(entry => {
-    if (role !== "admin" || selectedInstructorId === "all") return true;
-    const instructor = profiles.find(p => p.id === selectedInstructorId);
-    if (!instructor) return true;
-    return isInstructorResponsibleForCoupleByResponsabili(instructor.full_name, entry.couples?.responsabili || []);
+    if (role === "admin" && selectedInstructorId !== "all") {
+      const instructor = profiles.find(p => p.id === selectedInstructorId);
+      if (instructor && !isInstructorResponsibleForCoupleByResponsabili(instructor.full_name, entry.couples?.responsabili || [])) {
+        return false;
+      }
+    }
+    
+    if (searchQuery) {
+      const a1 = entry.couples?.athlete1;
+      const a2 = entry.couples?.athlete2;
+      const q = searchQuery.toLowerCase();
+      const searchString = `${a1?.first_name || ""} ${a1?.last_name || ""} ${a1?.code || ""} ${a2?.first_name || ""} ${a2?.last_name || ""} ${a2?.code || ""}`.toLowerCase();
+      if (!searchString.includes(q)) return false;
+    }
+    
+    return true;
   });
 
   const getAthleteForPos = (entry: CompetitionEntry, athleteNum: 1 | 2) => {
@@ -260,6 +274,15 @@ export default function CompetitionEntriesDetail({
   const visibleUnenrolledCouples = allCouples.filter(couple => {
     if (!checkCoupleVisibility(couple)) return false;
     if (enrolledCoupleIds.has(couple.id)) return false;
+    
+    if (searchQuery) {
+      const a1 = couple.athlete1;
+      const a2 = couple.athlete2;
+      const q = searchQuery.toLowerCase();
+      const searchString = `${a1?.first_name || ""} ${a1?.last_name || ""} ${a1?.code || ""} ${a2?.first_name || ""} ${a2?.last_name || ""} ${a2?.code || ""}`.toLowerCase();
+      if (!searchString.includes(q)) return false;
+    }
+    
     return true;
   });
 
@@ -285,27 +308,153 @@ export default function CompetitionEntriesDetail({
     }
   };
 
-  const generateReport = () => {
-    const wb = XLSX.utils.book_new();
-    const getData = (list: CompetitionEntry[], status: string) => list.map(e => {
-      const c = e.couples;
-      const a1 = getAthleteForPos(e, 1);
-      const a2 = getAthleteForPos(e, 2);
-      return {
-        "Stato": status,
-        "Categoria": c.category,
-        "Classe": c.class,
-        "Cavaliere": a1 ? `${a1.first_name} ${a1.last_name}` : "-",
-        "Dama": a2 ? `${a2.first_name} ${a2.last_name}` : "-",
-        "CID Cav.": a1?.code || "-",
-        "CID Dama": a2?.code || "-",
-        "Data Iscrizione": new Date(e.created_at).toLocaleDateString("it-IT"),
+  const generatePdfReport = async () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      
+      const img = new Image();
+      img.src = '/logo.png';
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
+      const addHeaderFooter = (doc: jsPDF) => {
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          
+          doc.addImage(img, 'PNG', 14, 10, 30, 30);
+          
+          doc.setFontSize(24);
+          doc.setTextColor(218, 165, 32);
+          doc.text("Competition Entry", pageWidth / 2, 22, { align: "center" });
+          
+          doc.setFontSize(12);
+          doc.setTextColor(0, 0, 0);
+          doc.setFont("helvetica", "bold");
+          doc.text(competition.name, 14, 50);
+          
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          doc.text(new Date(competition.date).toLocaleDateString("it-IT"), 14, 55);
+          doc.text("Email: ufficiogare@ritmodanza.net", 14, 60);
+          
+          doc.setLineWidth(0.5);
+          doc.line(14, 65, pageWidth - 14, 65);
+
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100);
+          const printDate = new Date().toLocaleString("it-IT");
+          doc.text(`Stampato il: ${printDate}`, 14, pageHeight - 10);
+          doc.text(`Pagina ${i} di ${pageCount}`, pageWidth - 14, pageHeight - 10, { align: "right" });
+        }
       };
-    });
-    const allData = [...getData(paidEntries, "Pagato"), ...getData(lateUnpaidEntries, "In Ritardo"), ...getData(regularUnpaidEntries, "Confermato")];
-    const ws = XLSX.utils.json_to_sheet(allData);
-    XLSX.utils.book_append_sheet(wb, ws, "Iscrizioni");
-    XLSX.writeFile(wb, `${competition.name}_Report.xlsx`);
+
+      let startY = 75;
+
+      const writeGroup = (title: string, list: any[], type: "entry" | "unenrolled" | "ineligible") => {
+        if (list.length === 0) return;
+        
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 0, 0);
+        
+        if (startY > pageHeight - 30) {
+          doc.addPage();
+          startY = 75;
+        }
+        
+        doc.text(title, 14, startY);
+        startY += 10;
+        
+        list.forEach(item => {
+          if (startY > pageHeight - 20) {
+            doc.addPage();
+            startY = 75;
+          }
+
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "bold");
+          
+          let coupleText = "";
+          let eventsText: string[] = [];
+          
+          if (type === "entry") {
+            const e = item as CompetitionEntry;
+            const a1 = getAthleteForPos(e, 1);
+            const a2 = getAthleteForPos(e, 2);
+            const a1Name = a1 ? `${a1.first_name} ${a1.last_name}` : "-";
+            const a2Name = a2 ? `${a2.first_name} ${a2.last_name}` : "-";
+            const entryCount = (e.event_type_ids || []).length;
+            const isLate = isLateEntry(e.created_at);
+            const feeStatus = e.is_paid ? "ENTRY FEE PAID" : (isLate ? "ENTRY FEE UNPAID (LATE)" : "ENTRY FEE UNPAID");
+            
+            coupleText = `${a1Name} & ${a2Name} - ${feeStatus} (entries ${entryCount})`;
+            
+            eventsText = (e.event_type_ids || []).map(id => {
+              const name = eventTypes.find(et => et.id === id)?.event_name;
+              if (!name) return "";
+              const effClass = getEffectiveClass(e.couples, name);
+              return `    ${formatEventName(name, effClass, e.couples.category)}`;
+            }).filter(Boolean);
+            
+          } else {
+            const c = item as Couple;
+            const a1 = c.athlete1;
+            const a2 = c.athlete2;
+            const a1Name = a1 ? `${a1.first_name} ${a1.last_name}` : "-";
+            const a2Name = a2 ? `${a2.first_name} ${a2.last_name}` : "-";
+            
+            if (type === "unenrolled") {
+                const eligibleEventNames = eventTypes
+                  .filter(et => isEventAllowedForCouple(et, c))
+                  .map(et => {
+                    const effClass = getEffectiveClass(c, et.event_name);
+                    return `    ${formatEventName(et.event_name, effClass, c.category)}`;
+                  });
+                coupleText = `${a1Name} & ${a2Name} - DA ISCRIVERE (idonee a ${eligibleEventNames.length} gare)`;
+                eventsText = eligibleEventNames;
+            } else {
+                coupleText = `${a1Name} & ${a2Name} - NON IDONEI`;
+                eventsText = ["    Nessuna gara idonea trovata per questa competizione."];
+            }
+          }
+
+          doc.text(coupleText, 14, startY);
+          startY += 6;
+          
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          eventsText.forEach(evt => {
+             if (startY > pageHeight - 15) {
+                doc.addPage();
+                startY = 75;
+             }
+             doc.text(evt, 14, startY);
+             startY += 5;
+          });
+          
+          startY += 4;
+        });
+        
+        startY += 10;
+      };
+
+      writeGroup("ISCRITTI PAGATI", paidEntries, "entry");
+      writeGroup("ISCRITTI DA PAGARE", [...regularUnpaidEntries, ...lateUnpaidEntries], "entry");
+      writeGroup("DA ISCRIVERE", unenrolledCouples, "unenrolled");
+      writeGroup("NON IDONEI", ineligibleCouples, "ineligible");
+
+      addHeaderFooter(doc);
+
+      doc.save(`${competition.name}_Report.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({ title: "Errore", description: "Impossibile generare il PDF", variant: "destructive" });
+    }
   };
 
   const handleSendReport = async () => {
@@ -432,11 +581,25 @@ export default function CompetitionEntriesDetail({
            <div><CardTitle className="text-2xl font-display font-black tracking-tighter uppercase flex items-center gap-3"><Trophy className="text-primary" /> {competition.name}</CardTitle>
            <p className="text-muted-foreground font-medium mt-1">Status: {new Date(competition.date).toLocaleDateString("it-IT")} • {entries.length} Iscrizioni</p></div>
            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={generateReport} className="rounded-xl border-white/10 hover:bg-primary/5 font-bold"><FileSpreadsheet className="mr-2" /> Report</Button>
+              <Button variant="outline" onClick={generatePdfReport} className="rounded-xl border-white/10 hover:bg-primary/5 font-bold"><Printer className="mr-2 w-4 h-4" /> Stampa / PDF</Button>
               <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full w-12 h-12 hover:bg-red-500/10 hover:text-red-500"><X /></Button>
            </div>
         </CardHeader>
         <CardContent className="p-0">
+           <div className="mx-8 mt-8 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input 
+                 placeholder="Cerca atleti per nome, cognome o CID..." 
+                 className="w-full pl-12 h-14 bg-neutral-100/50 dark:bg-white/5 border-neutral-200 dark:border-white/10 rounded-2xl text-lg font-medium"
+                 value={searchQuery}
+                 onChange={e => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                 <Button variant="ghost" size="icon" onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full w-8 h-8 hover:bg-neutral-200 dark:hover:bg-white/10">
+                    <X className="w-4 h-4" />
+                 </Button>
+              )}
+           </div>
            <Tabs defaultValue="iscritti">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mx-8 mt-8 gap-4">
                  <TabsList className="bg-neutral-100 dark:bg-black/20 p-2 rounded-2xl flex flex-wrap gap-2 h-auto min-h-10">
