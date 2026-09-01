@@ -13,6 +13,9 @@ import AthleteDetailModal from "./AthleteDetailModal";
 
 import { Athlete, Couple, Profile } from "@/types/dashboard";
 import { isCidAndCategorySwapped, detectFieldType, smartRemapAthlete } from "@/lib/athlete-utils";
+import { useUserRole } from "@/hooks/use-user-role";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter } from "lucide-react";
 
 interface AthletesListProps {
   athletes: Athlete[];
@@ -25,9 +28,17 @@ interface AthletesListProps {
 }
 
 export default function AthletesList({ athletes, deactivatedAthletes = [], allAthletes, couples, profiles, lastSyncTime, onClose }: AthletesListProps) {
+  const { role } = useUserRole();
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeactivated, setShowDeactivated] = useState(false);
   const [selectedAthlete, setSelectedAthlete] = useState<Athlete | null>(null);
+  
+  const [filterInstructor, setFilterInstructor] = useState("all");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStandard, setFilterStandard] = useState("all");
+  const [filterLatini, setFilterLatini] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const formatDate = (date: string | null) => {
     if (!date) return "-";
@@ -113,16 +124,61 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
     return deduped;
   }, [uniqueAthletes, validCouples, athleteIdsInCouples]);
 
+  const uniqueInstructors = useMemo(() => {
+    const resps = new Set<string>();
+    athletes.forEach(a => {
+      a.responsabili?.forEach(r => resps.add(r.trim()));
+    });
+    return Array.from(resps).filter(Boolean).sort();
+  }, [athletes]);
+
+  const uniqueCategories = useMemo(() => Array.from(new Set(athletes.map(a => a.category))).filter(Boolean).sort(), [athletes]);
+  const uniqueClasses = useMemo(() => Array.from(new Set(athletes.map(a => a.class || "-"))).filter(Boolean).sort(), [athletes]);
+  
+  const uniqueStandard = useMemo(() => {
+    const s = new Set<string>();
+    athletes.forEach(a => {
+      if (a.discipline_info?.standard) s.add(a.discipline_info.standard);
+    });
+    return Array.from(s).filter(Boolean).sort();
+  }, [athletes]);
+
+  const uniqueLatini = useMemo(() => {
+    const s = new Set<string>();
+    athletes.forEach(a => {
+      if (a.discipline_info?.latino) s.add(a.discipline_info.latino);
+    });
+    return Array.from(s).filter(Boolean).sort();
+  }, [athletes]);
+
   const filteredSortedAthletes = useMemo(() => {
-    if (!searchQuery) return sortedAthletes;
+    let filtered = sortedAthletes;
+    
+    if (role === "admin") {
+      filtered = filtered.filter(a => {
+        if (filterCategory !== "all" && a.category !== filterCategory) return false;
+        if (filterClass !== "all" && (a.class || "-") !== filterClass) return false;
+        if (filterStandard !== "all" && (a.discipline_info?.standard || "-") !== filterStandard) return false;
+        if (filterLatini !== "all" && (a.discipline_info?.latino || "-") !== filterLatini) return false;
+        
+        if (filterInstructor !== "all") {
+          const resps = (a.responsabili || []).map(r => r.trim());
+          if (!resps.includes(filterInstructor)) return false;
+        }
+        return true;
+      });
+    }
+
+    if (!searchQuery) return filtered;
+    
     const words = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-    return sortedAthletes.filter(a => {
+    return filtered.filter(a => {
       const first = (a.first_name || "").toLowerCase();
       const last = (a.last_name || "").toLowerCase();
       const code = (a.code || "").toLowerCase();
       return words.every(w => first.includes(w) || last.includes(w) || code.includes(w));
     });
-  }, [sortedAthletes, searchQuery]);
+  }, [sortedAthletes, searchQuery, role, filterCategory, filterClass, filterStandard, filterLatini, filterInstructor]);
 
   const registeredProfileNames = useMemo(() =>
     new Set(profiles.map(p => p.full_name.toLowerCase().trim())),
@@ -154,14 +210,93 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
             <X className="w-4 h-4" />
           </Button>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Cerca atleta..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/30 focus-visible:ring-primary/30"
-          />
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2 relative">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Cerca atleta..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-muted/30 focus-visible:ring-primary/30"
+              />
+            </div>
+            {role === "admin" && (
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                className={showFilters ? "bg-primary hover:bg-primary/90" : ""}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Filtri
+              </Button>
+            )}
+          </div>
+
+          {role === "admin" && showFilters && (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-muted/20 rounded-lg border border-border/50 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Istruttore</label>
+                <Select value={filterInstructor} onValueChange={setFilterInstructor}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutti" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutti</SelectItem>
+                    {uniqueInstructors.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Categoria</label>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Classe</label>
+                <Select value={filterClass} onValueChange={setFilterClass}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueClasses.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Standard</label>
+                <Select value={filterStandard} onValueChange={setFilterStandard}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueStandard.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Latini</label>
+                <Select value={filterLatini} onValueChange={setFilterLatini}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueLatini.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>

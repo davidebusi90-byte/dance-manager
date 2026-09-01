@@ -13,6 +13,9 @@ import { useMemo, useState } from "react";
 
 import { Athlete, Couple, Profile } from "@/types/dashboard";
 import { detectFieldType, smartRemapAthlete } from "@/lib/athlete-utils";
+import { useUserRole } from "@/hooks/use-user-role";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Filter } from "lucide-react";
 
 interface CouplesListProps {
   couples: Couple[];
@@ -33,8 +36,16 @@ const getCategoryLabel = (category: string) => {
 };
 
 export default function CouplesList({ couples, deactivatedCouples = [], athletes, profiles, lastSyncTime, onClose }: CouplesListProps) {
+  const { role } = useUserRole();
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeactivated, setShowDeactivated] = useState(false);
+  const [filterInstructor, setFilterInstructor] = useState("all");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStandard, setFilterStandard] = useState("all");
+  const [filterLatini, setFilterLatini] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+
   const athleteMap = useMemo(() => new Map(athletes.map(a => [a.id, a])), [athletes]);
 
   const getClassForDiscipline = (couple: Couple, key: string) => {
@@ -78,19 +89,50 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
     [profiles]
   );
 
+  const uniqueInstructors = useMemo(() => {
+    const resps = new Set<string>();
+    couples.forEach(c => {
+      const a1 = athleteMap.get(c.athlete1_id);
+      const a2 = athleteMap.get(c.athlete2_id);
+      [...(a1?.responsabili || []), ...(a2?.responsabili || [])].forEach(r => resps.add(r.trim()));
+    });
+    return Array.from(resps).filter(Boolean).sort();
+  }, [couples, athleteMap]);
+
+  const uniqueCategories = useMemo(() => Array.from(new Set(couples.map(c => c.category))).filter(Boolean).sort(), [couples]);
+  const uniqueStandard = useMemo(() => Array.from(new Set(couples.map(c => getClassForDiscipline(c, "standard")))).filter(Boolean).sort(), [couples, getClassForDiscipline]);
+  const uniqueLatini = useMemo(() => Array.from(new Set(couples.map(c => getClassForDiscipline(c, "latino")))).filter(Boolean).sort(), [couples, getClassForDiscipline]);
+  const uniqueClasses = useMemo(() => Array.from(new Set(couples.map(c => c.class || "-"))).filter(Boolean).sort(), [couples]);
+
   const sortedFilteredCouples = useMemo(() => {
     const referenceDate = new Date();
     const queryWords = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 0);
 
     const filtered = couples.filter(couple => {
-      if (queryWords.length === 0) return true;
       const a1 = athleteMap.get(couple.athlete1_id);
       const a2 = athleteMap.get(couple.athlete2_id);
-      const searchable = [
-        a1?.first_name, a1?.last_name, a1?.code,
-        a2?.first_name, a2?.last_name, a2?.code
-      ].map(s => (s || "").toLowerCase());
-      return queryWords.every(word => searchable.some(s => s.includes(word)));
+
+      if (role === "admin") {
+        if (filterCategory !== "all" && couple.category !== filterCategory) return false;
+        if (filterClass !== "all" && (couple.class || "-") !== filterClass) return false;
+        if (filterStandard !== "all" && getClassForDiscipline(couple, "standard") !== filterStandard) return false;
+        if (filterLatini !== "all" && getClassForDiscipline(couple, "latino") !== filterLatini) return false;
+        
+        if (filterInstructor !== "all") {
+          const resps = Array.from(new Set([...(a1?.responsabili || []), ...(a2?.responsabili || [])].map(r => r.trim())));
+          if (!resps.includes(filterInstructor)) return false;
+        }
+      }
+
+      if (queryWords.length > 0) {
+        const searchable = [
+          a1?.first_name, a1?.last_name, a1?.code,
+          a2?.first_name, a2?.last_name, a2?.code
+        ].map(s => (s || "").toLowerCase());
+        if (!queryWords.every(word => searchable.some(s => s.includes(word)))) return false;
+      }
+      
+      return true;
     });
 
     return filtered.sort((a, b) => {
@@ -131,14 +173,93 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
             <X className="w-4 h-4" />
           </Button>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per nome ballerino/a..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/30 focus-visible:ring-success/30"
-          />
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2 relative">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Cerca per nome ballerino/a o codice..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-muted/30 focus-visible:ring-success/30"
+              />
+            </div>
+            {role === "admin" && (
+              <Button
+                variant={showFilters ? "default" : "outline"}
+                className={showFilters ? "bg-success hover:bg-success/90" : ""}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Filtri
+              </Button>
+            )}
+          </div>
+          
+          {role === "admin" && showFilters && (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-muted/20 rounded-lg border border-border/50 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Istruttore</label>
+                <Select value={filterInstructor} onValueChange={setFilterInstructor}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutti" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutti</SelectItem>
+                    {uniqueInstructors.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Categoria</label>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Classe</label>
+                <Select value={filterClass} onValueChange={setFilterClass}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueClasses.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Standard</label>
+                <Select value={filterStandard} onValueChange={setFilterStandard}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueStandard.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground">Latini</label>
+                <Select value={filterLatini} onValueChange={setFilterLatini}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Tutte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tutte</SelectItem>
+                    {uniqueLatini.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
