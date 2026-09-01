@@ -397,6 +397,13 @@ export default function CompetitionEntriesDetail({
       return formatEventName(name, effClass, couple.category);
     }).filter(Boolean);
 
+    const unselectedEventNames = eventTypes
+      .filter(et => isEventAllowedForCouple(et, couple) && !(entry.event_type_ids || []).includes(et.id))
+      .map(et => {
+        const effClass = getEffectiveClass(couple, et.event_name);
+        return formatEventName(et.event_name, effClass, couple.category);
+      });
+
     return (
       <tr key={entry.id} className={cn("cursor-pointer hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5", showLateFlag && "bg-amber-500/5")} onClick={() => setSelectedEntry(entry)}>
         <td className="py-4 px-3 w-[35%]"><div className="flex items-center gap-3">{renderAthleteName(a1)}<span className="text-muted-foreground opacity-30 text-[10px]">&</span>{renderAthleteName(a2)}</div></td>
@@ -405,7 +412,10 @@ export default function CompetitionEntriesDetail({
           {entryEventNames.map(name => (
              <Badge key={name} className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] font-bold uppercase rounded-lg px-2 py-0.5">{name}</Badge>
           ))}
-          {entry.event_type_ids?.length === 0 && <span className="text-muted-foreground italic text-xs">Nessuna gara selezionata</span>}
+          {unselectedEventNames.map(name => (
+             <Badge key={`uns-${name}`} className="bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-white/5 dark:text-white/40 dark:border-white/10 text-[10px] font-bold uppercase rounded-lg px-2 py-0.5">{name}</Badge>
+          ))}
+          {entry.event_type_ids?.length === 0 && unselectedEventNames.length === 0 && <span className="text-muted-foreground italic text-xs">Nessuna gara selezionata</span>}
         </div></td>
         <td className="w-[15%] hidden lg:table-cell"><div className="flex flex-col gap-1">{couple.responsabili?.map(r => <span key={r} className="text-[10px] text-muted-foreground font-bold border-l-2 border-primary/20 pl-2">{r}</span>)}</div></td>
         <td className="text-center pr-3"><Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); if (role === "admin") handlePaymentToggle(entry.id, entry.is_paid); }} className={cn("rounded-full px-4 font-black text-[10px] uppercase h-8", entry.is_paid ? "bg-green-500 text-white hover:bg-green-600" : "bg-amber-500 text-white hover:bg-amber-600")}>
@@ -459,9 +469,10 @@ export default function CompetitionEntriesDetail({
               <TabsContent value="non-iscritti" className="p-8 pt-4">
                  <table className="w-full text-left">
                     <thead>
-                       <tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5">
+                        <tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5">
                           <th className="pb-4 px-3">Atleti</th>
                           <th className="pb-4 text-center">Cat / Classe</th>
+                          <th className="pb-4 hidden md:table-cell">Gare</th>
                           <th className="pb-4 hidden lg:table-cell">Istruttori</th>
                        </tr>
                     </thead>
@@ -469,16 +480,29 @@ export default function CompetitionEntriesDetail({
                        {unenrolledCouples.map(couple => {
                           const a1 = couple.athlete1;
                           const a2 = couple.athlete2;
+                          const eligibleEventNames = eventTypes
+                            .filter(et => isEventAllowedForCouple(et, couple))
+                            .map(et => {
+                              const effClass = getEffectiveClass(couple, et.event_name);
+                              return formatEventName(et.event_name, effClass, couple.category);
+                            });
+
                           return (
                              <tr key={couple.id} className="hover:bg-neutral-50 dark:hover:bg-white/5 transition-colors border-b border-neutral-100 dark:border-white/5">
                                 <td className="py-4 px-3 w-[35%]"><div className="flex items-center gap-3">{renderAthleteName(a1)}<span className="text-muted-foreground opacity-30 text-[10px]">&</span>{renderAthleteName(a2)}</div></td>
                                 <td className="text-center w-[20%]"><div className="flex flex-col items-center"><span className="text-sm font-black tracking-tight">{couple.category}</span><span className="text-[9px] text-muted-foreground font-black uppercase opacity-60">CLASSE {couple.class}</span></div></td>
+                                <td className="w-[30%] hidden md:table-cell"><div className="flex flex-wrap gap-1">
+                                  {eligibleEventNames.map(name => (
+                                    <Badge key={name} className="bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-white/5 dark:text-white/40 dark:border-white/10 text-[10px] font-bold uppercase rounded-lg px-2 py-0.5">{name}</Badge>
+                                  ))}
+                                  {eligibleEventNames.length === 0 && <span className="text-muted-foreground italic text-xs">Nessuna gara idonea</span>}
+                                </div></td>
                                 <td className="w-[15%] hidden lg:table-cell"><div className="flex flex-col gap-1">{couple.responsabili?.map(r => <span key={r} className="text-[10px] text-muted-foreground font-bold border-l-2 border-primary/20 pl-2">{r}</span>)}</div></td>
                              </tr>
                           );
                        })}
                        {unenrolledCouples.length === 0 && (
-                          <tr><td colSpan={3} className="text-center py-8 text-muted-foreground italic">Nessuna coppia da iscrivere.</td></tr>
+                          <tr><td colSpan={4} className="text-center py-8 text-muted-foreground italic">Nessuna coppia da iscrivere.</td></tr>
                        )}
                     </tbody>
                  </table>
