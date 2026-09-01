@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail, Printer, Loader2, ChevronDown, Search, Info } from "lucide-react";
+import { Trophy, X, Users, AlertTriangle, Clock, Trash2, FileSpreadsheet, CheckCircle, AlertCircle, Mail, Printer, Loader2, ChevronDown, Search, Info, Filter } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,6 +101,11 @@ export default function CompetitionEntriesDetail({
   const [isSendingReport, setIsSendingReport] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<CompetitionEntry | null>(null);
   const [selectedInstructorId, setSelectedInstructorId] = useState<string>("all");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStandard, setFilterStandard] = useState("all");
+  const [filterLatini, setFilterLatini] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const { role, userId } = useUserRole();
@@ -204,6 +209,11 @@ export default function CompetitionEntriesDetail({
 
   const instructors = profiles.filter(p => !!p.full_name).sort((a, b) => a.full_name.localeCompare(b.full_name));
 
+  const uniqueCategories = useMemo(() => Array.from(new Set(allCouples.map(c => c.category))).filter(Boolean).sort(), [allCouples]);
+  const uniqueClasses = useMemo(() => Array.from(new Set(allCouples.map(c => c.class || "-"))).filter(Boolean).sort(), [allCouples]);
+  const uniqueStandard = useMemo(() => Array.from(new Set(allCouples.map(c => resolveDisciplineClass("standard", c.athlete1, c.athlete2, c)))).filter(Boolean).sort(), [allCouples]);
+  const uniqueLatini = useMemo(() => Array.from(new Set(allCouples.map(c => resolveDisciplineClass("latino", c.athlete1, c.athlete2, c)))).filter(Boolean).sort(), [allCouples]);
+
   const filteredEntries = entries.filter(entry => {
     if (role === "admin" && selectedInstructorId !== "all") {
       const instructor = profiles.find(p => p.id === selectedInstructorId);
@@ -212,6 +222,11 @@ export default function CompetitionEntriesDetail({
       }
     }
     
+    if (filterCategory !== "all" && entry.couples?.category !== filterCategory) return false;
+    if (filterClass !== "all" && (entry.couples?.class || "-") !== filterClass) return false;
+    if (filterStandard !== "all" && resolveDisciplineClass("standard", entry.couples?.athlete1, entry.couples?.athlete2, entry.couples) !== filterStandard) return false;
+    if (filterLatini !== "all" && resolveDisciplineClass("latino", entry.couples?.athlete1, entry.couples?.athlete2, entry.couples) !== filterLatini) return false;
+
     if (searchQuery) {
       const a1 = entry.couples?.athlete1;
       const a2 = entry.couples?.athlete2;
@@ -274,6 +289,11 @@ export default function CompetitionEntriesDetail({
   const visibleUnenrolledCouples = allCouples.filter(couple => {
     if (!checkCoupleVisibility(couple)) return false;
     if (enrolledCoupleIds.has(couple.id)) return false;
+    
+    if (filterCategory !== "all" && couple.category !== filterCategory) return false;
+    if (filterClass !== "all" && (couple.class || "-") !== filterClass) return false;
+    if (filterStandard !== "all" && resolveDisciplineClass("standard", couple.athlete1, couple.athlete2, couple) !== filterStandard) return false;
+    if (filterLatini !== "all" && resolveDisciplineClass("latino", couple.athlete1, couple.athlete2, couple) !== filterLatini) return false;
     
     if (searchQuery) {
       const a1 = couple.athlete1;
@@ -339,7 +359,13 @@ export default function CompetitionEntriesDetail({
           
           doc.setFont("helvetica", "normal");
           doc.setFontSize(10);
-          doc.text(new Date(competition.date).toLocaleDateString("it-IT"), 14, 55);
+          
+          const startDateStr = new Date(competition.date).toLocaleDateString("it-IT");
+          const endDateStr = competition.end_date ? new Date(competition.end_date).toLocaleDateString("it-IT") : '';
+          const locationStr = competition.location || '';
+          const dateLocText = [startDateStr, endDateStr, locationStr].filter(Boolean).join(" - ");
+          
+          doc.text(dateLocText, 14, 55);
           doc.text("Email: ufficiogare@ritmodanza.net", 14, 60);
           
           doc.setLineWidth(0.5);
@@ -358,14 +384,14 @@ export default function CompetitionEntriesDetail({
       const writeGroup = (title: string, list: any[], type: "entry" | "unenrolled" | "ineligible") => {
         if (list.length === 0) return;
         
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0, 0, 0);
-        
-        if (startY > pageHeight - 30) {
+        if (startY !== 75) {
           doc.addPage();
           startY = 75;
         }
+        
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 0, 0);
         
         doc.text(title, 14, startY);
         startY += 10;
@@ -388,11 +414,8 @@ export default function CompetitionEntriesDetail({
             const a2 = getAthleteForPos(e, 2);
             const a1Name = a1 ? `${a1.first_name} ${a1.last_name}` : "-";
             const a2Name = a2 ? `${a2.first_name} ${a2.last_name}` : "-";
-            const entryCount = (e.event_type_ids || []).length;
-            const isLate = isLateEntry(e.created_at);
-            const feeStatus = e.is_paid ? "ENTRY FEE PAID" : (isLate ? "ENTRY FEE UNPAID (LATE)" : "ENTRY FEE UNPAID");
             
-            coupleText = `${a1Name} & ${a2Name} - ${feeStatus} (entries ${entryCount})`;
+            coupleText = `${a1Name} & ${a2Name}`;
             
             eventsText = (e.event_type_ids || []).map(id => {
               const name = eventTypes.find(et => et.id === id)?.event_name;
@@ -415,10 +438,10 @@ export default function CompetitionEntriesDetail({
                     const effClass = getEffectiveClass(c, et.event_name);
                     return `    ${formatEventName(et.event_name, effClass, c.category)}`;
                   });
-                coupleText = `${a1Name} & ${a2Name} - DA ISCRIVERE (idonee a ${eligibleEventNames.length} gare)`;
+                coupleText = `${a1Name} & ${a2Name}`;
                 eventsText = eligibleEventNames;
             } else {
-                coupleText = `${a1Name} & ${a2Name} - NON IDONEI`;
+                coupleText = `${a1Name} & ${a2Name}`;
                 eventsText = ["    Nessuna gara idonea trovata per questa competizione."];
             }
           }
@@ -586,20 +609,98 @@ export default function CompetitionEntriesDetail({
            </div>
         </CardHeader>
         <CardContent className="p-0">
-           <div className="mx-8 mt-8 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input 
-                 placeholder="Cerca atleti per nome, cognome o CID..." 
-                 className="w-full pl-12 h-14 bg-neutral-100/50 dark:bg-white/5 border-neutral-200 dark:border-white/10 rounded-2xl text-lg font-medium"
-                 value={searchQuery}
-                 onChange={e => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                 <Button variant="ghost" size="icon" onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full w-8 h-8 hover:bg-neutral-200 dark:hover:bg-white/10">
-                    <X className="w-4 h-4" />
-                 </Button>
+           <div className="mx-8 mt-8 relative flex gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input 
+                   placeholder="Cerca atleti per nome, cognome o CID..." 
+                   className="w-full pl-12 h-14 bg-neutral-100/50 dark:bg-white/5 border-neutral-200 dark:border-white/10 rounded-2xl text-lg font-medium"
+                   value={searchQuery}
+                   onChange={e => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                   <Button variant="ghost" size="icon" onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full w-8 h-8 hover:bg-neutral-200 dark:hover:bg-white/10">
+                      <X className="w-4 h-4" />
+                   </Button>
+                )}
+              </div>
+              {role === "admin" && (
+                <Button
+                  variant={showFilters ? "default" : "outline"}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={cn("h-14 px-6 rounded-2xl font-bold border-neutral-200 dark:border-white/10 shrink-0", showFilters ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-neutral-100/50 dark:bg-white/5")}
+                >
+                  <Filter className="w-5 h-5 mr-2" />
+                  Filtri
+                </Button>
               )}
            </div>
+
+           {role === "admin" && showFilters && (
+              <div className="mx-8 mt-4 grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-neutral-100/50 dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 animate-in fade-in slide-in-from-top-2">
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground ml-1">Istruttore</label>
+                   <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
+                     <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-black/20 border-neutral-200 dark:border-white/10 font-medium">
+                       <SelectValue placeholder="Tutti" />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-xl">
+                       <SelectItem value="all">Tutti</SelectItem>
+                       {instructors.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground ml-1">Categoria</label>
+                   <Select value={filterCategory} onValueChange={setFilterCategory}>
+                     <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-black/20 border-neutral-200 dark:border-white/10 font-medium">
+                       <SelectValue placeholder="Tutte" />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-xl">
+                       <SelectItem value="all">Tutte</SelectItem>
+                       {uniqueCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground ml-1">Classe</label>
+                   <Select value={filterClass} onValueChange={setFilterClass}>
+                     <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-black/20 border-neutral-200 dark:border-white/10 font-medium">
+                       <SelectValue placeholder="Tutte" />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-xl">
+                       <SelectItem value="all">Tutte</SelectItem>
+                       {uniqueClasses.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground ml-1">Standard</label>
+                   <Select value={filterStandard} onValueChange={setFilterStandard}>
+                     <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-black/20 border-neutral-200 dark:border-white/10 font-medium">
+                       <SelectValue placeholder="Tutte" />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-xl">
+                       <SelectItem value="all">Tutte</SelectItem>
+                       {uniqueStandard.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
+                 </div>
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground ml-1">Latini</label>
+                   <Select value={filterLatini} onValueChange={setFilterLatini}>
+                     <SelectTrigger className="h-10 rounded-xl bg-white dark:bg-black/20 border-neutral-200 dark:border-white/10 font-medium">
+                       <SelectValue placeholder="Tutte" />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-xl">
+                       <SelectItem value="all">Tutte</SelectItem>
+                       {uniqueLatini.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                     </SelectContent>
+                   </Select>
+                 </div>
+              </div>
+           )}
+
            <Tabs defaultValue="iscritti">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mx-8 mt-8 gap-4">
                  <TabsList className="bg-neutral-100 dark:bg-black/20 p-2 rounded-2xl flex flex-wrap gap-2 h-auto min-h-10">
@@ -607,21 +708,6 @@ export default function CompetitionEntriesDetail({
                     <TabsTrigger value="non-iscritti" className="rounded-xl font-bold py-2">DA ISCRIVERE ({unenrolledCouples.length})</TabsTrigger>
                     <TabsTrigger value="ineligible" className="rounded-xl font-bold py-2">NON IDONEE ({ineligibleCouples.length})</TabsTrigger>
                  </TabsList>
-                {role === "admin" && (
-                  <div className="w-full sm:w-64">
-                    <Select value={selectedInstructorId} onValueChange={setSelectedInstructorId}>
-                      <SelectTrigger className="rounded-xl h-10 border-white/10 bg-white/5 font-medium">
-                        <SelectValue placeholder="Filtra per istruttore" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="all">Tutti gli istruttori</SelectItem>
-                        {instructors.map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
               </div>
               <TabsContent value="iscritti" className="p-8 pt-4">
                  <div className="overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
