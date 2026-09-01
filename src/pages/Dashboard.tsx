@@ -221,7 +221,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className={`grid grid-cols-1 md:grid-cols-2 ${role === "instructor" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-6 mb-12`}
+            className={`grid grid-cols-1 md:grid-cols-2 ${role === "admin" ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-6 mb-12`}
           >
             <StatCard
               icon={Users}
@@ -239,7 +239,7 @@ export default function Dashboard() {
               onClick={() => handleStatClick("couples")}
               isActive={activeView === "couples"}
             />
-            {role !== "instructor" && (
+            {role === "admin" && (
               <div
                  onClick={() => navigate("/competition-enrollments")}
                  className="cursor-pointer group"
