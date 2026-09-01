@@ -12,6 +12,7 @@ import CompetitionEnrollments from "./pages/CompetitionEnrollments";
 import AthleteEnrollment from "./pages/AthleteEnrollment";
 import Anomalies from "./pages/Anomalies";
 import NotFound from "./pages/NotFound";
+import Statistics from "./pages/Statistics";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/competition-enrollments" element={<CompetitionEnrollments />} />
             <Route path="/enroll" element={<AthleteEnrollment />} />
             <Route path="/anomalies" element={<Anomalies />} />
+            <Route path="/statistics" element={<Statistics />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

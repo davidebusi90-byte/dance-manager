@@ -12,7 +12,8 @@ import {
   ClipboardList,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  BarChart2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -60,6 +61,12 @@ export default function Layout({ children }: LayoutProps) {
       path: "/instructors", 
       icon: Users,
       roles: ["admin"] 
+    },
+    {
+      label: "Statistiche",
+      path: "/statistics",
+      icon: BarChart2,
+      roles: ["admin", "instructor", "supervisor"]
     },
     { 
       label: "Impostazioni", 
