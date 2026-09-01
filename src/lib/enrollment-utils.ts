@@ -37,6 +37,9 @@ const getMinYoungerAgeForRule = (minAge: number, label?: string): number => {
     // Regola Under 21: il più giovane deve avere almeno 16 anni
     if (label === 'Under 21') return 16;
     
+    // Regola Adult (19-34 o simili con minAge 19): il più giovane può avere 16 anni (Youth)
+    if (minAge === 19) return 16;
+    
     // Regola Seniors: il più giovane deve avere almeno 30 anni
     if (minAge >= 35) return 30;
     
