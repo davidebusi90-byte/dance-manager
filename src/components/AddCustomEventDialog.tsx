@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Copy } from "lucide-react";
+import { Plus, Copy, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DISCIPLINES, getEventsForDiscipline } from "@/lib/event-presets";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -674,6 +675,20 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                 </Button>
               ))}
             </div>
+            {allowedClasses.has("D") && 
+              (eventName.toUpperCase().includes("ADULT OPEN") || 
+               eventName.toUpperCase().includes("CLASSE A") || 
+               /\bA[12]\b/.test(eventName.toUpperCase()) || 
+               /\bAS\b/.test(eventName.toUpperCase()) || 
+               eventName.toUpperCase().includes("MASTER")) && 
+              !(/\b(open\s+(?:classe\s+)?b|b\s+open|open\s+(?:classe\s+)?c|c\s+open)\b/i.test(eventName)) && (
+              <Alert variant="destructive" className="mt-4 bg-destructive/10 border-destructive/20 text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs font-medium ml-1">
+                  <strong>Attenzione:</strong> Le regole di sistema bloccano in automatico la Classe D per le gare "Adult Open", "Classe A" o "Master". Anche se selezioni "D" qui, le coppie di questa classe non potranno comunque iscriversi a questo evento.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
 
