@@ -154,20 +154,18 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
   const filteredSortedAthletes = useMemo(() => {
     let filtered = sortedAthletes;
     
-    if (role === "admin") {
-      filtered = filtered.filter(a => {
-        if (filterCategory !== "all" && a.category !== filterCategory) return false;
-        if (filterClass !== "all" && (a.class || "-") !== filterClass) return false;
-        if (filterStandard !== "all" && (a.discipline_info?.standard || "-") !== filterStandard) return false;
-        if (filterLatini !== "all" && (a.discipline_info?.latino || "-") !== filterLatini) return false;
-        
-        if (filterInstructor !== "all") {
-          const resps = (a.responsabili || []).map(r => r.trim());
-          if (!resps.includes(filterInstructor)) return false;
-        }
-        return true;
-      });
-    }
+    filtered = filtered.filter(a => {
+      if (filterCategory !== "all" && a.category !== filterCategory) return false;
+      if (filterClass !== "all" && (a.class || "-") !== filterClass) return false;
+      if (filterStandard !== "all" && (a.discipline_info?.standard || "-") !== filterStandard) return false;
+      if (filterLatini !== "all" && (a.discipline_info?.latino || "-") !== filterLatini) return false;
+      
+      if (filterInstructor !== "all") {
+        const resps = (a.responsabili || []).map(r => r.trim());
+        if (!resps.includes(filterInstructor)) return false;
+      }
+      return true;
+    });
 
     if (!searchQuery) return filtered;
     
@@ -178,7 +176,7 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
       const code = (a.code || "").toLowerCase();
       return words.every(w => first.includes(w) || last.includes(w) || code.includes(w));
     });
-  }, [sortedAthletes, searchQuery, role, filterCategory, filterClass, filterStandard, filterLatini, filterInstructor]);
+  }, [sortedAthletes, searchQuery, filterCategory, filterClass, filterStandard, filterLatini, filterInstructor]);
 
   const registeredProfileNames = useMemo(() =>
     new Set(profiles.map(p => p.full_name.toLowerCase().trim())),
@@ -221,19 +219,17 @@ export default function AthletesList({ athletes, deactivatedAthletes = [], allAt
                 className="pl-10 bg-muted/30 focus-visible:ring-primary/30"
               />
             </div>
-            {role === "admin" && (
-              <Button
-                variant={showFilters ? "default" : "outline"}
-                className={showFilters ? "bg-primary hover:bg-primary/90" : ""}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filtri
-              </Button>
-            )}
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              className={showFilters ? "bg-primary hover:bg-primary/90" : ""}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filtri
+            </Button>
           </div>
 
-          {role === "admin" && showFilters && (
+          {showFilters && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-muted/20 rounded-lg border border-border/50 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase text-muted-foreground">Istruttore</label>

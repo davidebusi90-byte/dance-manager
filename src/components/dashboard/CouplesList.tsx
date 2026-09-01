@@ -112,16 +112,14 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
       const a1 = athleteMap.get(couple.athlete1_id);
       const a2 = athleteMap.get(couple.athlete2_id);
 
-      if (role === "admin") {
-        if (filterCategory !== "all" && couple.category !== filterCategory) return false;
-        if (filterClass !== "all" && (couple.class || "-") !== filterClass) return false;
-        if (filterStandard !== "all" && getClassForDiscipline(couple, "standard") !== filterStandard) return false;
-        if (filterLatini !== "all" && getClassForDiscipline(couple, "latino") !== filterLatini) return false;
-        
-        if (filterInstructor !== "all") {
-          const resps = Array.from(new Set([...(a1?.responsabili || []), ...(a2?.responsabili || [])].map(r => r.trim())));
-          if (!resps.includes(filterInstructor)) return false;
-        }
+      if (filterCategory !== "all" && couple.category !== filterCategory) return false;
+      if (filterClass !== "all" && (couple.class || "-") !== filterClass) return false;
+      if (filterStandard !== "all" && getClassForDiscipline(couple, "standard") !== filterStandard) return false;
+      if (filterLatini !== "all" && getClassForDiscipline(couple, "latino") !== filterLatini) return false;
+      
+      if (filterInstructor !== "all") {
+        const resps = Array.from(new Set([...(a1?.responsabili || []), ...(a2?.responsabili || [])].map(r => r.trim())));
+        if (!resps.includes(filterInstructor)) return false;
       }
 
       if (queryWords.length > 0) {
@@ -184,19 +182,17 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
                 className="pl-10 bg-muted/30 focus-visible:ring-success/30"
               />
             </div>
-            {role === "admin" && (
-              <Button
-                variant={showFilters ? "default" : "outline"}
-                className={showFilters ? "bg-success hover:bg-success/90" : ""}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Filtri
-              </Button>
-            )}
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              className={showFilters ? "bg-success hover:bg-success/90" : ""}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filtri
+            </Button>
           </div>
           
-          {role === "admin" && showFilters && (
+          {showFilters && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3 bg-muted/20 rounded-lg border border-border/50 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase text-muted-foreground">Istruttore</label>

@@ -215,7 +215,7 @@ export default function CompetitionEntriesDetail({
   const uniqueLatini = useMemo(() => Array.from(new Set(allCouples.map(c => resolveDisciplineClass("latino", c.athlete1, c.athlete2, c)))).filter(Boolean).sort(), [allCouples]);
 
   const filteredEntries = entries.filter(entry => {
-    if (role === "admin" && selectedInstructorId !== "all") {
+    if (selectedInstructorId !== "all") {
       const instructor = profiles.find(p => p.id === selectedInstructorId);
       if (instructor && !isInstructorResponsibleForCoupleByResponsabili(instructor.full_name, entry.couples?.responsabili || [])) {
         return false;
@@ -277,7 +277,7 @@ export default function CompetitionEntriesDetail({
       }
     }
     
-    if (role === "admin" && selectedInstructorId !== "all") {
+    if (selectedInstructorId !== "all") {
       const instructor = profiles.find(p => p.id === selectedInstructorId);
       if (instructor && !isInstructorResponsibleForCoupleByResponsabili(instructor.full_name, couple.responsabili || [])) {
         return false;
@@ -629,19 +629,17 @@ export default function CompetitionEntriesDetail({
                    </Button>
                 )}
               </div>
-              {role === "admin" && (
-                <Button
+              <Button
                   variant={showFilters ? "default" : "outline"}
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn("h-14 px-6 rounded-2xl font-bold border-neutral-200 dark:border-white/10 shrink-0", showFilters ? "bg-primary text-primary-foreground hover:bg-primary/90" : "bg-neutral-100/50 dark:bg-white/5")}
                 >
                   <Filter className="w-5 h-5 mr-2" />
                   Filtri
-                </Button>
-              )}
+              </Button>
            </div>
 
-           {role === "admin" && showFilters && (
+           {showFilters && (
               <div className="mx-8 mt-4 grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-neutral-100/50 dark:bg-white/5 rounded-2xl border border-neutral-200 dark:border-white/10 animate-in fade-in slide-in-from-top-2">
                  <div className="space-y-1.5">
                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground ml-1">Istruttore</label>
