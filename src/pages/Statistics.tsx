@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { isInstructorResponsibleForCouple, isInstructorResponsibleForCoupleByResponsabili } from "@/lib/instructor-utils";
 import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -149,7 +150,17 @@ export default function Statistics() {
   // Overview Filters logic
   const filteredCouples = useMemo(() => {
     return couples.filter(couple => {
-      if (selectedInstructor !== "all" && couple.instructor_id !== selectedInstructor) return false;
+      if (selectedInstructor !== "all") {
+        const prof = profiles.find(p => p.id === selectedInstructor);
+        if (prof) {
+          const isResponsible = couple.instructor_id === prof.id || 
+                                isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, prof) ||
+                                isInstructorResponsibleForCoupleByResponsabili(prof.full_name, couple.responsabili || []);
+          if (!isResponsible) return false;
+        } else {
+          return false;
+        }
+      }
       if (selectedClass !== "all" && couple.class !== selectedClass) return false;
       if (selectedCategory !== "all" && couple.category !== selectedCategory) return false;
       if (selectedSeason !== "all") {

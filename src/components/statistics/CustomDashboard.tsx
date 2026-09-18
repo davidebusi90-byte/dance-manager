@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { isInstructorResponsibleForCouple, isInstructorResponsibleForCoupleByResponsabili, isInstructorResponsibleForAthlete } from "@/lib/instructor-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
@@ -46,7 +47,11 @@ export default function CustomDashboard({ charts, athletes, couples, competition
       if (chart.groupBy === 'category') return couple.category;
       if (chart.groupBy === 'season') return getSeason(couple.created_at);
       if (chart.groupBy === 'instructor') {
-        const prof = profiles.find(p => p.id === couple.instructor_id);
+        const prof = profiles.find(p => 
+          p.id === couple.instructor_id ||
+          isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
+          isInstructorResponsibleForCoupleByResponsabili(p.full_name, couple.responsabili || [])
+        );
         return prof ? prof.full_name : "Nessun Istruttore";
       }
       return "Tutti";
@@ -61,7 +66,7 @@ export default function CustomDashboard({ charts, athletes, couples, competition
         if (chart.groupBy === 'class') key = a.class;
         else if (chart.groupBy === 'category') key = a.category;
         else if (chart.groupBy === 'instructor') {
-          const prof = profiles.find(p => p.id === a.instructor_id);
+          const prof = profiles.find(p => p.id === a.instructor_id || isInstructorResponsibleForAthlete(a, p));
           key = prof ? prof.full_name : "Nessun Istruttore";
         }
         increment(key);
