@@ -18,6 +18,7 @@ export const formatEventName = (name: string): string => {
     return name
         .replace(/Danze (Standard|Latino Americane|Latino-Americane) - /gi, "")
         .replace(/ \(\d+\/\d+\)/g, "")
+        .replace(/\bOpen\s+Open\b/gi, "Open")
         .trim();
 };
 
