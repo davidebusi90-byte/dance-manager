@@ -49,7 +49,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
   const [createMultiple, setCreateMultiple] = useState({
     standard: true,
     latin: true,
-    combinata: false,
+    combinata10: false,
+    combinata8: false,
     classicShowdance: false,
     southAmericanShowdance: false
   });
@@ -60,7 +61,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
       setCreateMultiple({
         standard: discipline === "Danze Standard",
         latin: discipline === "Danze Latino Americane",
-        combinata: discipline === "Combinata",
+        combinata10: discipline === "Combinata 10 Balli",
+        combinata8: discipline === "Combinata 8 Balli",
         classicShowdance: discipline === "Classic Showdance",
         southAmericanShowdance: discipline === "South American Showdance"
       });
@@ -75,8 +77,10 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
       setAllowedClasses(new Set(existingEvent.allowed_classes || []));
       
       const evtLower = existingEvent.event_name.toLowerCase();
-      if (evtLower.includes("combinata")) {
-        setDiscipline("Combinata");
+      if (evtLower.includes("combinata 10") || evtLower.includes("ten dance") || (evtLower.includes("combinata") && !evtLower.includes("8"))) {
+        setDiscipline("Combinata 10 Balli");
+      } else if (evtLower.includes("combinata 8") || evtLower.includes("eight dance")) {
+        setDiscipline("Combinata 8 Balli");
       } else if (evtLower.includes("classic show") || evtLower.includes("classic showdance")) {
         setDiscipline("Classic Showdance");
       } else if (evtLower.includes("south american show") || evtLower.includes("south america showdance")) {
@@ -142,7 +146,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
-          if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
+          if (discipline.includes("Combinata 10")) intlDisc = "Ten Dance";
+          if (discipline.includes("Combinata 8")) intlDisc = "Eight Dance";
           if (discipline.includes("Classic Showdance")) intlDisc = "Classic Showdance";
           if (discipline.includes("South American Showdance")) intlDisc = "South American Showdance";
           
@@ -176,7 +181,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           
           let intlDisc = "Standard";
           if (discipline.includes("Latin")) intlDisc = "Latin";
-          if (discipline.includes("Combinata")) intlDisc = "Ten Dance";
+          if (discipline.includes("Combinata 10")) intlDisc = "Ten Dance";
+          if (discipline.includes("Combinata 8")) intlDisc = "Eight Dance";
           if (discipline.includes("Classic Showdance")) intlDisc = "Classic Showdance";
           if (discipline.includes("South American Showdance")) intlDisc = "South American Showdance";
           
@@ -264,7 +270,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             selectedDiscs.forEach(discKey => {
               let discName = "Danze Standard";
               if (discKey === "latin") discName = "Danze Latino Americane";
-              if (discKey === "combinata") discName = "Combinata";
+              if (discKey === "combinata10") discName = "Combinata 10 Balli";
+              if (discKey === "combinata8") discName = "Combinata 8 Balli";
               if (discKey === "classicShowdance") discName = "Classic Showdance";
               if (discKey === "southAmericanShowdance") discName = "South American Showdance";
 
@@ -296,7 +303,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
-                if (discKey === "combinata") intlDisc = "Ten Dance";
+                if (discKey === "combinata10") intlDisc = "Ten Dance";
+                if (discKey === "combinata8") intlDisc = "Eight Dance";
                 if (discKey === "classicShowdance") intlDisc = "Classic Showdance";
                 if (discKey === "southAmericanShowdance") intlDisc = "South American Showdance";
 
@@ -331,7 +339,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                 
                 let intlDisc = "Standard";
                 if (discKey === "latin") intlDisc = "Latin";
-                if (discKey === "combinata") intlDisc = "Ten Dance";
+                if (discKey === "combinata10") intlDisc = "Ten Dance";
+                if (discKey === "combinata8") intlDisc = "Eight Dance";
                 if (discKey === "classicShowdance") intlDisc = "Classic Showdance";
                 if (discKey === "southAmericanShowdance") intlDisc = "South American Showdance";
 
@@ -364,7 +373,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
           toInsert = selectedDiscs.map(discKey => {
             let discName = "Danze Standard";
             if (discKey === "latin") discName = "Danze Latino Americane";
-            if (discKey === "combinata") discName = "Combinata";
+            if (discKey === "combinata10") discName = "Combinata 10 Balli";
+            if (discKey === "combinata8") discName = "Combinata 8 Balli";
             if (discKey === "classicShowdance") discName = "Classic Showdance";
             if (discKey === "southAmericanShowdance") discName = "South American Showdance";
 
@@ -373,7 +383,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             if (isStarCupFormat) {
                let targetIntlDisc = "Standard";
                if (discKey === "latin") targetIntlDisc = "Latin";
-               if (discKey === "combinata") targetIntlDisc = "Ten Dance";
+               if (discKey === "combinata10") targetIntlDisc = "Ten Dance";
+               if (discKey === "combinata8") targetIntlDisc = "Eight Dance";
                if (discKey === "classicShowdance") targetIntlDisc = "Classic Showdance";
                if (discKey === "southAmericanShowdance") targetIntlDisc = "South American Showdance";
                
@@ -383,6 +394,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                  nameToInsert = nameToInsert.replace(/Latin$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("Ten Dance")) {
                  nameToInsert = nameToInsert.replace(/Ten Dance$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Eight Dance")) {
+                 nameToInsert = nameToInsert.replace(/Eight Dance$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("Classic Showdance")) {
                  nameToInsert = nameToInsert.replace(/Classic Showdance$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("South American Showdance")) {
@@ -398,7 +411,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
             } else if (isInternationalFormat) {
                let targetIntlDisc = "Standard";
                if (discKey === "latin") targetIntlDisc = "Latin";
-               if (discKey === "combinata") targetIntlDisc = "Ten Dance";
+               if (discKey === "combinata10") targetIntlDisc = "Ten Dance";
+               if (discKey === "combinata8") targetIntlDisc = "Eight Dance";
                if (discKey === "classicShowdance") targetIntlDisc = "Classic Showdance";
                if (discKey === "southAmericanShowdance") targetIntlDisc = "South American Showdance";
                
@@ -408,6 +422,8 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                  nameToInsert = nameToInsert.replace(/Latin$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("Ten Dance")) {
                  nameToInsert = nameToInsert.replace(/Ten Dance$/, targetIntlDisc);
+               } else if (nameToInsert.endsWith("Eight Dance")) {
+                 nameToInsert = nameToInsert.replace(/Eight Dance$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("Classic Showdance")) {
                  nameToInsert = nameToInsert.replace(/Classic Showdance$/, targetIntlDisc);
                } else if (nameToInsert.endsWith("South American Showdance")) {
@@ -429,7 +445,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                if (discipline !== discName && nameToInsert.includes(discipline)) {
                   nameToInsert = nameToInsert.replace(discipline, discName);
                } else if (discipline !== discName && !nameToInsert.includes(discName)) {
-                  nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata)\s*-\s*/, '')}`;
+                  nameToInsert = `${discName} - ${nameToInsert.replace(/^(Danze Standard|Danze Latino Americane|Combinata 10 Balli|Combinata 8 Balli|Combinata)\s*-\s*/, '')}`;
                }
             }
 
@@ -591,11 +607,19 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
-                        id="multi-comb" 
-                        checked={createMultiple.combinata} 
-                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata: !!c }))}
+                        id="multi-comb10" 
+                        checked={createMultiple.combinata10} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata10: !!c }))}
                       />
-                      <label htmlFor="multi-comb" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Combinata</label>
+                      <label htmlFor="multi-comb10" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Combinata 10 Balli</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multi-comb8" 
+                        checked={createMultiple.combinata8} 
+                        onCheckedChange={(c) => setCreateMultiple(p => ({ ...p, combinata8: !!c }))}
+                      />
+                      <label htmlFor="multi-comb8" className="text-sm font-medium leading-none cursor-pointer whitespace-nowrap">Combinata 8 Balli</label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 

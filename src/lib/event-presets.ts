@@ -1,4 +1,4 @@
-export const DISCIPLINES = ["Danze Standard", "Danze Latino Americane", "Combinata", "Classic Showdance", "South American Showdance"];
+export const DISCIPLINES = ["Danze Standard", "Danze Latino Americane", "Combinata 10 Balli", "Combinata 8 Balli", "Classic Showdance", "South American Showdance"];
 
 export const STANDARD_LATIN_EVENTS = [
   // Syllabus
@@ -43,12 +43,6 @@ export const STANDARD_LATIN_EVENTS = [
   { name: "Master 4", classes: ["MASTER"] },
 ];
 
-export const COMBINATA_EVENTS = [
-  { name: "Combinata 10 Balli", classes: ["MASTER", "AS", "A", "A1", "A2", "B1", "B2", "B3"] },
-  { name: "Combinata 8 Balli", classes: ["C", "D"] },
-];
-
 export const getEventsForDiscipline = (discipline: string) => {
-  if (discipline === "Combinata") return COMBINATA_EVENTS;
   return STANDARD_LATIN_EVENTS;
 };
