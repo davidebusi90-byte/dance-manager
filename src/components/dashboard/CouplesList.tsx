@@ -144,7 +144,7 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
       const nameB = athB1 ? `${athB1.last_name} ${athB1.first_name}`.toLowerCase() : "";
       return nameA.localeCompare(nameB);
     });
-  }, [couples, athleteMap, searchQuery]);
+  }, [couples, athleteMap, searchQuery, filterCategory, filterClass, filterStandard, filterLatini, filterInstructor]);
 
   return (
     <Card className="animate-fade-in shadow-xl border-success/10">

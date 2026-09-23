@@ -372,7 +372,7 @@ export default function CompetitionsList({ competitions, athletes = [], couples 
               >
                 Gare Attive ({activeCompetitions.length})
               </button>
-              {role === "admin" && (
+              {(role === "admin" || role === "supervisor") && (
                 <button
                   className={`px-4 py-2 font-medium text-sm rounded-t-lg transition-colors ${showCompleted ? "bg-orange-50 text-orange-700 border-b-2 border-orange-500" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}
                   onClick={() => setShowCompleted(true)}
