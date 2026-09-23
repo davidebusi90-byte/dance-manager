@@ -14,12 +14,17 @@ export const getEventDiscipline = (eventName: string): string | null => {
     return null;
 };
 
-export const formatEventName = (name: string): string => {
-    return name
+export const formatEventName = (name: string, effClass?: string, category?: string): string => {
+    let formattedName = name
         .replace(/Danze (Standard|Latino Americane|Latino-Americane) - /gi, "")
         .replace(/ \(\d+\/\d+\)/g, "")
         .replace(/\bOpen\s+Open\b/gi, "Open")
         .trim();
+        
+    if (effClass) formattedName += ` - Classe ${effClass}`;
+    if (category) formattedName += ` - Cat. ${category}`;
+    
+    return formattedName;
 };
 
 export const getEffectClassForCouple = (couple: any, eventName: string): string => {
