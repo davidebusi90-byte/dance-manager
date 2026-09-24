@@ -272,9 +272,9 @@ Deno.serve(async (req) => {
               if (disc && cls) {
                   const discName = disc.toLowerCase();
                   let key = discName;
-                  if (discName.includes("combinata")) key = "combinata";
-                  else if (discName.includes("latino")) key = "latino";
-                  else if (discName.includes("standard")) key = "standard";
+                  if (discName.includes("combinata") || discName.includes("10 balli")) key = "combinata";
+                  else if (discName.includes("latino") || discName.includes("latin") || /\bla\b/.test(discName)) key = "latino";
+                  else if (discName.includes("standard") || /\bstd\b/.test(discName)) key = "standard";
                   
                   disciplineInfo[key] = cls.toUpperCase();
                   if (i === 1 && !athlete.class) bestClass = cls;
@@ -341,16 +341,19 @@ Deno.serve(async (req) => {
                         const d = (athlete as any)[`disc${i}`];
                         const c = (athlete as any)[`class${i}`];
                         if (d && c) {
-                          const k = d.toLowerCase().includes("latino") ? "latino" : d.toLowerCase().includes("standard") ? "standard" : "combinata";
+                          const normD = d.toLowerCase();
+                          const k = (normD.includes("latino") || normD.includes("latin") || /\bla\b/.test(normD)) ? "latino" : 
+                                    (normD.includes("standard") || /\bstd\b/.test(normD)) ? "standard" : "combinata";
                           discInfo[k] = c.toUpperCase();
                           discs.add(k);
                           if (bestCls === "D") bestCls = c.toUpperCase();
                         }
                       }
 
+                      const [sortedA1Id, sortedA2Id] = [a1Id, a2Id].sort();
                       couplesToUpsert.push({
-                          athlete1_id: a1Id,
-                          athlete2_id: a2Id,
+                          athlete1_id: sortedA1Id,
+                          athlete2_id: sortedA2Id,
                           category: athlete.category,
                           class: bestCls,
                           disciplines: Array.from(discs),
