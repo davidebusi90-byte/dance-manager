@@ -30,6 +30,13 @@ const getCurrentSeason = () => getSeason(new Date());
 
 const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b'];
 
+// Strict matching based only on text names in `responsabili` fields, ignoring `instructor_id` which might be the admin
+const isStrictlyResponsible = (couple: any, profile: any) => {
+    return isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.responsabili || []) ||
+           (couple.athlete1 && isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.athlete1.responsabili || [])) ||
+           (couple.athlete2 && isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.athlete2.responsabili || []));
+};
+
 export default function Statistics() {
   const { role, userId } = useUserRole();
   const { athletes, couples, competitions, profiles, loading: dashboardLoading } = useDashboardData(role, userId);
@@ -153,9 +160,7 @@ export default function Statistics() {
       if (selectedInstructor !== "all") {
         const prof = profiles.find(p => p.id === selectedInstructor);
         if (prof) {
-          const isResponsible = couple.instructor_id === prof.id || 
-                                isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, prof) ||
-                                isInstructorResponsibleForCoupleByResponsabili(prof.full_name, couple.responsabili || []);
+          const isResponsible = isStrictlyResponsible(couple, prof);
           if (!isResponsible) return false;
         } else {
           return false;
@@ -251,12 +256,7 @@ export default function Statistics() {
     profiles.forEach(p => instructorCounts[p.full_name] = new Set());
     
     filteredCouples.forEach(c => {
-       const resp = c.responsabili || [];
-       const coupleInstructors = profiles.filter(p => 
-           c.instructor_id === p.id || 
-           isInstructorResponsibleForCouple(c.athlete1, c.athlete2, p) ||
-           isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
-       );
+       const coupleInstructors = profiles.filter(p => isStrictlyResponsible(c, p));
        coupleInstructors.forEach(instructor => {
          if (c.athlete1) instructorCounts[instructor.full_name].add(c.athlete1.id);
          if (c.athlete2) instructorCounts[instructor.full_name].add(c.athlete2.id);
@@ -283,12 +283,7 @@ export default function Statistics() {
        const couple = filteredCouples.find(c => c.id === e.couple_id);
        if (!couple) return;
        
-       const resp = couple.responsabili || [];
-       const coupleInstructors = profiles.filter(p => 
-           couple.instructor_id === p.id || 
-           isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
-           isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
-       );
+       const coupleInstructors = profiles.filter(p => isStrictlyResponsible(couple, p));
        
        if (coupleInstructors.length === 0) {
            compsMap[cName]['Nessun Istruttore'] = (compsMap[cName]['Nessun Istruttore'] || 0) + 1;
@@ -330,12 +325,7 @@ export default function Statistics() {
        });
        
        if (hasAnomaly) {
-           const resp = couple.responsabili || [];
-           const coupleInstructors = profiles.filter(p => 
-               couple.instructor_id === p.id || 
-               isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
-               isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
-           );
+           const coupleInstructors = profiles.filter(p => isStrictlyResponsible(couple, p));
            coupleInstructors.forEach(instructor => {
                instructorCounts[instructor.full_name] = (instructorCounts[instructor.full_name] || 0) + 1;
            });
@@ -377,12 +367,7 @@ export default function Statistics() {
           const couple = couples.find(c => c.id === e.couple_id);
           if (!couple) return;
           
-          const resp = couple.responsabili || [];
-          const coupleInstructors = profiles.filter(p => 
-               couple.instructor_id === p.id || 
-               isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
-               isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
-          );
+          const coupleInstructors = profiles.filter(p => isStrictlyResponsible(couple, p));
           
           coupleInstructors.forEach(instructor => {
                yearlyData[season][instructor.full_name] = (yearlyData[season][instructor.full_name] || 0) + 1;
