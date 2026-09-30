@@ -753,12 +753,24 @@ export default function CompetitionEntriesDetail({
   return (
     <div className="space-y-6">
       <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
-        <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
-           <div><CardTitle className="text-2xl font-display font-black tracking-tighter uppercase flex items-center gap-3"><Trophy className="text-primary" /> {competition.name}</CardTitle>
-           <p className="text-muted-foreground font-medium mt-1">Status: {new Date(competition.date).toLocaleDateString("it-IT")} • {entries.length} Iscrizioni</p></div>
-           <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={generatePdfReport} className="rounded-xl border-white/10 hover:bg-primary/5 font-bold"><Printer className="mr-2 w-4 h-4" /> Stampa / PDF</Button>
-              <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full w-12 h-12 hover:bg-red-500/10 hover:text-red-500"><X /></Button>
+        <CardHeader className="p-6 md:p-8 border-b border-white/5 relative">
+           <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-4 top-4 md:right-8 md:top-8 rounded-full w-12 h-12 shrink-0 hover:bg-red-500/10 hover:text-red-500 z-10"><X /></Button>
+           <div className="flex flex-col gap-4 pr-12 md:pr-16">
+              <div>
+                 <CardTitle className="text-2xl font-display font-black tracking-tighter uppercase flex items-start gap-3">
+                    <Trophy className="text-primary shrink-0 mt-1" />
+                    <span>{competition.name}</span>
+                 </CardTitle>
+                 <div className="text-muted-foreground font-medium mt-2 flex flex-col gap-1">
+                    <span>Ultima sincronizzazione: {new Date(competition.date).toLocaleDateString("it-IT")}</span>
+                    <span>{entries.length} Iscrizioni</span>
+                 </div>
+              </div>
+              <div className="mt-2">
+                 <Button variant="outline" onClick={generatePdfReport} className="rounded-xl border-white/10 hover:bg-primary/5 font-bold w-full sm:w-auto h-12">
+                    <Printer className="mr-2 w-4 h-4" /> Stampa / PDF
+                 </Button>
+              </div>
            </div>
         </CardHeader>
         <CardContent className="p-0">
