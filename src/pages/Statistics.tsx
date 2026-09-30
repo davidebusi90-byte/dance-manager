@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Users, FileWarning, Trophy, Activity, Plus, X, BarChartIcon } from "lucide-react";
 import { validateCoupleCategory } from "@/lib/category-validation";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from "recharts";
 
 // New components & types
 import ChartBuilder from "@/components/statistics/ChartBuilder";
@@ -243,6 +243,157 @@ export default function Statistics() {
     { name: 'Mancanti', value: certificateStats.missing, color: '#f59e0b' },
   ].filter(d => d.value > 0);
 
+  // --- NEW ADMIN/SUPERVISOR KPIs ---
+  // KPI 1: Allievi per istruttore
+  const athletesPerInstructor = useMemo(() => {
+    if (role !== "admin" && role !== "supervisor") return [];
+    const instructorCounts: Record<string, Set<string>> = {};
+    profiles.forEach(p => instructorCounts[p.full_name] = new Set());
+    
+    filteredCouples.forEach(c => {
+       const resp = c.responsabili || [];
+       const coupleInstructors = profiles.filter(p => 
+           c.instructor_id === p.id || 
+           isInstructorResponsibleForCouple(c.athlete1, c.athlete2, p) ||
+           isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
+       );
+       coupleInstructors.forEach(instructor => {
+         if (c.athlete1) instructorCounts[instructor.full_name].add(c.athlete1.id);
+         if (c.athlete2) instructorCounts[instructor.full_name].add(c.athlete2.id);
+       });
+    });
+    return Object.entries(instructorCounts)
+      .map(([name, athletesSet]) => ({ name, allievi: athletesSet.size }))
+      .filter(item => item.allievi > 0)
+      .sort((a, b) => b.allievi - a.allievi);
+  }, [filteredCouples, profiles, role]);
+
+  // KPI 2: Coppie per gara per istruttore
+  const entriesPerCompPerInst = useMemo(() => {
+    if (role !== "admin" && role !== "supervisor") return { data: [], instructors: [] };
+    const compsMap: Record<string, Record<string, number>> = {};
+    const usedInstructors = new Set<string>();
+    
+    filteredEntries.forEach(e => {
+       const comp = competitions.find(c => c.id === e.competition_id);
+       if (!comp) return;
+       const cName = comp.name;
+       if (!compsMap[cName]) compsMap[cName] = {};
+       
+       const couple = filteredCouples.find(c => c.id === e.couple_id);
+       if (!couple) return;
+       
+       const resp = couple.responsabili || [];
+       const coupleInstructors = profiles.filter(p => 
+           couple.instructor_id === p.id || 
+           isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
+           isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
+       );
+       
+       if (coupleInstructors.length === 0) {
+           compsMap[cName]['Nessun Istruttore'] = (compsMap[cName]['Nessun Istruttore'] || 0) + 1;
+           usedInstructors.add('Nessun Istruttore');
+       } else {
+           coupleInstructors.forEach(instructor => {
+               compsMap[cName][instructor.full_name] = (compsMap[cName][instructor.full_name] || 0) + 1;
+               usedInstructors.add(instructor.full_name);
+           });
+       }
+    });
+    
+    const data = Object.keys(compsMap).map(cName => ({ name: cName, ...compsMap[cName] }));
+    data.sort((a, b) => {
+        const totalA = Object.keys(a).filter(k => k !== 'name').reduce((sum, k) => sum + (a[k] as number), 0);
+        const totalB = Object.keys(b).filter(k => k !== 'name').reduce((sum, k) => sum + (b[k] as number), 0);
+        return totalB - totalA;
+    });
+    return { data, instructors: Array.from(usedInstructors) };
+  }, [filteredEntries, filteredCouples, competitions, profiles, role]);
+
+  // KPI 3: Anomalie per istruttore
+  const anomaliesPerInstructor = useMemo(() => {
+    if (role !== "admin" && role !== "supervisor") return [];
+    const instructorCounts: Record<string, number> = {};
+    const today = new Date();
+    
+    filteredCouples.forEach(couple => {
+       if (!couple.athlete1 || !couple.athlete2) return;
+       const validation = validateCoupleCategory({
+         storedCategory: couple.category,
+         athlete1BirthDateISO: couple.athlete1.birth_date,
+         athlete2BirthDateISO: couple.athlete2.birth_date,
+         onDate: today,
+       });
+       let hasAnomaly = !validation.ok;
+       [couple.athlete1, couple.athlete2].forEach(a => {
+         if (!a.medical_certificate_expiry || new Date(a.medical_certificate_expiry) < today) hasAnomaly = true;
+       });
+       
+       if (hasAnomaly) {
+           const resp = couple.responsabili || [];
+           const coupleInstructors = profiles.filter(p => 
+               couple.instructor_id === p.id || 
+               isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
+               isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
+           );
+           coupleInstructors.forEach(instructor => {
+               instructorCounts[instructor.full_name] = (instructorCounts[instructor.full_name] || 0) + 1;
+           });
+       }
+    });
+    return Object.entries(instructorCounts)
+      .map(([name, anomalie]) => ({ name, anomalie }))
+      .sort((a, b) => b.anomalie - a.anomalie);
+  }, [filteredCouples, profiles, role]);
+
+  // KPI 4: Storico Gara
+  const [selectedHistoricalComp, setSelectedHistoricalComp] = useState<string>("");
+  const uniqueCompetitionNames = useMemo(() => Array.from(new Set(competitions.map(c => c.name))).sort(), [competitions]);
+  
+  useEffect(() => {
+     if (uniqueCompetitionNames.length > 0 && !selectedHistoricalComp) {
+         setSelectedHistoricalComp(uniqueCompetitionNames[0]);
+     }
+  }, [uniqueCompetitionNames, selectedHistoricalComp]);
+  
+  const historicalCompData = useMemo(() => {
+      if (role !== "admin" && role !== "supervisor") return { data: [], instructors: [] };
+      if (!selectedHistoricalComp) return { data: [], instructors: [] };
+      
+      const compEntries = entries.filter(e => {
+          const c = competitions.find(comp => comp.id === e.competition_id);
+          return c && c.name === selectedHistoricalComp;
+      });
+      
+      const yearlyData: Record<string, Record<string, number>> = {};
+      const usedInstructors = new Set<string>();
+      
+      compEntries.forEach(e => {
+          const comp = competitions.find(c => c.id === e.competition_id);
+          if (!comp) return;
+          const season = getSeason(comp.date);
+          if (!yearlyData[season]) yearlyData[season] = {};
+          
+          const couple = couples.find(c => c.id === e.couple_id);
+          if (!couple) return;
+          
+          const resp = couple.responsabili || [];
+          const coupleInstructors = profiles.filter(p => 
+               couple.instructor_id === p.id || 
+               isInstructorResponsibleForCouple(couple.athlete1, couple.athlete2, p) ||
+               isInstructorResponsibleForCoupleByResponsabili(p.full_name, resp)
+          );
+          
+          coupleInstructors.forEach(instructor => {
+               yearlyData[season][instructor.full_name] = (yearlyData[season][instructor.full_name] || 0) + 1;
+               usedInstructors.add(instructor.full_name);
+          });
+      });
+      
+      const data = Object.keys(yearlyData).sort().map(season => ({ name: season, ...yearlyData[season] }));
+      return { data, instructors: Array.from(usedInstructors) };
+  }, [selectedHistoricalComp, entries, couples, competitions, profiles, role]);
+
 
   if (dashboardLoading || entriesLoading) {
     return (
@@ -438,6 +589,123 @@ export default function Statistics() {
               </CardContent>
             </Card>
           </div>
+
+          {/* ADMIN/SUPERVISOR KPIs */}
+          {(role === "admin" || role === "supervisor") && (
+            <div className="space-y-6 mb-8 border-t border-neutral-200 dark:border-neutral-800 pt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-black uppercase tracking-tight">Statistiche Staff</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* KPI 1: Allievi per istruttore */}
+                <Card className="shadow-sm border-neutral-200/50 dark:border-neutral-800/50">
+                  <CardHeader><CardTitle>Allievi Tesserati per Istruttore</CardTitle></CardHeader>
+                  <CardContent>
+                    {athletesPerInstructor.length > 0 ? (
+                      <div className="h-[350px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={athletesPerInstructor} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e5e7eb" />
+                            <XAxis type="number" allowDecimals={false} />
+                            <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
+                            <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                            <Bar dataKey="allievi" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-[350px] flex items-center justify-center text-muted-foreground">Nessun dato.</div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* KPI 3: Anomalie per istruttore */}
+                <Card className="shadow-sm border-neutral-200/50 dark:border-neutral-800/50">
+                  <CardHeader><CardTitle>Anomalie da Risolvere (Per Istruttore)</CardTitle></CardHeader>
+                  <CardContent>
+                    {anomaliesPerInstructor.length > 0 ? (
+                      <div className="h-[350px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={anomaliesPerInstructor} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                            <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={60} />
+                            <YAxis allowDecimals={false} />
+                            <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                            <Bar dataKey="anomalie" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-[350px] flex items-center justify-center text-green-600 font-bold">Nessuna anomalia riscontrata! 🎉</div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* KPI 2: Coppie per gara per istruttore */}
+              <Card className="shadow-sm border-neutral-200/50 dark:border-neutral-800/50">
+                <CardHeader><CardTitle>Coppie Iscritte alle Gare (Divise per Istruttore)</CardTitle></CardHeader>
+                <CardContent>
+                  {entriesPerCompPerInst.data.length > 0 ? (
+                    <div className="h-[400px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={entriesPerCompPerInst.data} margin={{ top: 10, right: 10, left: -20, bottom: 40 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                          <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-45} textAnchor="end" height={80} />
+                          <YAxis allowDecimals={false} />
+                          <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                          <Legend verticalAlign="top" height={36} />
+                          {entriesPerCompPerInst.instructors.map((instructor, idx) => (
+                             <Bar key={instructor} dataKey={instructor} stackId="a" fill={COLORS[idx % COLORS.length]} />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-[400px] flex items-center justify-center text-muted-foreground">Nessun dato.</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* KPI 4: Storico Gara */}
+              <Card className="shadow-sm border-neutral-200/50 dark:border-neutral-800/50">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <CardTitle>Storico Partecipazioni a Specifica Gara</CardTitle>
+                  <Select value={selectedHistoricalComp} onValueChange={setSelectedHistoricalComp}>
+                    <SelectTrigger className="w-full sm:w-[300px]"><SelectValue placeholder="Seleziona una competizione..." /></SelectTrigger>
+                    <SelectContent>
+                      {uniqueCompetitionNames.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </CardHeader>
+                <CardContent>
+                  {historicalCompData.data.length > 0 ? (
+                    <div className="h-[400px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={historicalCompData.data} margin={{ top: 10, right: 30, left: -20, bottom: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis allowDecimals={false} />
+                          <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                          <Legend verticalAlign="top" height={36} />
+                          {historicalCompData.instructors.map((instructor, idx) => (
+                             <Line key={instructor} type="monotone" dataKey={instructor} stroke={COLORS[idx % COLORS.length]} strokeWidth={3} dot={{ r: 5 }} activeDot={{ r: 8 }} />
+                          ))}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+                       {selectedHistoricalComp ? "Nessun dato storico per questa gara." : "Seleziona una gara per visualizzare i trend."}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+            </div>
+          )}
         </TabsContent>
 
         {customTabs.map(tab => (
