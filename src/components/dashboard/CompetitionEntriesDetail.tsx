@@ -762,7 +762,7 @@ export default function CompetitionEntriesDetail({
                     <span>{competition.name}</span>
                  </CardTitle>
                  <div className="text-muted-foreground font-medium mt-2 flex flex-col gap-1">
-                    <span>Ultima sincronizzazione: {new Date(competition.date).toLocaleDateString("it-IT")}</span>
+                    <span>Inizio competizione: {new Date(competition.date).toLocaleDateString("it-IT")}</span>
                     <span>{entries.length} Iscrizioni</span>
                  </div>
               </div>
