@@ -188,7 +188,7 @@ export const isEventAllowedForCouple = (et: any, couple: any): boolean => {
     if (!isRaceAllowed) {
         if (effectiveClass === "A") {
             isRaceAllowed = (et.allowed_classes || []).includes("A1") || (et.allowed_classes || []).includes("A2");
-        } else if (effectiveClass === "B" || effectiveClass === "B1") {
+        } else if (effectiveClass === "B" || effectiveClass === "B1" || effectiveClass === "B2" || effectiveClass === "B3") {
             isRaceAllowed = (et.allowed_classes || []).includes("B") || (et.allowed_classes || []).includes("B1") || (et.allowed_classes || []).includes("B2") || (et.allowed_classes || []).includes("B3");
         }
     }
