@@ -602,6 +602,154 @@ export default function CompetitionEntriesDetail({
     );
   };
 
+  const renderMobileAthleteLine = (athlete: any) => {
+    if (!athlete) return <span className="text-muted-foreground">-</span>;
+    const expiry = athlete.medical_certificate_expiry;
+    const isExpired = expiry && new Date(expiry) < new Date();
+    const isMissing = !expiry;
+    return (
+      <div className="flex items-center gap-2 w-full">
+        <span className="font-bold text-sm truncate max-w-[200px]">{athlete.first_name} {athlete.last_name}</span>
+        <span className="text-[10px] text-muted-foreground shrink-0">CID: {athlete.code}</span>
+        {(isExpired || isMissing) && (
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        )}
+      </div>
+    );
+  };
+
+  const renderMobileEntryCard = (entry: CompetitionEntry, showLateFlag = false) => {
+    const couple = entry.couples;
+    if (!couple) return null;
+    const a1 = getAthleteForPos(entry, 1);
+    const a2 = getAthleteForPos(entry, 2);
+    const stClass = resolveDisciplineClass("standard", a1, a2, couple);
+    const laClass = resolveDisciplineClass("latino", a1, a2, couple);
+    
+    const entryEventNames = (entry.event_type_ids || []).map(id => {
+      const name = eventTypes.find(et => et.id === id)?.event_name;
+      if (!name) return null;
+      const effClass = getEffectiveClass(couple, name);
+      return formatEventName(name, effClass, couple.category);
+    }).filter(Boolean);
+
+    const unselectedEventNames = eventTypes
+      .filter(et => isEventAllowedForCouple(et, couple) && !(entry.event_type_ids || []).includes(et.id))
+      .map(et => {
+        const effClass = getEffectiveClass(couple, et.event_name);
+        return formatEventName(et.event_name, effClass, couple.category);
+      });
+
+    return (
+      <div 
+        key={entry.id} 
+        onClick={() => setSelectedEntry(entry)}
+        className={cn(
+          "flex flex-col p-4 gap-4 rounded-2xl border border-neutral-200/50 dark:border-white/5 bg-white dark:bg-white/5 cursor-pointer shadow-sm relative transition-all hover:border-primary/30",
+          showLateFlag && "bg-amber-500/5 border-amber-500/20"
+        )}
+      >
+        <div className="flex flex-col gap-1.5">
+          {renderMobileAthleteLine(a1)}
+          {renderMobileAthleteLine(a2)}
+        </div>
+        
+        <div className="flex justify-between items-center bg-neutral-50 dark:bg-black/20 p-2 rounded-xl">
+           <span className="text-sm font-black tracking-tight">{couple.category}</span>
+           <span className="text-[10px] text-muted-foreground font-black uppercase">ST: {stClass} • LA: {laClass}</span>
+        </div>
+
+        <div className="flex flex-wrap gap-1">
+          {entryEventNames.map(name => (
+             <Badge key={name} className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] font-bold uppercase rounded-lg px-2 py-0.5">{name}</Badge>
+          ))}
+          {unselectedEventNames.map(name => (
+             <Badge key={`uns-${name}`} className="bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-white/5 dark:text-white/40 dark:border-white/10 text-[10px] font-bold uppercase rounded-lg px-2 py-0.5">{name}</Badge>
+          ))}
+          {entry.event_type_ids?.length === 0 && unselectedEventNames.length === 0 && <span className="text-muted-foreground italic text-xs">Nessuna gara selezionata</span>}
+        </div>
+
+        <div className="flex justify-between items-center mt-2 border-t border-neutral-100 dark:border-white/5 pt-3">
+           <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] uppercase tracking-wider text-muted-foreground opacity-70">Istruttori</span>
+              <div className="flex flex-wrap gap-1">
+                 {couple.responsabili?.map(r => <span key={r} className="text-[10px] font-bold">{r}</span>)}
+              </div>
+           </div>
+           
+           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); if (role === "admin") handlePaymentToggle(entry.id, entry.is_paid); }} className={cn("rounded-full px-4 font-black text-[10px] uppercase h-8", entry.is_paid ? "bg-green-500 text-white hover:bg-green-600" : "bg-amber-500 text-white hover:bg-amber-600")}>
+             {entry.is_paid ? "PAGATO" : isLateEntry(entry.created_at) ? "DA PAGARE (MORA)" : "DA PAGARE"}
+           </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMobileUnenrolledCard = (couple: Couple) => {
+    const a1 = couple.athlete1;
+    const a2 = couple.athlete2;
+    const eligibleEventNames = eventTypes
+      .filter(et => isEventAllowedForCouple(et, couple))
+      .map(et => {
+        const effClass = getEffectiveClass(couple, et.event_name);
+        return formatEventName(et.event_name, effClass, couple.category);
+      });
+
+    return (
+      <div key={couple.id} className="flex flex-col p-4 gap-4 rounded-2xl border border-neutral-200/50 dark:border-white/5 bg-white dark:bg-white/5 shadow-sm relative">
+        <div className="flex flex-col gap-1.5">
+          {renderMobileAthleteLine(a1)}
+          {renderMobileAthleteLine(a2)}
+        </div>
+        
+        <div className="flex justify-between items-center bg-neutral-50 dark:bg-black/20 p-2 rounded-xl">
+           <span className="text-sm font-black tracking-tight">{couple.category}</span>
+           <span className="text-[10px] text-muted-foreground font-black uppercase">CLASSE {couple.class}</span>
+        </div>
+
+        <div className="flex flex-wrap gap-1">
+          {eligibleEventNames.map(name => (
+            <Badge key={name} className="bg-neutral-100 text-neutral-500 border-neutral-200 dark:bg-white/5 dark:text-white/40 dark:border-white/10 text-[10px] font-bold uppercase rounded-lg px-2 py-0.5">{name}</Badge>
+          ))}
+          {eligibleEventNames.length === 0 && <span className="text-muted-foreground italic text-xs">Nessuna gara idonea</span>}
+        </div>
+
+        <div className="flex flex-col gap-0.5 mt-1 border-t border-neutral-100 dark:border-white/5 pt-3">
+           <span className="text-[9px] uppercase tracking-wider text-muted-foreground opacity-70">Istruttori</span>
+           <div className="flex flex-wrap gap-2">
+              {couple.responsabili?.map(r => <span key={r} className="text-[10px] font-bold">{r}</span>)}
+           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMobileIneligibleCard = (couple: Couple) => {
+    const a1 = couple.athlete1;
+    const a2 = couple.athlete2;
+    
+    return (
+      <div key={couple.id} className="flex flex-col p-4 gap-4 rounded-2xl border border-neutral-200/50 dark:border-white/5 bg-white dark:bg-white/5 shadow-sm opacity-60">
+        <div className="flex flex-col gap-1.5">
+          {renderMobileAthleteLine(a1)}
+          {renderMobileAthleteLine(a2)}
+        </div>
+        
+        <div className="flex justify-between items-center bg-neutral-50 dark:bg-black/20 p-2 rounded-xl">
+           <span className="text-sm font-black tracking-tight">{couple.category}</span>
+           <span className="text-[10px] text-muted-foreground font-black uppercase">CLASSE {couple.class}</span>
+        </div>
+
+        <div className="flex flex-col gap-0.5 border-t border-neutral-100 dark:border-white/5 pt-3">
+           <span className="text-[9px] uppercase tracking-wider text-muted-foreground opacity-70">Istruttori</span>
+           <div className="flex flex-wrap gap-2">
+              {couple.responsabili?.map(r => <span key={r} className="text-[10px] font-bold">{r}</span>)}
+           </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <Card className="rounded-[2.5rem] glass border-white/10 shadow-2xl overflow-hidden">
@@ -712,16 +860,19 @@ export default function CompetitionEntriesDetail({
                     <TabsTrigger value="ineligible" className="rounded-xl font-bold py-2">NON IDONEE ({ineligibleCouples.length})</TabsTrigger>
                  </TabsList>
               </div>
-              <TabsContent value="iscritti" className="p-8 pt-4">
-                 <div className="overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
+              <TabsContent value="iscritti" className="p-4 md:p-8 pt-4">
+                 <div className="hidden lg:block overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
                    <table className="w-full text-left min-w-[800px]">
                       <thead><tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5"><th className="pb-4 px-3 min-w-[200px]">Atleti</th><th className="pb-4 text-center min-w-[120px]">Cat / Classe</th><th className="pb-4 min-w-[200px]">Gare</th><th className="pb-4 min-w-[120px]">Istruttori</th><th className="pb-4 text-center">Pagamento</th></tr></thead>
                       <tbody>{activeEntries.map(e => renderEntryRow(e, isLateEntry(e.created_at)))}</tbody>
                    </table>
                  </div>
+                 <div className="lg:hidden flex flex-col gap-4">
+                   {activeEntries.map(e => renderMobileEntryCard(e, isLateEntry(e.created_at)))}
+                 </div>
               </TabsContent>
-              <TabsContent value="non-iscritti" className="p-8 pt-4">
-                 <div className="overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
+              <TabsContent value="non-iscritti" className="p-4 md:p-8 pt-4">
+                 <div className="hidden lg:block overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
                    <table className="w-full text-left min-w-[800px]">
                       <thead>
                           <tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5">
@@ -762,9 +913,15 @@ export default function CompetitionEntriesDetail({
                       </tbody>
                    </table>
                  </div>
+                 <div className="lg:hidden flex flex-col gap-4">
+                   {unenrolledCouples.map(couple => renderMobileUnenrolledCard(couple))}
+                   {unenrolledCouples.length === 0 && (
+                     <div className="text-center py-8 text-muted-foreground italic bg-neutral-50 dark:bg-white/5 rounded-2xl">Nessuna coppia da iscrivere.</div>
+                   )}
+                 </div>
               </TabsContent>
-              <TabsContent value="ineligible" className="p-8 pt-4">
-                 <div className="overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
+              <TabsContent value="ineligible" className="p-4 md:p-8 pt-4">
+                 <div className="hidden lg:block overflow-x-auto rounded-lg border border-neutral-200/50 dark:border-white/5">
                    <table className="w-full text-left min-w-[700px]">
                       <thead>
                          <tr className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/60 border-b border-neutral-100 dark:border-white/5">
@@ -790,6 +947,12 @@ export default function CompetitionEntriesDetail({
                          )}
                       </tbody>
                    </table>
+                 </div>
+                 <div className="lg:hidden flex flex-col gap-4">
+                   {ineligibleCouples.map(couple => renderMobileIneligibleCard(couple))}
+                   {ineligibleCouples.length === 0 && (
+                     <div className="text-center py-8 text-muted-foreground italic bg-neutral-50 dark:bg-white/5 rounded-2xl">Tutte le coppie sono idonee per questa gara.</div>
+                   )}
                  </div>
               </TabsContent>
            </Tabs>
