@@ -1,6 +1,6 @@
 -- Add auto_api_sync_enabled column to system_settings
 ALTER TABLE public.system_settings 
-ADD COLUMN auto_api_sync_enabled BOOLEAN NOT NULL DEFAULT true;
+ADD COLUMN IF NOT EXISTS auto_api_sync_enabled BOOLEAN NOT NULL DEFAULT true;
 
 -- Update the default row if it exists
 UPDATE public.system_settings 
