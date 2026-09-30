@@ -49,6 +49,12 @@ const getMinYoungerAgeForRule = (minAge: number, label?: string): number => {
     // Regola Seniors: il più giovane deve avere almeno 30 anni
     if (minAge >= 35) return 30;
     
+    // Regole settore giovanile FIDESM: salto di 1 categoria verso l'alto
+    if (minAge === 16) return 14; // Youth -> Junior 2
+    if (minAge === 14) return 12; // Junior 2 -> Junior 1
+    if (minAge === 12) return 10; // Junior 1 -> Juvenile 2
+    if (minAge === 10) return 6;  // Juvenile 2 -> Juvenile 1
+    
     // Default: nessuna tolleranza (stessa età minima)
     return minAge;
 };
