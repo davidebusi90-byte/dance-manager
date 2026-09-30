@@ -8,8 +8,8 @@ import { getCategoryMaxAge, getCategoryMinAge, getSportsAge, normalizeCategory, 
 
 export const getEventDiscipline = (eventName: string): string | null => {
     const name = eventName.toLowerCase();
-    if (name.includes("standard") || /\bstd\b/.test(name)) return "standard";
-    if (name.includes("latino") || name.includes("latin") || /\bla\b/.test(name)) return "latino";
+    if (name.includes("standard") || /\bstd\b/.test(name) || name.includes("classic")) return "standard";
+    if (name.includes("latino") || name.includes("latin") || /\bla\b/.test(name) || name.includes("south american")) return "latino";
     if (name.includes("combinata") || name.includes("10 balli")) return "combinata";
     return null;
 };
