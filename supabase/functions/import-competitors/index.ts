@@ -275,6 +275,7 @@ Deno.serve(async (req) => {
                   if (discName.includes("combinata") || discName.includes("10 balli")) key = "combinata";
                   else if (discName.includes("latino") || discName.includes("latin") || /\bla\b/.test(discName)) key = "latino";
                   else if (discName.includes("standard") || /\bstd\b/.test(discName)) key = "standard";
+                  else if (discName.includes("show")) key = "show_dance";
                   
                   disciplineInfo[key] = cls.toUpperCase();
                   if (i === 1 && !athlete.class) bestClass = cls;
@@ -346,6 +347,7 @@ Deno.serve(async (req) => {
                           if (normD.includes("combinata") || normD.includes("10 balli")) k = "combinata";
                           else if (normD.includes("latino") || normD.includes("latin") || /\bla\b/.test(normD)) k = "latino";
                           else if (normD.includes("standard") || /\bstd\b/.test(normD)) k = "standard";
+                          else if (normD.includes("show")) k = "show_dance";
                           
                           discInfo[k] = c.toUpperCase();
                           discs.add(k);
