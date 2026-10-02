@@ -48,8 +48,8 @@ export default function AthleteDetailModal({ athlete, allAthletes = [], couples 
     // We can't easily use resolveDisciplineClass here because we only have one couple 
     // at a time in the loop, but we want the athlete info to be considered.
     // However, resolveDisciplineClass handles exactly this.
-    const a1 = couple.athlete1_id === athlete.id ? athlete : null;
-    const a2 = couple.athlete2_id === athlete.id ? athlete : null;
+    const a1 = couple.athlete1_id === athlete.id ? athlete : allAthletes.find(a => a.id === couple.athlete1_id) || null;
+    const a2 = couple.athlete2_id === athlete.id ? athlete : allAthletes.find(a => a.id === couple.athlete2_id) || null;
     return resolveDisciplineClass(key, a1, a2, couple);
   };
 
