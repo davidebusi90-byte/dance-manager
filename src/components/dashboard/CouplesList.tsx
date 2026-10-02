@@ -61,25 +61,10 @@ export default function CouplesList({ couples, deactivatedCouples = [], athletes
       ? couple.discipline_info[key] 
       : (couple.disciplines?.includes(key === "show_dance_sa" || key === "show_dance_classic" ? "show_dance" : key) ? couple.class : "-");
 
-    // special handling for combinata
-    if (key === "combinata") {
-      let resolved = class1 || class2 || coupleClass || "D";
-      if (class1) resolved = getBestClass(resolved, class1);
-      if (class2) resolved = getBestClass(resolved, class2);
-      return resolved === "-" ? "D" : resolved;
-    }
-
     // Pick best class between athlete 1, athlete 2, and the couple record
     let finalClass = coupleClass;
     if (class1 && class1 !== "-") finalClass = finalClass === "-" ? class1 : getBestClass(finalClass, class1);
     if (class2 && class2 !== "-") finalClass = finalClass === "-" ? class2 : getBestClass(finalClass, class2);
-    
-    // LAST RESORT FALLBACK: If we still don't have a class for this discipline, 
-    // but the athletes have a general 'class' saved, use that.
-    if (finalClass === "-") {
-      if (a1 && (a1 as any).class && (a1 as any).class !== "D") finalClass = (a1 as any).class;
-      if (a2 && (a2 as any).class && (a2 as any).class !== "D") finalClass = finalClass === "-" ? (a2 as any).class : getBestClass(finalClass, (a2 as any).class);
-    }
     
     return finalClass || "-";
   };
