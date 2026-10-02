@@ -342,8 +342,11 @@ Deno.serve(async (req) => {
                         const c = (athlete as any)[`class${i}`];
                         if (d && c) {
                           const normD = d.toLowerCase();
-                          const k = (normD.includes("latino") || normD.includes("latin") || /\bla\b/.test(normD)) ? "latino" : 
-                                    (normD.includes("standard") || /\bstd\b/.test(normD)) ? "standard" : "combinata";
+                          let k = normD;
+                          if (normD.includes("combinata") || normD.includes("10 balli")) k = "combinata";
+                          else if (normD.includes("latino") || normD.includes("latin") || /\bla\b/.test(normD)) k = "latino";
+                          else if (normD.includes("standard") || /\bstd\b/.test(normD)) k = "standard";
+                          
                           discInfo[k] = c.toUpperCase();
                           discs.add(k);
                           if (bestCls === "D") bestCls = c.toUpperCase();
