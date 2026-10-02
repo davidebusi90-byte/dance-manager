@@ -122,7 +122,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
 
         if (isStarCupFormat) {
           const ageMatch = preset.name.match(/\(([^)]+)\)/);
-          let ageStr = ageMatch ? ageMatch[1] : preset.name.replace(/\bOpen\b/ig, '').trim();
+          const ageStr = ageMatch ? ageMatch[1] : preset.name.replace(/\bOpen\b/ig, '').trim();
           
           let classStr = "Open";
           if (classesToUse.length === 1) {
@@ -278,7 +278,7 @@ export default function AddCustomEventDialog({ competitionId, onSuccess, existin
               let finalName = "";
               if (isStarCupFormat) {
                 const ageMatch = preset.name.match(/\(([^)]+)\)/);
-                let ageStr = ageMatch ? ageMatch[1] : preset.name.replace(/\bOpen\b/ig, '').trim();
+                const ageStr = ageMatch ? ageMatch[1] : preset.name.replace(/\bOpen\b/ig, '').trim();
 
                 let classStr = "Open";
                 if (classesToUse.length === 1) {
