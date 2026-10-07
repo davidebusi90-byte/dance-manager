@@ -15,6 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 // New components & types
 import ChartBuilder from "@/components/statistics/ChartBuilder";
 import CustomDashboard from "@/components/statistics/CustomDashboard";
+import GeneralStatsDashboard from "@/components/statistics/GeneralStatsDashboard";
 import { CustomTab, CustomChart, StatisticsPreferences } from "@/types/statistics";
 
 const getSeason = (dateString: string | Date | null) => {
@@ -35,6 +36,21 @@ const isStrictlyResponsible = (couple: any, profile: any) => {
     return isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.responsabili || []) ||
            (couple.athlete1 && isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.athlete1.responsabili || [])) ||
            (couple.athlete2 && isInstructorResponsibleForCoupleByResponsabili(profile.full_name, couple.athlete2.responsabili || []));
+};
+
+const coupleHasAnomaly = (couple: any, today: Date) => {
+    if (!couple.athlete1 || !couple.athlete2) return false;
+    const validation = validateCoupleCategory({
+        storedCategory: couple.category,
+        athlete1BirthDateISO: couple.athlete1.birth_date,
+        athlete2BirthDateISO: couple.athlete2.birth_date,
+        onDate: today,
+    });
+    let hasAnomaly = !validation.ok;
+    [couple.athlete1, couple.athlete2].forEach((a: any) => {
+        if (!a.medical_certificate_expiry || new Date(a.medical_certificate_expiry) < today) hasAnomaly = true;
+    });
+    return hasAnomaly;
 };
 
 export default function Statistics() {
@@ -217,18 +233,7 @@ export default function Statistics() {
     let count = 0;
     const today = new Date();
     filteredCouples.forEach(couple => {
-      if (!couple.athlete1 || !couple.athlete2) return;
-      const validation = validateCoupleCategory({
-        storedCategory: couple.category,
-        athlete1BirthDateISO: couple.athlete1.birth_date,
-        athlete2BirthDateISO: couple.athlete2.birth_date,
-        onDate: today,
-      });
-      let hasAnomaly = !validation.ok;
-      [couple.athlete1, couple.athlete2].forEach(a => {
-        if (!a.medical_certificate_expiry || new Date(a.medical_certificate_expiry) < today) hasAnomaly = true;
-      });
-      if (hasAnomaly) count++;
+      if (coupleHasAnomaly(couple, today)) count++;
     });
     return count;
   }, [filteredCouples]);
@@ -312,19 +317,7 @@ export default function Statistics() {
     const today = new Date();
     
     filteredCouples.forEach(couple => {
-       if (!couple.athlete1 || !couple.athlete2) return;
-       const validation = validateCoupleCategory({
-         storedCategory: couple.category,
-         athlete1BirthDateISO: couple.athlete1.birth_date,
-         athlete2BirthDateISO: couple.athlete2.birth_date,
-         onDate: today,
-       });
-       let hasAnomaly = !validation.ok;
-       [couple.athlete1, couple.athlete2].forEach(a => {
-         if (!a.medical_certificate_expiry || new Date(a.medical_certificate_expiry) < today) hasAnomaly = true;
-       });
-       
-       if (hasAnomaly) {
+       if (coupleHasAnomaly(couple, today)) {
            const coupleInstructors = profiles.filter(p => isStrictlyResponsible(couple, p));
            coupleInstructors.forEach(instructor => {
                instructorCounts[instructor.full_name] = (instructorCounts[instructor.full_name] || 0) + 1;
@@ -414,6 +407,11 @@ export default function Statistics() {
             <TabsTrigger value="overview" className="rounded-xl font-bold px-6 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm">
               Overview
             </TabsTrigger>
+            {(role === "admin" || role === "supervisor") && (
+              <TabsTrigger value="general_stats" className="rounded-xl font-bold px-6 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm text-primary">
+                Statistica Generale
+              </TabsTrigger>
+            )}
             {customTabs.map(tab => (
               <TabsTrigger key={tab.id} value={tab.id} className="rounded-xl font-bold px-4 data-[state=active]:bg-white dark:data-[state=active]:bg-neutral-800 data-[state=active]:shadow-sm group flex items-center gap-2">
                 {tab.name}
@@ -426,6 +424,17 @@ export default function Statistics() {
             <Plus className="w-5 h-5" />
           </Button>
         </div>
+
+        {(role === "admin" || role === "supervisor") && (
+          <TabsContent value="general_stats" className="mt-0 outline-none">
+             <GeneralStatsDashboard 
+                competitions={competitions}
+                couples={couples}
+                entries={entries}
+                profiles={profiles}
+             />
+          </TabsContent>
+        )}
 
         <TabsContent value="overview" className="mt-0 outline-none">
           {/* Filters */}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Loader2 } from "lucide-react";
 
@@ -25,6 +27,7 @@ interface Competition {
     registration_deadline?: string | null;
     late_fee_deadline?: string | null;
     description?: string | null;
+    previous_competition_id?: string | null;
 }
 
 interface EditCompetitionDialogProps {
@@ -40,6 +43,7 @@ interface CompetitionFormValues {
     registration_deadline: string;
     late_fee_deadline: string;
     description: string;
+    previous_competition_id: string;
 }
 
 export default function EditCompetitionDialog({ competition, onSuccess }: EditCompetitionDialogProps) {
@@ -55,7 +59,23 @@ export default function EditCompetitionDialog({ competition, onSuccess }: EditCo
             registration_deadline: competition.registration_deadline || "",
             late_fee_deadline: competition.late_fee_deadline || "",
             description: competition.description || "",
+            previous_competition_id: competition.previous_competition_id || "none",
         }
+    });
+
+    const { data: competitions } = useQuery({
+        queryKey: ["competitions-list-for-select", competition.id],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("competitions")
+                .select("id, name, date")
+                .eq("is_deleted", false)
+                .neq("id", competition.id)
+                .order("date", { ascending: false });
+            if (error) throw error;
+            return data;
+        },
+        enabled: isOpen,
     });
 
     // Reset form when competition prop changes or dialog opens
@@ -69,6 +89,7 @@ export default function EditCompetitionDialog({ competition, onSuccess }: EditCo
                 registration_deadline: competition.registration_deadline || "",
                 late_fee_deadline: competition.late_fee_deadline || "",
                 description: competition.description || "",
+                previous_competition_id: competition.previous_competition_id || "none",
             });
         }
     }, [competition, isOpen, reset]);
@@ -84,6 +105,7 @@ export default function EditCompetitionDialog({ competition, onSuccess }: EditCo
                 registration_deadline: values.registration_deadline || null,
                 late_fee_deadline: values.late_fee_deadline || null,
                 description: values.description || null,
+                previous_competition_id: values.previous_competition_id && values.previous_competition_id !== "none" ? values.previous_competition_id : null,
             }).eq("id", competition.id);
 
             if (error) throw error;
@@ -191,6 +213,32 @@ export default function EditCompetitionDialog({ competition, onSuccess }: EditCo
                                 placeholder="Dettagli aggiuntivi..."
                                 rows={3}
                             />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="previous_competition_id">Edizione Precedente (Opzionale)</Label>
+                            <Controller
+                                name="previous_competition_id"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value || "none"}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Seleziona l'edizione precedente..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">-- Nessuna / Prima Edizione --</SelectItem>
+                                            {competitions?.map((comp) => (
+                                                <SelectItem key={comp.id} value={comp.id}>
+                                                    {comp.name} ({new Date(comp.date).getFullYear()})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Seleziona la gara dell'anno precedente per visualizzare le statistiche a confronto.
+                            </p>
                         </div>
                     </form>
 

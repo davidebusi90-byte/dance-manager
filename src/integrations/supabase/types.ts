@@ -261,6 +261,7 @@ export type Database = {
           registration_deadline: string | null
           updated_at: string
           is_deleted: boolean
+          previous_competition_id: string | null
         }
         Insert: {
           created_at?: string
@@ -274,6 +275,7 @@ export type Database = {
           name: string
           registration_deadline?: string | null
           updated_at?: string
+          previous_competition_id?: string | null
         }
         Update: {
           created_at?: string
@@ -287,8 +289,17 @@ export type Database = {
           name?: string
           registration_deadline?: string | null
           updated_at?: string
+          previous_competition_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "competitions_previous_competition_id_fkey"
+            columns: ["previous_competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       couples: {
         Row: {
